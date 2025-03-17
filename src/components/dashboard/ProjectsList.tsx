@@ -20,6 +20,8 @@ import {
     DialogContentText,
     DialogTitle,
     Avatar,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -39,6 +41,8 @@ const ProjectsList = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -118,7 +122,7 @@ const ProjectsList = () => {
                     startIcon={<AddIcon />}
                     onClick={() => navigate('/admin/projects/new')}
                 >
-                    Add Project
+                    {isMobile ? 'Add' : 'Add Project'}
                 </Button>
             </Box>
 
