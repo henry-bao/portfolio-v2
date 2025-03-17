@@ -202,12 +202,16 @@ const DashboardLayout = () => {
             <Box
                 component="main"
                 sx={{
-                    flexGrow: 1,
                     p: 3,
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    mt: '64px',
                     backgroundColor: 'background.default',
-                    minHeight: '100vh',
+                    minHeight: 'calc(100vh - 64px)',
+                    height: 'calc(100vh - 64px)',
+                    overflowY: 'auto',
+                    position: 'fixed',
+                    right: 0,
+                    bottom: 0,
+                    top: '64px',
                 }}
             >
                 <Outlet />
