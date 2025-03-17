@@ -42,6 +42,11 @@ const DashboardLayout = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+    const handleMenuItemClick = (path: string) => {
+        setMobileOpen(!mobileOpen);
+        navigate(path);
+    };
+
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
@@ -92,7 +97,7 @@ const DashboardLayout = () => {
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding>
                         <Tooltip title={isCollapsed ? item.text : ''} placement="right">
-                            <ListItemButton onClick={() => navigate(item.path)}>
+                            <ListItemButton onClick={() => handleMenuItemClick(item.path)}>
                                 <ListItemIcon>{item.icon}</ListItemIcon>
                                 {(!isCollapsed || isMobile) && <ListItemText primary={item.text} />}
                             </ListItemButton>
@@ -141,7 +146,8 @@ const DashboardLayout = () => {
                         Dashboard
                     </Typography>
                     <Button color="inherit" onClick={() => window.open('/', '_blank')}>
-                        {isMobile ? <Home /> : 'View Site'}
+                        <Home />
+                        {isMobile ? '' : 'View Site'}
                     </Button>
                 </Toolbar>
             </AppBar>
@@ -161,7 +167,7 @@ const DashboardLayout = () => {
                         display: { xs: 'block', sm: 'none' },
                         '& .MuiDrawer-paper': {
                             boxSizing: 'border-box',
-                            width: '40%',
+                            width: '60vw',
                             transition: 'width 0.2s',
                         },
                     }}
