@@ -133,21 +133,25 @@ const ProjectsList = () => {
             )}
 
             <Paper>
-                <TableContainer>
+                <TableContainer sx={{ overflowX: 'auto' }}>
                     <Table>
                         <TableHead>
                             <TableRow>
                                 <TableCell width="60px"></TableCell>
                                 <TableCell>Title</TableCell>
-                                <TableCell>Role</TableCell>
-                                <TableCell>Date</TableCell>
+                                {!isMobile && (
+                                    <>
+                                        <TableCell>Role</TableCell>
+                                        <TableCell>Date</TableCell>
+                                    </>
+                                )}
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {projects.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center">
+                                    <TableCell colSpan={isMobile ? 3 : 5} align="center">
                                         No projects found. Create your first project!
                                     </TableCell>
                                 </TableRow>
@@ -170,8 +174,12 @@ const ProjectsList = () => {
                                             )}
                                         </TableCell>
                                         <TableCell>{project.title}</TableCell>
-                                        <TableCell>{project.role}</TableCell>
-                                        <TableCell>{project.date}</TableCell>
+                                        {!isMobile && (
+                                            <>
+                                                <TableCell>{project.role}</TableCell>
+                                                <TableCell>{project.date}</TableCell>
+                                            </>
+                                        )}
                                         <TableCell align="right">
                                             <IconButton
                                                 color="primary"

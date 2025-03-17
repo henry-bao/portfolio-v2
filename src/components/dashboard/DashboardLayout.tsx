@@ -97,7 +97,12 @@ const DashboardLayout = () => {
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding>
                         <Tooltip title={isCollapsed ? item.text : ''} placement="right">
-                            <ListItemButton onClick={() => handleMenuItemClick(item.path)}>
+                            <ListItemButton
+                                onClick={() => handleMenuItemClick(item.path)}
+                                sx={{
+                                    py: { xs: 3, sm: 1 },
+                                }}
+                            >
                                 <ListItemIcon>{item.icon}</ListItemIcon>
                                 {(!isCollapsed || isMobile) && <ListItemText primary={item.text} />}
                             </ListItemButton>
@@ -109,7 +114,12 @@ const DashboardLayout = () => {
             <List>
                 <ListItem disablePadding>
                     <Tooltip title={isCollapsed ? 'Logout' : ''} placement="right">
-                        <ListItemButton onClick={handleLogout}>
+                        <ListItemButton
+                            onClick={handleLogout}
+                            sx={{
+                                py: { xs: 3, sm: 1 },
+                            }}
+                        >
                             <ListItemIcon>
                                 <LogoutIcon />
                             </ListItemIcon>
@@ -166,7 +176,7 @@ const DashboardLayout = () => {
                         display: { xs: 'block', sm: 'none' },
                         '& .MuiDrawer-paper': {
                             boxSizing: 'border-box',
-                            width: '60vw',
+                            width: '70vw',
                             transition: 'width 0.2s',
                         },
                     }}
