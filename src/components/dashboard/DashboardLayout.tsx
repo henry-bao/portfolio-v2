@@ -15,6 +15,7 @@ import {
     Toolbar,
     Typography,
     Button,
+    Tooltip,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -22,19 +23,29 @@ import {
     Person as PersonIcon,
     Work as WorkIcon,
     ExitToApp as LogoutIcon,
+    ChevronLeft as ChevronLeftIcon,
+    ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
-const drawerWidth = 240;
+const expandedDrawerWidth = 240;
+const collapsedDrawerWidth = 64;
 
 const DashboardLayout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const { logout } = useAuth();
     const navigate = useNavigate();
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
+
+    const handleDrawerCollapse = () => {
+        setIsCollapsed(!isCollapsed);
+    };
+
+    const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
 
     const handleLogout = async () => {
         await logout();
@@ -49,31 +60,51 @@ const DashboardLayout = () => {
 
     const drawer = (
         <div>
-            <Toolbar>
-                <Typography variant="h6" noWrap component="div">
-                    Portfolio Admin
-                </Typography>
+            <Toolbar
+                sx={{
+                    justifyContent: isCollapsed ? 'center' : 'space-between',
+                    minHeight: 64,
+                    px: isCollapsed ? 0 : 2,
+                }}
+            >
+                {!isCollapsed && (
+                    <Typography variant="h6" noWrap component="div">
+                        Dashboard
+                    </Typography>
+                )}
+                <IconButton
+                    onClick={handleDrawerCollapse}
+                    sx={{
+                        mr: isCollapsed ? 0 : -1,
+                    }}
+                >
+                    {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                </IconButton>
             </Toolbar>
             <Divider />
             <List>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding>
-                        <ListItemButton onClick={() => navigate(item.path)}>
-                            <ListItemIcon>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.text} />
-                        </ListItemButton>
+                        <Tooltip title={isCollapsed ? item.text : ''} placement="right">
+                            <ListItemButton onClick={() => navigate(item.path)}>
+                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                {!isCollapsed && <ListItemText primary={item.text} />}
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
                 ))}
             </List>
             <Divider />
             <List>
                 <ListItem disablePadding>
-                    <ListItemButton onClick={handleLogout}>
-                        <ListItemIcon>
-                            <LogoutIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Logout" />
-                    </ListItemButton>
+                    <Tooltip title={isCollapsed ? 'Logout' : ''} placement="right">
+                        <ListItemButton onClick={handleLogout}>
+                            <ListItemIcon>
+                                <LogoutIcon />
+                            </ListItemIcon>
+                            {!isCollapsed && <ListItemText primary="Logout" />}
+                        </ListItemButton>
+                    </Tooltip>
                 </ListItem>
             </List>
         </div>
@@ -87,6 +118,7 @@ const DashboardLayout = () => {
                 sx={{
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     ml: { sm: `${drawerWidth}px` },
+                    transition: 'width 0.2s, margin-left 0.2s',
                 }}
             >
                 <Toolbar>
@@ -121,7 +153,11 @@ const DashboardLayout = () => {
                     }}
                     sx={{
                         display: { xs: 'block', sm: 'none' },
-                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                        '& .MuiDrawer-paper': {
+                            boxSizing: 'border-box',
+                            width: drawerWidth,
+                            transition: 'width 0.2s',
+                        },
                     }}
                 >
                     {drawer}
@@ -130,7 +166,12 @@ const DashboardLayout = () => {
                     variant="permanent"
                     sx={{
                         display: { xs: 'none', sm: 'block' },
-                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                        '& .MuiDrawer-paper': {
+                            boxSizing: 'border-box',
+                            width: drawerWidth,
+                            transition: 'width 0.2s',
+                            overflowX: 'hidden',
+                        },
                     }}
                     open
                 >
