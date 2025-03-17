@@ -21,10 +21,10 @@ export const PROJECTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROJECTS_COL
 // Define interfaces for our data
 export interface ProfileData {
     name: string;
-    pronouns: string[];
-    education: string[];
-    languages: string[];
     email: string;
+    pronouns?: string[];
+    education?: string[];
+    languages?: string[];
     resumeFileId?: string;
     profileImageId?: string;
     linkedin?: string;
@@ -33,10 +33,10 @@ export interface ProfileData {
 
 export interface ProjectData {
     title: string;
-    logoFileId?: string;
     role: string;
     description: string[];
     date: string;
+    logoFileId?: string;
     link_url?: string;
     link_text?: string;
     isOpen?: boolean;
@@ -141,7 +141,6 @@ export const createProfileData = async (data: ProfileData) => {
         if (data.profileImageId) documentData.profileImageId = data.profileImageId;
         if (data.resumeFileId) documentData.resumeFileId = data.resumeFileId;
 
-
         return await databases.createDocument(DATABASE_ID, PROFILE_COLLECTION_ID, ID.unique(), documentData);
     } catch (error) {
         console.error('Error creating profile data:', error);
@@ -164,7 +163,6 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
         if (data.github !== undefined) documentData.github = data.github;
         if (data.profileImageId !== undefined) documentData.profileImageId = data.profileImageId;
         if (data.resumeFileId !== undefined) documentData.resumeFileId = data.resumeFileId;
-
 
         return await databases.updateDocument(DATABASE_ID, PROFILE_COLLECTION_ID, profileId, documentData);
     } catch (error) {

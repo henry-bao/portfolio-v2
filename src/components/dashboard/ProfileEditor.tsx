@@ -143,7 +143,6 @@ const ProfileEditor = () => {
     };
 
     const handleSave = async () => {
-
         // Validate required fields
         if (!name.trim() || !email.trim()) {
             setError('Name and email are required');
@@ -198,7 +197,6 @@ const ProfileEditor = () => {
                 profileImageId,
                 resumeFileId,
             };
-
 
             let updatedProfile;
             if (profile) {

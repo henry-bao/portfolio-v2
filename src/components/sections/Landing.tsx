@@ -21,11 +21,11 @@ const Landing = () => {
         <section id="home" className="landing-css">
             <div className="hello-container">
                 <div className="type-animation">
-                    <span className="open-tag">&lt;Hello&gt;</span>
+                    <span className="open-tag">&lt;Hello&gt;</span>{' '}
                     <span className="wave-hand" onClick={handleWaveClick}>
-                        👋
+                        {'👋'}
                     </span>
-                    {"  I'm Henry"}
+                    {"  I'm Henry "}
                     <span className="close-tag">&lt;/Hello&gt;&nbsp;</span>
                 </div>
             </div>
