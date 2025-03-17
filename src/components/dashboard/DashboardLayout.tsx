@@ -145,7 +145,7 @@ const DashboardLayout = () => {
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         Dashboard
                     </Typography>
-                    <Button color="inherit" onClick={() => window.open('/', '_blank')}>
+                    <Button color="inherit" onClick={() => navigate('/')}>
                         <Home />
                         {isMobile ? '' : 'View Site'}
                     </Button>

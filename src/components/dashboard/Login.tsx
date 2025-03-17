@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Paper, Container, Alert, CircularProgress } from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, Container, Alert, CircularProgress, Divider } from '@mui/material';
 import { login } from '../../services/appwrite';
 import { useAuth } from '../../context/AuthContext';
 
@@ -47,7 +47,7 @@ const Login = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minHeight: '100vh',
+                    height: '100vh',
                 }}
             >
                 <Paper
@@ -96,6 +96,18 @@ const Login = () => {
                         />
                         <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} disabled={isLoading}>
                             {isLoading ? <CircularProgress size={24} /> : 'Sign In'}
+                        </Button>
+                        <Divider />
+                        <Button
+                            type="button"
+                            color="warning"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2 }}
+                            disabled={isLoading}
+                            onClick={() => navigate('/')}
+                        >
+                            Back to Home Page
                         </Button>
                     </Box>
                 </Paper>
