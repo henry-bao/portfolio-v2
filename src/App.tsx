@@ -13,7 +13,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/dashboard/ProtectedRoute';
 import Login from './components/dashboard/Login';
 import DashboardLayout from './components/dashboard/DashboardLayout';
-import Dashboard from './components/dashboard/Dashboard';
+import Overview from './components/dashboard/Overview';
 import ProfileEditor from './components/dashboard/ProfileEditor';
 import ProjectsList from './components/dashboard/ProjectsList';
 import ProjectEditor from './components/dashboard/ProjectEditor';
@@ -75,15 +75,13 @@ function App() {
                             }
                         />
 
-                        {/* Admin Dashboard Routes */}
                         <Route path="/admin/login" element={<Login />} />
 
-                        {/* Redirect /admin to /admin/dashboard */}
-                        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                        <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
 
                         <Route path="/admin" element={<ProtectedRoute />}>
                             <Route element={<DashboardLayout />}>
-                                <Route path="dashboard" element={<Dashboard />} />
+                                <Route path="overview" element={<Overview />} />
                                 <Route path="profile" element={<ProfileEditor />} />
                                 <Route path="projects" element={<ProjectsList />} />
                                 <Route path="projects/new" element={<ProjectEditor />} />

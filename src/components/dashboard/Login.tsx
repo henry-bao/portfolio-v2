@@ -15,7 +15,7 @@ const Login = () => {
     // Check if user is already logged in
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/admin/dashboard');
+            navigate('/admin/overview');
         }
     }, [isAuthenticated, navigate]);
 
@@ -30,7 +30,7 @@ const Login = () => {
                 await login(email, password);
                 await checkAuthStatus();
             }
-            navigate('/admin/dashboard');
+            navigate('/admin/overview');
         } catch (err) {
             console.error('Login error:', err);
             setError('Invalid email or password. Please try again.');

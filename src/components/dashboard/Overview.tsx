@@ -4,7 +4,7 @@ import { getProfileData, getProjects, ProfileData, ProjectData } from '../../ser
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 
-const Dashboard = () => {
+const Overview = () => {
     const [profileData, setProfileData] = useState<(Models.Document & ProfileData) | null>(null);
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +20,7 @@ const Dashboard = () => {
                 setProfileData(profile);
                 setProjects(projectsList);
             } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+                console.error('Error fetching overview data:', error);
             } finally {
                 setIsLoading(false);
             }
@@ -40,7 +40,7 @@ const Dashboard = () => {
     return (
         <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-                Dashboard
+                Overview
             </Typography>
 
             <Grid container spacing={3}>
@@ -111,4 +111,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Overview;

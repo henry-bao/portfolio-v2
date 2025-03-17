@@ -16,6 +16,8 @@ import {
     Typography,
     Button,
     Tooltip,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -36,6 +38,8 @@ const DashboardLayout = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const { logout } = useAuth();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -53,7 +57,7 @@ const DashboardLayout = () => {
     };
 
     const menuItems = [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
+        { text: 'Overview', icon: <DashboardIcon />, path: '/admin/overview' },
         { text: 'Profile', icon: <PersonIcon />, path: '/admin/profile' },
         { text: 'Projects', icon: <WorkIcon />, path: '/admin/projects' },
     ];
@@ -62,20 +66,21 @@ const DashboardLayout = () => {
         <div>
             <Toolbar
                 sx={{
-                    justifyContent: isCollapsed ? 'center' : 'space-between',
+                    justifyContent: { xs: 'space-between', sm: isCollapsed ? 'center' : 'space-between' },
                     minHeight: 64,
-                    px: isCollapsed ? 0 : 2,
+                    px: { xs: 2, sm: isCollapsed ? 0 : 2 },
                 }}
             >
-                {!isCollapsed && (
+                {(!isCollapsed || isMobile) && (
                     <Typography variant="h6" noWrap component="div">
-                        Dashboard
+                        Menu
                     </Typography>
                 )}
                 <IconButton
                     onClick={handleDrawerCollapse}
                     sx={{
                         mr: isCollapsed ? 0 : -1,
+                        display: { xs: 'none', sm: 'inline-flex' }
                     }}
                 >
                     {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -88,7 +93,7 @@ const DashboardLayout = () => {
                         <Tooltip title={isCollapsed ? item.text : ''} placement="right">
                             <ListItemButton onClick={() => navigate(item.path)}>
                                 <ListItemIcon>{item.icon}</ListItemIcon>
-                                {!isCollapsed && <ListItemText primary={item.text} />}
+                                {(!isCollapsed || isMobile) && <ListItemText primary={item.text} />}
                             </ListItemButton>
                         </Tooltip>
                     </ListItem>
@@ -102,7 +107,7 @@ const DashboardLayout = () => {
                             <ListItemIcon>
                                 <LogoutIcon />
                             </ListItemIcon>
-                            {!isCollapsed && <ListItemText primary="Logout" />}
+                            {(!isCollapsed || isMobile) && <ListItemText primary="Logout" />}
                         </ListItemButton>
                     </Tooltip>
                 </ListItem>
@@ -155,7 +160,7 @@ const DashboardLayout = () => {
                         display: { xs: 'block', sm: 'none' },
                         '& .MuiDrawer-paper': {
                             boxSizing: 'border-box',
-                            width: drawerWidth,
+                            width: '40%',
                             transition: 'width 0.2s',
                         },
                     }}

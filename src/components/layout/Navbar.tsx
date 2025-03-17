@@ -54,7 +54,7 @@ const Navbar = () => {
                     </li>
                     {isAuthenticated && (
                         <li>
-                            <RouterLink to="/admin/dashboard" onClick={closeMenu}>
+                            <RouterLink to="/admin/overview" onClick={closeMenu}>
                                 Admin
                             </RouterLink>
                         </li>
