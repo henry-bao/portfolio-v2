@@ -3,6 +3,7 @@ import { Models } from 'appwrite';
 import { getProfileData } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/layout/Navbar';
 import Landing from './components/sections/Landing';
 import About from './components/sections/About';
@@ -50,43 +51,50 @@ function App() {
     }, []);
 
     return (
-        <Router>
-            <AuthProvider>
-                <Routes>
-                    {/* Public Portfolio Routes */}
-                    <Route
-                        path="/"
-                        element={
-                            <>
-                                <Navbar />
-                                <main>
-                                    <Landing />
-                                    <About profile={profile} resumeUrl={resumeUrl} profileImageUrl={profileImageUrl} />
-                                    <Projects />
-                                </main>
-                                <Footer resumeUrl={resumeUrl} />
-                            </>
-                        }
-                    />
+        <>
+            <Router>
+                <AuthProvider>
+                    <Routes>
+                        {/* Public Portfolio Routes */}
+                        <Route
+                            path="/"
+                            element={
+                                <>
+                                    <Navbar />
+                                    <main>
+                                        <Landing />
+                                        <About
+                                            profile={profile}
+                                            resumeUrl={resumeUrl}
+                                            profileImageUrl={profileImageUrl}
+                                        />
+                                        <Projects />
+                                    </main>
+                                    <Footer resumeUrl={resumeUrl} />
+                                </>
+                            }
+                        />
 
-                    {/* Admin Dashboard Routes */}
-                    <Route path="/admin/login" element={<Login />} />
+                        {/* Admin Dashboard Routes */}
+                        <Route path="/admin/login" element={<Login />} />
 
-                    {/* Redirect /admin to /admin/dashboard */}
-                    <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                        {/* Redirect /admin to /admin/dashboard */}
+                        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
-                    <Route path="/admin" element={<ProtectedRoute />}>
-                        <Route element={<DashboardLayout />}>
-                            <Route path="dashboard" element={<Dashboard />} />
-                            <Route path="profile" element={<ProfileEditor />} />
-                            <Route path="projects" element={<ProjectsList />} />
-                            <Route path="projects/new" element={<ProjectEditor />} />
-                            <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
+                        <Route path="/admin" element={<ProtectedRoute />}>
+                            <Route element={<DashboardLayout />}>
+                                <Route path="dashboard" element={<Dashboard />} />
+                                <Route path="profile" element={<ProfileEditor />} />
+                                <Route path="projects" element={<ProjectsList />} />
+                                <Route path="projects/new" element={<ProjectEditor />} />
+                                <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
+                            </Route>
                         </Route>
-                    </Route>
-                </Routes>
-            </AuthProvider>
-        </Router>
+                    </Routes>
+                </AuthProvider>
+            </Router>
+            <Analytics />
+        </>
     );
 }
 
