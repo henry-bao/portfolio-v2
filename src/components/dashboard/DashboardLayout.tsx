@@ -170,7 +170,7 @@ const DashboardLayout = () => {
                     open={mobileOpen}
                     onClose={handleDrawerToggle}
                     ModalProps={{
-                        keepMounted: true, // Better open performance on mobile
+                        keepMounted: true,
                     }}
                     sx={{
                         display: { xs: 'block', sm: 'none' },
@@ -205,13 +205,9 @@ const DashboardLayout = () => {
                     p: 3,
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     backgroundColor: 'background.default',
-                    minHeight: 'calc(100vh - 64px)',
-                    height: 'calc(100vh - 64px)',
+                    minHeight: 'calc(100% - 64px)',
                     overflowY: 'auto',
-                    position: 'fixed',
-                    right: 0,
-                    bottom: 0,
-                    top: '64px',
+                    mt: '64px',
                 }}
             >
                 <Outlet />

@@ -104,7 +104,14 @@ const ProjectsList = () => {
 
     if (isLoading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+            <Box
+                sx={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                }}
+            >
                 <CircularProgress />
             </Box>
         );
@@ -139,9 +146,9 @@ const ProjectsList = () => {
                             <TableRow>
                                 <TableCell width="60px"></TableCell>
                                 <TableCell>Title</TableCell>
+                                <TableCell>Role</TableCell>
                                 {!isMobile && (
                                     <>
-                                        <TableCell>Role</TableCell>
                                         <TableCell>Date</TableCell>
                                     </>
                                 )}
@@ -174,9 +181,9 @@ const ProjectsList = () => {
                                             )}
                                         </TableCell>
                                         <TableCell>{project.title}</TableCell>
+                                        <TableCell>{project.role}</TableCell>
                                         {!isMobile && (
                                             <>
-                                                <TableCell>{project.role}</TableCell>
                                                 <TableCell>{project.date}</TableCell>
                                             </>
                                         )}
