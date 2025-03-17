@@ -128,8 +128,8 @@
         align-items: center;
         justify-content: space-around;
         transition: all 0.3s ease;
-        padding-bottom: 10rem;
-        padding-top: 5rem;
+        padding-bottom: 12rem;
+        padding-top: 3rem;
     }
 
     .menu-list.active {
