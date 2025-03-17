@@ -1,0 +1,147 @@
+.nav {
+    position: fixed;
+    z-index: 5;
+    width: 100%;
+    padding: 25px 0;
+    transition: all 0.3s ease;
+}
+
+.nav.sticky {
+    background-color: rgb(25, 25, 25);
+    padding: 15px 0;
+    opacity: 95%;
+}
+
+.nav-content {
+    margin: auto;
+    padding: 0px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.menu-list {
+    display: inline-flex;
+    list-style: none;
+}
+
+.nav .logo a {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 30px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-list li a {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 20px;
+    font-weight: 500;
+    margin-left: 25px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-list li a,
+.nav .logo a {
+    transition: all 0.2s ease;
+}
+
+.menu-btn {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: all 0.5s ease-in-out;
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    display: none;
+}
+
+.menu-burger {
+    width: 20px;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 5px;
+    transition: all 0.5s ease-in-out;
+}
+
+.menu-burger::before,
+.menu-burger::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 5px;
+    transition: all 0.5s ease-in-out;
+}
+
+.menu-burger::before {
+    transform: translateY(-7px);
+}
+
+.menu-burger::after {
+    transform: translateY(7px);
+}
+
+.menu-btn.open .menu-burger {
+    background: transparent;
+}
+
+.menu-btn.open .menu-burger::before {
+    transform: rotate(45deg);
+}
+
+.menu-btn.open .menu-burger::after {
+    transform: rotate(-45deg);
+}
+
+@media (min-width: 768px) {
+    .menu-list li a:hover,
+    .nav .logo a:hover {
+        color: rgba(200, 200, 200, 0.55);
+    }
+}
+
+@media (max-width: 992px) {
+    .nav .logo a {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    body.disableScroll {
+        overflow: hidden;
+    }
+
+    .menu-list {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        height: 100vh;
+        width: 100%;
+        background-color: rgb(25, 25, 25);
+        display: block;
+        padding: 40px 0;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .menu-list.active {
+        left: 0%;
+    }
+
+    .menu-list li {
+        margin-top: 15vh;
+    }
+
+    .menu-list li a {
+        margin-left: 0;
+    }
+
+    .menu-btn {
+        display: flex;
+    }
+}

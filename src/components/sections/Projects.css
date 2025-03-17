@@ -1,0 +1,38 @@
+.projects-css {
+    background-color: rgba(235, 235, 235);
+    color: black;
+    min-height: 100vh;
+    padding-left: 10.5em;
+    padding-right: 10.5em;
+    padding-top: 5em;
+    padding-bottom: 2em;
+}
+
+.projects-css .description h1 {
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+.projects-css .description p {
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+.projects-css .description strong {
+    display: block;
+    margin: 1em 0;
+}
+
+@media (max-width: 1200px) {
+    .projects-css {
+        padding-left: 4em;
+        padding-right: 4em;
+    }
+}
+
+@media (max-width: 768px) {
+    .projects-css {
+        padding-left: 1.5em;
+        padding-right: 1.5em;
+    }
+}

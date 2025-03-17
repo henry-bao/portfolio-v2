@@ -1,0 +1,155 @@
+.landing-css {
+    height: 100vh;
+    background-color: rgb(15, 15, 15);
+    color: rgba(255, 255, 255, 0.75);
+    text-align: center;
+    min-height: 100vh;
+    padding-left: 3em;
+    padding-right: 3em;
+    padding-top: 5em;
+    padding-bottom: 2em;
+}
+
+.hello-container {
+    display: inline-block;
+    padding-top: 35vh;
+    font-size: 2.5rem;
+}
+
+.open-tag {
+    color: #2f7295;
+}
+
+.close-tag {
+    color: #2f7295;
+}
+
+.scroll-indicator {
+    position: relative;
+    width: 0.8em;
+    height: 0.8em;
+    display: flex;
+    border-width: 0 2px 2px 0;
+    border-color: rgba(255, 255, 255, 0.75);
+    border-style: solid;
+    animation: bounce 2s 0s ease infinite;
+    animation-fill-mode: forwards;
+    margin: 30vh auto;
+    transform: rotate(45deg);
+}
+
+.scroll-indicator-container {
+    animation: 5s fadeIn;
+    animation-fill-mode: forwards;
+    visibility: hidden;
+    cursor: pointer;
+    display: block;
+}
+
+.type-animation {
+    overflow: hidden;
+    border-right: 0.08em solid grey;
+    white-space: nowrap;
+    animation: typing 1.5s steps(30, end) forwards, blinking 0.9s infinite;
+    width: 0;
+}
+
+.wave-hand {
+    animation-name: wave-animation;
+    animation-duration: 3.5s;
+    animation-iteration-count: infinite;
+    transform-origin: 70% 70%;
+    display: inline-block;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0% {
+        top: -0.8em;
+    }
+    25% {
+        top: 0em;
+    }
+    100% {
+        top: -0.8em;
+    }
+}
+
+@keyframes typing {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes blinking {
+    from {
+        border-color: transparent;
+    }
+    to {
+        border-color: grey;
+    }
+}
+
+@keyframes wave-animation {
+    0% {
+        transform: rotate(0deg);
+    }
+    10% {
+        transform: rotate(14deg);
+    }
+    20% {
+        transform: rotate(-8deg);
+    }
+    30% {
+        transform: rotate(14deg);
+    }
+    40% {
+        transform: rotate(-4deg);
+    }
+    50% {
+        transform: rotate(10deg);
+    }
+    60% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+@media (max-width: 1200px) {
+    .hello-container {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hello-container {
+        padding-top: 32vh;
+        font-size: 1.1rem;
+    }
+    .landing-css {
+        padding-left: 1.5em;
+        padding-right: 1.5em;
+    }
+}
+
+@media (max-width: 350px) {
+    .hello-container {
+        padding-top: 28vh;
+        font-size: 0.9rem;
+    }
+}

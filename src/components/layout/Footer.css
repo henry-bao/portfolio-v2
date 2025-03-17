@@ -1,0 +1,20 @@
+footer {
+    background-color: rgb(15, 15, 15);
+    color: rgba(255, 255, 255, 0.75);
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+footer > p {
+    margin: 5px 0;
+}
+
+footer > p > a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: underline;
+}
+
+footer > p > a:hover {
+    color: #2f7295;
+}
