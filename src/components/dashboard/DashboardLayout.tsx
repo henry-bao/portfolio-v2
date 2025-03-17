@@ -27,6 +27,7 @@ import {
     ExitToApp as LogoutIcon,
     ChevronLeft as ChevronLeftIcon,
     ChevronRight as ChevronRightIcon,
+    Home,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
@@ -80,7 +81,7 @@ const DashboardLayout = () => {
                     onClick={handleDrawerCollapse}
                     sx={{
                         mr: isCollapsed ? 0 : -1,
-                        display: { xs: 'none', sm: 'inline-flex' }
+                        display: { xs: 'none', sm: 'inline-flex' },
                     }}
                 >
                     {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -137,10 +138,10 @@ const DashboardLayout = () => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        Portfolio Dashboard
+                        Dashboard
                     </Typography>
                     <Button color="inherit" onClick={() => window.open('/', '_blank')}>
-                        View Site
+                        {isMobile ? <Home /> : 'View Site'}
                     </Button>
                 </Toolbar>
             </AppBar>
