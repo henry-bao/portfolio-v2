@@ -171,6 +171,7 @@ const DashboardLayout = () => {
                     onClose={handleDrawerToggle}
                     ModalProps={{
                         keepMounted: true,
+                        disableScrollLock: true,
                     }}
                     sx={{
                         display: { xs: 'block', sm: 'none' },
@@ -202,13 +203,12 @@ const DashboardLayout = () => {
             <Box
                 component="main"
                 sx={{
-                    p: 3,
-                    width: '100%',
+                    flexGrow: 1,
+                    p: isMobile ? 2 : 3,
                     backgroundColor: 'background.default',
-                    overflowY: 'auto',
-                    pt: '5rem',
                 }}
             >
+                <Toolbar />
                 <Outlet />
             </Box>
         </Box>
