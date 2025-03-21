@@ -26,7 +26,7 @@ const ProjectCard = ({
 }: ProjectCardProps) => {
     const [isExpanded, setIsExpanded] = useState(isOpen);
     const theme = useTheme();
-    const isTablet = useMediaQuery(theme.breakpoints.down(1000));
+    const isTablet = useMediaQuery(theme.breakpoints.down(992));
 
     const renderContent = () => {
         const content = (

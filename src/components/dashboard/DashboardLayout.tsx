@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
     AppBar,
@@ -41,6 +41,16 @@ const DashboardLayout = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down(992));
+
+    useEffect(() => {
+        if (isTablet) {
+            setIsCollapsed(true);
+            console.log('isTablet');
+        } else {
+            setIsCollapsed(false);
+        }
+    }, [isTablet]);
 
     const handleMenuItemClick = (path: string) => {
         setMobileOpen(!mobileOpen);
