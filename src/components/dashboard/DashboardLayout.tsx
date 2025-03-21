@@ -25,8 +25,8 @@ import {
     Person as PersonIcon,
     Work as WorkIcon,
     ExitToApp as LogoutIcon,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
+    KeyboardDoubleArrowLeft as LeftIcon,
+    KeyboardDoubleArrowRight as RightIcon,
     Home,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
@@ -44,12 +44,7 @@ const DashboardLayout = () => {
     const isTablet = useMediaQuery(theme.breakpoints.down(992));
 
     useEffect(() => {
-        if (isTablet) {
-            setIsCollapsed(true);
-            console.log('isTablet');
-        } else {
-            setIsCollapsed(false);
-        }
+        setIsCollapsed(isTablet);
     }, [isTablet]);
 
     const handleMenuItemClick = (path: string) => {
@@ -99,7 +94,7 @@ const DashboardLayout = () => {
                         display: { xs: 'none', sm: 'inline-flex' },
                     }}
                 >
-                    {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                    {isCollapsed ? <RightIcon /> : <LeftIcon />}
                 </IconButton>
             </Toolbar>
             <Divider />
@@ -111,9 +106,17 @@ const DashboardLayout = () => {
                                 onClick={() => handleMenuItemClick(item.path)}
                                 sx={{
                                     py: { xs: 3, sm: 1 },
+                                    justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
                                 }}
                             >
-                                <ListItemIcon>{item.icon}</ListItemIcon>
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: isCollapsed && !isMobile ? 0 : undefined,
+                                        justifyContent: isCollapsed && !isMobile ? 'center' : undefined,
+                                    }}
+                                >
+                                    {item.icon}
+                                </ListItemIcon>
                                 {(!isCollapsed || isMobile) && <ListItemText primary={item.text} />}
                             </ListItemButton>
                         </Tooltip>
@@ -128,9 +131,15 @@ const DashboardLayout = () => {
                             onClick={handleLogout}
                             sx={{
                                 py: { xs: 3, sm: 1 },
+                                justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
                             }}
                         >
-                            <ListItemIcon>
+                            <ListItemIcon
+                                sx={{
+                                    minWidth: isCollapsed && !isMobile ? 0 : undefined,
+                                    justifyContent: isCollapsed && !isMobile ? 'center' : undefined,
+                                }}
+                            >
                                 <LogoutIcon />
                             </ListItemIcon>
                             {(!isCollapsed || isMobile) && <ListItemText primary="Logout" />}
