@@ -206,7 +206,7 @@ const DashboardLayout = () => {
                     width: '100%',
                     backgroundColor: 'background.default',
                     overflowY: 'auto',
-                    pt: '64px',
+                    pt: '6rem',
                 }}
             >
                 <Outlet />
