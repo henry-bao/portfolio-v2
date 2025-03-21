@@ -35,7 +35,7 @@ const ProjectCard = ({
                 <div className="description">
                     <h1>{role}</h1>
                     {description.map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
+                        <p key={index}>{`● ${paragraph}`}</p>
                     ))}
                     <strong>{date}</strong>
                     {link_url && (
