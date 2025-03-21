@@ -203,11 +203,10 @@ const DashboardLayout = () => {
                 component="main"
                 sx={{
                     p: 3,
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
+                    width: '100%',
                     backgroundColor: 'background.default',
-                    minHeight: 'calc(100% - 64px)',
                     overflowY: 'auto',
-                    mt: '64px',
+                    pt: '64px',
                 }}
             >
                 <Outlet />

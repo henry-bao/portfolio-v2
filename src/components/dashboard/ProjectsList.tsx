@@ -43,6 +43,7 @@ const ProjectsList = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -146,12 +147,17 @@ const ProjectsList = () => {
                             <TableRow>
                                 <TableCell width="60px"></TableCell>
                                 <TableCell>Title</TableCell>
-                                <TableCell>Role</TableCell>
                                 {!isMobile && (
+                                    <>
+                                        <TableCell>Role</TableCell>
+                                    </>
+                                )}
+                                {!isTablet && (
                                     <>
                                         <TableCell>Date</TableCell>
                                     </>
                                 )}
+
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -181,8 +187,12 @@ const ProjectsList = () => {
                                             )}
                                         </TableCell>
                                         <TableCell>{project.title}</TableCell>
-                                        <TableCell>{project.role}</TableCell>
                                         {!isMobile && (
+                                            <>
+                                                <TableCell>{project.role}</TableCell>
+                                            </>
+                                        )}
+                                        {!isTablet && (
                                             <>
                                                 <TableCell>{project.date}</TableCell>
                                             </>
