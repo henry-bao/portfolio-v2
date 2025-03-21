@@ -23,12 +23,7 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Visibility as VisibilityIcon,
-} from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { getProjects, deleteProject, ProjectData } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
@@ -198,13 +193,6 @@ const ProjectsList = () => {
                                             </>
                                         )}
                                         <TableCell align="right">
-                                            <IconButton
-                                                color="primary"
-                                                onClick={() => window.open('/#projects', '_blank')}
-                                                title="View on site"
-                                            >
-                                                <VisibilityIcon />
-                                            </IconButton>
                                             <IconButton
                                                 color="primary"
                                                 onClick={() => handleEditProject(project.$id)}
