@@ -23,6 +23,25 @@
     margin: 1em 0;
 }
 
+.empty-container,
+.error-container,
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 5rem;
+}
+
+.empty-container {
+    flex-direction: column;
+    gap:1rem;
+}
+
+.loading-container {
+    flex-direction: column;
+    gap: 2rem;
+}
+
 @media (max-width: 1200px) {
     .projects-css {
         padding-left: 4em;

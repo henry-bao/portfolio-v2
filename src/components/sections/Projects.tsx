@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
 import { getProjects } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
+import { CircularProgress } from '@mui/material';
+
 import './Projects.css';
 
 interface ProjectDisplayData {
@@ -67,6 +69,7 @@ const Projects = () => {
             {isLoading ? (
                 <div className="loading-container">
                     <p>Loading projects...</p>
+                    <CircularProgress />
                 </div>
             ) : error ? (
                 <div className="error-container">
@@ -74,7 +77,10 @@ const Projects = () => {
                 </div>
             ) : projects.length === 0 ? (
                 <div className="empty-container">
-                    <p>No projects found.</p>
+                    <p>oops, no projects found</p>
+                    <p>db probably broke (i blame appwrite)</p>
+                    <p>at least the about me section has fallback data</p>
+                    <p>you can still contact me there :)</p>
                 </div>
             ) : (
                 projects.map((project) => (
