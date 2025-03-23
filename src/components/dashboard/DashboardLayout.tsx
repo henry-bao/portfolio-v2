@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, JSX } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
     AppBar,
@@ -34,6 +34,38 @@ import { useAuth } from '../../context/AuthContext';
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 64;
 
+interface SidebarListItemProps {
+    tooltipText: string;
+    text: string;
+    icon: JSX.Element;
+    onClick: () => void;
+    isCollapsed: boolean;
+    isMobile: boolean;
+}
+
+const SidebarListItem = ({ tooltipText, text, icon, onClick, isCollapsed, isMobile }: SidebarListItemProps) => {
+    const buttonStyles = {
+        py: { xs: 3, sm: 1 },
+        justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
+    };
+
+    const iconStyles = {
+        minWidth: isCollapsed && !isMobile ? 0 : undefined,
+        justifyContent: isCollapsed && !isMobile ? 'center' : undefined,
+    };
+
+    return (
+        <ListItem disablePadding>
+            <Tooltip title={isCollapsed ? tooltipText : ''} placement="right">
+                <ListItemButton onClick={onClick} sx={buttonStyles}>
+                    <ListItemIcon sx={iconStyles}>{icon}</ListItemIcon>
+                    {(!isCollapsed || isMobile) && <ListItemText primary={text} />}
+                </ListItemButton>
+            </Tooltip>
+        </ListItem>
+    );
+};
+
 const DashboardLayout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -48,7 +80,7 @@ const DashboardLayout = () => {
     }, [isTablet]);
 
     const handleMenuItemClick = (path: string) => {
-        setMobileOpen(!mobileOpen);
+        if (mobileOpen) setMobileOpen(false);
         navigate(path);
     };
 
@@ -60,12 +92,12 @@ const DashboardLayout = () => {
         setIsCollapsed(!isCollapsed);
     };
 
-    const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
-
     const handleLogout = async () => {
         await logout();
         navigate('/admin/login');
     };
+
+    const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
 
     const menuItems = [
         { text: 'Overview', icon: <DashboardIcon />, path: '/admin/overview' },
@@ -73,8 +105,8 @@ const DashboardLayout = () => {
         { text: 'Projects', icon: <WorkIcon />, path: '/admin/projects' },
     ];
 
-    const drawer = (
-        <div>
+    const drawerContent = (
+        <>
             <Toolbar
                 sx={{
                     justifyContent: { xs: 'space-between', sm: isCollapsed ? 'center' : 'space-between' },
@@ -83,16 +115,13 @@ const DashboardLayout = () => {
                 }}
             >
                 {(!isCollapsed || isMobile) && (
-                    <Typography variant="h6" noWrap component="div">
+                    <Typography variant="h6" noWrap>
                         Menu
                     </Typography>
                 )}
                 <IconButton
                     onClick={handleDrawerCollapse}
-                    sx={{
-                        mr: isCollapsed ? 0 : -1,
-                        display: { xs: 'none', sm: 'inline-flex' },
-                    }}
+                    sx={{ mr: isCollapsed ? 0 : -1, display: { xs: 'none', sm: 'inline-flex' } }}
                 >
                     {isCollapsed ? <RightIcon /> : <LeftIcon />}
                 </IconButton>
@@ -100,54 +129,29 @@ const DashboardLayout = () => {
             <Divider />
             <List>
                 {menuItems.map((item) => (
-                    <ListItem key={item.text} disablePadding>
-                        <Tooltip title={isCollapsed ? item.text : ''} placement="right">
-                            <ListItemButton
-                                onClick={() => handleMenuItemClick(item.path)}
-                                sx={{
-                                    py: { xs: 3, sm: 1 },
-                                    justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
-                                }}
-                            >
-                                <ListItemIcon
-                                    sx={{
-                                        minWidth: isCollapsed && !isMobile ? 0 : undefined,
-                                        justifyContent: isCollapsed && !isMobile ? 'center' : undefined,
-                                    }}
-                                >
-                                    {item.icon}
-                                </ListItemIcon>
-                                {(!isCollapsed || isMobile) && <ListItemText primary={item.text} />}
-                            </ListItemButton>
-                        </Tooltip>
-                    </ListItem>
+                    <SidebarListItem
+                        key={item.text}
+                        tooltipText={item.text}
+                        text={item.text}
+                        icon={item.icon}
+                        onClick={() => handleMenuItemClick(item.path)}
+                        isCollapsed={isCollapsed}
+                        isMobile={isMobile}
+                    />
                 ))}
             </List>
             <Divider />
             <List>
-                <ListItem disablePadding>
-                    <Tooltip title={isCollapsed ? 'Logout' : ''} placement="right">
-                        <ListItemButton
-                            onClick={handleLogout}
-                            sx={{
-                                py: { xs: 3, sm: 1 },
-                                justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
-                            }}
-                        >
-                            <ListItemIcon
-                                sx={{
-                                    minWidth: isCollapsed && !isMobile ? 0 : undefined,
-                                    justifyContent: isCollapsed && !isMobile ? 'center' : undefined,
-                                }}
-                            >
-                                <LogoutIcon />
-                            </ListItemIcon>
-                            {(!isCollapsed || isMobile) && <ListItemText primary="Logout" />}
-                        </ListItemButton>
-                    </Tooltip>
-                </ListItem>
+                <SidebarListItem
+                    tooltipText="Logout"
+                    text="Logout"
+                    icon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    isCollapsed={isCollapsed}
+                    isMobile={isMobile}
+                />
             </List>
-        </div>
+        </>
     );
 
     return (
@@ -184,6 +188,7 @@ const DashboardLayout = () => {
                 sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
                 aria-label="dashboard navigation"
             >
+                {/* Mobile Drawer */}
                 <Drawer
                     variant="temporary"
                     open={mobileOpen}
@@ -201,8 +206,9 @@ const DashboardLayout = () => {
                         },
                     }}
                 >
-                    {drawer}
+                    {drawerContent}
                 </Drawer>
+                {/* Desktop Drawer */}
                 <Drawer
                     variant="permanent"
                     sx={{
@@ -216,7 +222,7 @@ const DashboardLayout = () => {
                     }}
                     open
                 >
-                    {drawer}
+                    {drawerContent}
                 </Drawer>
             </Box>
             <Box
