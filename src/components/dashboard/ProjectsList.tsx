@@ -37,6 +37,7 @@ import {
     closestCenter,
     KeyboardSensor,
     PointerSensor,
+    TouchSensor,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -81,14 +82,28 @@ const SortableTableRow = ({
 
     return (
         <TableRow ref={setNodeRef} style={style}>
-            <TableCell padding="none" width="40px">
+            <TableCell padding="none" width="50px">
                 <IconButton
                     {...attributes}
                     {...listeners}
-                    size="small"
-                    sx={{ cursor: 'grab', color: 'text.secondary' }}
+                    size="medium"
+                    sx={{
+                        cursor: 'grab',
+                        color: 'text.secondary',
+                        // Make it more touch-friendly
+                        padding: '8px',
+                        '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        },
+                        // // Visual indicator for mobile
+                        // '@media (hover: none)': {
+                        //     color: 'primary.main',
+                        // }
+                    }}
+                    aria-label="Drag to reorder"
+                    title="Drag to reorder"
                 >
-                    <DragIndicatorIcon />
+                    <DragIndicatorIcon fontSize="medium" />
                 </IconButton>
             </TableCell>
             <TableCell>
@@ -135,13 +150,22 @@ const ProjectsList = () => {
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
-    // Set up sensors for drag and drop
+    // Set up sensors for drag and drop, including touch support for mobile
     const sensors = useSensors(
+        // For mouse/pointer devices
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 8,
+                distance: 8, // 8px movement required before drag starts
             },
         }),
+        // For touch devices (mobile)
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250, // Small delay for touch to distinguish from scroll
+                tolerance: 5, // Small tolerance for slight finger movements
+            },
+        }),
+        // For keyboard navigation
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -310,6 +334,21 @@ const ProjectsList = () => {
                 </Alert>
             )}
 
+            {/* Mobile helper text */}
+            <Box
+                sx={{
+                    display: { xs: 'block', sm: 'none' },
+                    mb: 2,
+                    color: 'text.secondary',
+                    fontSize: '0.875rem',
+                }}
+            >
+                <Typography variant="caption" component="p" sx={{ display: 'flex', alignItems: 'center' }}>
+                    <DragIndicatorIcon fontSize="small" sx={{ mr: 0.5 }} />
+                    Tap and hold to drag projects and reorder them
+                </Typography>
+            </Box>
+
             <Paper>
                 <TableContainer
                     sx={{
@@ -320,7 +359,7 @@ const ProjectsList = () => {
                     <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
                         <TableHead>
                             <TableRow>
-                                <TableCell padding="none" width="40px"></TableCell>
+                                <TableCell padding="none" width="50px"></TableCell>
                                 <TableCell width="60px"></TableCell>
                                 <TableCell>Title</TableCell>
                                 {!isMobile && (
@@ -349,14 +388,14 @@ const ProjectsList = () => {
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
                                     onDragEnd={handleDragEnd}
-                                    // Add configuration to prevent out-of-bounds issues
+                                    // Add configuration to prevent out-of-bounds issues and improve mobile experience
                                     autoScroll={{
                                         threshold: {
                                             x: 0, // Disable horizontal scrolling
-                                            y: 0.2, // Reduce vertical scroll sensitivity
+                                            y: 0.15, // Lower threshold for mobile
                                         },
-                                        acceleration: 5, // Slower acceleration
-                                        interval: 5, // More frequent but smaller scrolls
+                                        acceleration: 10, // Faster acceleration for mobile
+                                        interval: 10, // Less frequent updates for better performance on mobile
                                     }}
                                     // Use a custom modifier to restrict movement to vertical axis only
                                     modifiers={[
