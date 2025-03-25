@@ -49,7 +49,7 @@ export const getActiveResumeVersion = async (): Promise<(Models.Document & Resum
 export const addResumeVersion = async (
     file: File,
     description?: string,
-    setAsActive: boolean = true
+    setAsActive: boolean = false
 ): Promise<Models.Document & ResumeVersion> => {
     try {
         // Upload the file

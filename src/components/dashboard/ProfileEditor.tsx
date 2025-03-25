@@ -185,8 +185,8 @@ const ProfileEditor = () => {
             if (resumeFile) {
                 try {
                     // Add to resume versioning system
-                    const resumeVersion = await addResumeVersion(resumeFile, "Uploaded from Profile Editor");
-                    
+                    const resumeVersion = await addResumeVersion(resumeFile, 'Uploaded from Profile Editor', true);
+
                     // Use the file ID from the resume version
                     resumeFileId = resumeVersion.fileId;
                 } catch (error) {
