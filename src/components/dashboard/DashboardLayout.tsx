@@ -1,5 +1,5 @@
 import { useState, useEffect, JSX } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, ScrollRestoration } from 'react-router-dom';
 import {
     AppBar,
     Box,
@@ -83,7 +83,6 @@ const DashboardLayout = () => {
     const handleMenuItemClick = (path: string) => {
         if (mobileOpen) setMobileOpen(false);
         navigate(path);
-        window.scrollTo(0, 0);
     };
 
     const handleDrawerToggle = () => {
@@ -97,7 +96,6 @@ const DashboardLayout = () => {
     const handleLogout = async () => {
         await logout();
         navigate('/admin/login');
-        window.scrollTo(0, 0);
     };
 
     const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
@@ -160,6 +158,7 @@ const DashboardLayout = () => {
 
     return (
         <Box sx={{ display: 'flex' }}>
+            <ScrollRestoration />
             <CssBaseline />
             <AppBar
                 position="fixed"
@@ -186,7 +185,6 @@ const DashboardLayout = () => {
                         color="inherit"
                         onClick={() => {
                             navigate('/');
-                            window.scrollTo(0, 0);
                         }}
                         startIcon={<Home />}
                     >
