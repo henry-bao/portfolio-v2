@@ -46,7 +46,11 @@ export const getActiveResumeVersion = async (): Promise<(Models.Document & Resum
 };
 
 // Add a new resume version
-export const addResumeVersion = async (file: File, description?: string, setAsActive: boolean = true): Promise<Models.Document & ResumeVersion> => {
+export const addResumeVersion = async (
+    file: File,
+    description?: string,
+    setAsActive: boolean = true
+): Promise<Models.Document & ResumeVersion> => {
     try {
         // Upload the file
         const uploadResult = await storage.createFile(BUCKET_ID, ID.unique(), file);
@@ -66,7 +70,7 @@ export const addResumeVersion = async (file: File, description?: string, setAsAc
 
         // Add to database
         const result = await databases.createDocument(DATABASE_ID, RESUME_COLLECTION_ID, ID.unique(), resumeData);
-        
+
         // If this should be active and it's not the first version, deactivate other versions
         if (setAsActive && !isFirstVersion) {
             // Set all other resumes to inactive
