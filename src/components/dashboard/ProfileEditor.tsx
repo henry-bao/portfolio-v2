@@ -1,4 +1,5 @@
 import { useState, useEffect, ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Grid, Paper, CircularProgress, Alert, Chip, Divider } from '@mui/material';
 import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import {
@@ -11,6 +12,7 @@ import {
 } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
+import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 
 // Helper function to map Appwrite document to ProfileData
 const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
@@ -51,6 +53,7 @@ const ProfileEditor = () => {
     const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [resumeFileName, setResumeFileName] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -77,8 +80,13 @@ const ProfileEditor = () => {
                         setProfileImagePreview(imageUrl);
                     }
 
-                    // Set resume filename if exists
-                    if (mappedData.resumeFileId) {
+                    // Check for active resume first
+                    const activeResume = await getActiveResumeVersion();
+                    if (activeResume) {
+                        setResumeFileName(activeResume.fileName);
+                    }
+                    // Fallback to profile resumeFileId if no active resume
+                    else if (mappedData.resumeFileId) {
                         setResumeFileName('Resume.pdf'); // Default name, could be stored in metadata
                     }
                 }
@@ -175,14 +183,31 @@ const ProfileEditor = () => {
 
             // Upload new resume if changed
             if (resumeFile) {
-                // Delete old resume if exists
-                if (currentResumeFileId) {
-                    await deleteFile(currentResumeFileId);
+                try {
+                    // Add to resume versioning system
+                    const resumeVersion = await addResumeVersion(resumeFile, "Uploaded from Profile Editor");
+                    
+                    // Use the file ID from the resume version
+                    resumeFileId = resumeVersion.fileId;
+                } catch (error) {
+                    console.error('Error adding resume to versioning system:', error);
+                    // Fallback to old method if versioning fails
+                    if (currentResumeFileId) {
+                        await deleteFile(currentResumeFileId);
+                    }
+                    const uploadResult = await uploadFile(resumeFile);
+                    resumeFileId = uploadResult.$id;
                 }
-
-                // Upload new resume
-                const uploadResult = await uploadFile(resumeFile);
-                resumeFileId = uploadResult.$id;
+            } else if (!resumeFileId) {
+                // If no resume file is selected, try to get the active resume
+                try {
+                    const activeResume = await getActiveResumeVersion();
+                    if (activeResume) {
+                        resumeFileId = activeResume.fileId;
+                    }
+                } catch (error) {
+                    console.error('Error getting active resume:', error);
+                }
             }
 
             // Prepare profile data
@@ -473,10 +498,19 @@ const ProfileEditor = () => {
                                     </Box>
                                 )}
 
-                                <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
-                                    Upload Resume
-                                    <input type="file" hidden accept=".pdf" onChange={handleResumeChange} />
-                                </Button>
+                                <Box display="flex" gap={2}>
+                                    <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+                                        Upload Resume
+                                        <input type="file" hidden accept=".pdf" onChange={handleResumeChange} />
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        onClick={() => navigate('/admin/resumes')}
+                                    >
+                                        Manage Resume Versions
+                                    </Button>
+                                </Box>
                             </Grid>
                         </Grid>
                     </Grid>

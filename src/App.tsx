@@ -10,6 +10,7 @@ import Overview from './components/dashboard/Overview';
 import ProfileEditor from './components/dashboard/ProfileEditor';
 import ProjectsList from './components/dashboard/ProjectsList';
 import ProjectEditor from './components/dashboard/ProjectEditor';
+import ResumeManager from './components/dashboard/ResumeManager';
 
 function App() {
     return (
@@ -31,6 +32,7 @@ function App() {
                                 <Route path="projects" element={<ProjectsList />} />
                                 <Route path="projects/new" element={<ProjectEditor />} />
                                 <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
+                                <Route path="resumes" element={<ResumeManager />} />
                             </Route>
                         </Route>
                     </Routes>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Models } from 'appwrite';
 import { getProfileData } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
+import { getActiveResumeVersion } from './services/resumeService';
 
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
@@ -27,10 +28,24 @@ function Portfolio() {
                     setProfileImageUrl(imageUrl);
                 }
 
-                // Get resume URL if available
-                if (profileData && profileData.resumeFileId) {
-                    const fileUrl = getFileUrl(profileData.resumeFileId);
-                    setResumeUrl(fileUrl);
+                // Try to get active resume from versioning system first
+                try {
+                    const activeResume = await getActiveResumeVersion();
+                    if (activeResume) {
+                        const fileUrl = getFileUrl(activeResume.fileId);
+                        setResumeUrl(fileUrl);
+                    } else if (profileData && profileData.resumeFileId) {
+                        // Fallback to profile's resumeFileId if no active resume
+                        const fileUrl = getFileUrl(profileData.resumeFileId);
+                        setResumeUrl(fileUrl);
+                    }
+                } catch (error) {
+                    console.error('Error fetching active resume:', error);
+                    // Fallback to profile's resumeFileId if error
+                    if (profileData && profileData.resumeFileId) {
+                        const fileUrl = getFileUrl(profileData.resumeFileId);
+                        setResumeUrl(fileUrl);
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching profile for About section:', err);

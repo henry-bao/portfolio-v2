@@ -107,6 +107,9 @@ const Overview = () => {
                             <Button variant="outlined" onClick={() => navigate('/admin/projects/new')}>
                                 Add New Project
                             </Button>
+                            <Button variant="outlined" onClick={() => navigate('/admin/resumes')}>
+                                Manage Resumes
+                            </Button>
                             <Button variant="outlined" onClick={() => window.open('/', '_blank')}>
                                 View Portfolio
                             </Button>
