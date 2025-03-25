@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent, Grid, CircularProgress, Button, Paper } from '@mui/material';
+import { Box, Typography, Card, CardContent, CircularProgress, Button, Paper, Stack, Divider } from '@mui/material';
 import { getProfileData, getProjects, ProfileData, ProjectData } from '../../services/appwrite';
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
@@ -49,78 +49,114 @@ const Overview = () => {
     }
 
     return (
-        <Box>
+        <>
             <Typography variant="h4" component="h1" gutterBottom>
                 Overview
             </Typography>
 
-            <Grid container spacing={3}>
-                {/* Profile Summary Card */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Profile
-                            </Typography>
-                            {profileData ? (
-                                <>
-                                    <Typography variant="body1">Name: {profileData.name}</Typography>
-                                    <Typography variant="body1">Email: {profileData.email}</Typography>
-                                    <Box mt={2}>
-                                        <Button variant="contained" onClick={() => navigate('/admin/profile')}>
-                                            Edit Profile
-                                        </Button>
-                                    </Box>
-                                </>
-                            ) : (
-                                <Typography variant="body1" color="text.secondary">
-                                    No profile data found. Create your profile to get started.
+            <Box>
+                <Stack spacing={3}>
+                    {/* Top Cards Section - Flexbox layout */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 3,
+                        }}
+                    >
+                        {/* Profile Summary Card */}
+                        <Card
+                            sx={{
+                                flex: { xs: '1 1 100%', md: '1 1 calc(33% - 12px)' },
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
+                            <CardContent sx={{ flexGrow: 1 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Profile
                                 </Typography>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Grid>
+                                {profileData ? (
+                                    <>
+                                        <Typography variant="body1">Name: {profileData.name}</Typography>
+                                        <Typography variant="body1">Email: {profileData.email}</Typography>
+                                        <Box mt={2}>
+                                            <Button variant="contained" onClick={() => navigate('/admin/profile')}>
+                                                Edit Profile
+                                            </Button>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <Typography variant="body1" color="text.secondary">
+                                        No profile data found. Create your profile to get started.
+                                    </Typography>
+                                )}
+                            </CardContent>
+                        </Card>
 
-                {/* Projects Summary Card */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Projects
-                            </Typography>
-                            <Typography variant="body1">Total Projects: {projects.length}</Typography>
-                            <Box mt={2}>
-                                <Button variant="contained" onClick={() => navigate('/admin/projects')}>
-                                    Manage Projects
-                                </Button>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
+                        {/* Projects Summary Card */}
+                        <Card
+                            sx={{
+                                flex: { xs: '1 1 100%', md: '1 1 calc(33% - 12px)' },
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
+                            <CardContent sx={{ flexGrow: 1 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Projects
+                                </Typography>
+                                <Typography variant="body1">Total Projects: {projects.length}</Typography>
+                                <Box mt={2}>
+                                    <Button variant="contained" onClick={() => navigate('/admin/projects')}>
+                                        Manage Projects
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
 
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Resumes
-                            </Typography>
-                            <Typography variant="body1">Total Resumes: {resumes.length}</Typography>
-                            <Box mt={2}>
-                                <Button variant="contained" onClick={() => navigate('/admin/resumes')}>
-                                    Manage Resumes
-                                </Button>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
+                        {/* Resumes Card */}
+                        <Card
+                            sx={{
+                                flex: { xs: '1 1 100%', md: '1 1 calc(33% - 12px)' },
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
+                            <CardContent sx={{ flexGrow: 1 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Resumes
+                                </Typography>
+                                <Typography variant="body1">Total Resumes: {resumes.length}</Typography>
+                                <Box mt={2}>
+                                    <Button variant="contained" onClick={() => navigate('/admin/resumes')}>
+                                        Manage Resumes
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Box>
 
-                {/* Quick Actions */}
-                <Grid item xs={12}>
-                    <Paper sx={{ p: 3, mt: 2 }}>
+                    {/* Quick Actions Section */}
+                    <Paper
+                        elevation={1}
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                        }}
+                    >
                         <Typography variant="h6" gutterBottom>
                             Quick Actions
                         </Typography>
-                        <Box display="flex" gap={2} flexWrap="wrap">
+                        <Divider sx={{ mb: 2 }} />
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                flexWrap: 'wrap',
+                                justifyContent: 'flex-start',
+                            }}
+                        >
                             <Button variant="outlined" onClick={() => navigate('/admin/profile')}>
                                 Update Profile
                             </Button>
@@ -132,9 +168,9 @@ const Overview = () => {
                             </Button>
                         </Box>
                     </Paper>
-                </Grid>
-            </Grid>
-        </Box>
+                </Stack>
+            </Box>
+        </>
     );
 };
 

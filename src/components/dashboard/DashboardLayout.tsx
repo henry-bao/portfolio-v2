@@ -1,5 +1,5 @@
 import { useState, useEffect, JSX } from 'react';
-import { Outlet, useNavigate, ScrollRestoration } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
     AppBar,
     Box,
@@ -158,7 +158,6 @@ const DashboardLayout = () => {
 
     return (
         <Box sx={{ display: 'flex' }}>
-            <ScrollRestoration />
             <CssBaseline />
             <AppBar
                 position="fixed"
