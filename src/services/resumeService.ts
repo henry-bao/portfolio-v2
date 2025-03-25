@@ -108,6 +108,27 @@ export const setResumeAsActive = async (resumeId: string): Promise<void> => {
     }
 };
 
+// Update a resume version
+export const updateResumeVersion = async (
+    resumeId: string,
+    updates: { fileName?: string; description?: string }
+): Promise<Models.Document & ResumeVersion> => {
+    try {
+        // Update the document
+        const result = await databases.updateDocument(
+            DATABASE_ID,
+            RESUME_COLLECTION_ID,
+            resumeId,
+            updates
+        );
+        
+        return result as Models.Document & ResumeVersion;
+    } catch (error) {
+        console.error('Error updating resume version:', error);
+        throw error;
+    }
+};
+
 // Delete a resume version
 export const deleteResumeVersion = async (resumeId: string, fileId: string): Promise<void> => {
     try {

@@ -31,6 +31,8 @@ import {
     Description as FileIcon,
     Upload as UploadIcon,
     Visibility as VisibilityIcon,
+    Edit as EditIcon,
+    Save as SaveIcon,
 } from '@mui/icons-material';
 import { Models } from 'appwrite';
 import { getFileUrl } from '../../services/fileProxy';
@@ -39,6 +41,7 @@ import {
     addResumeVersion,
     setResumeAsActive,
     deleteResumeVersion,
+    updateResumeVersion,
     ResumeVersion,
 } from '../../services/resumeService';
 
@@ -55,6 +58,13 @@ const ResumeManager = () => {
     const [resumeToDelete, setResumeToDelete] = useState<{ id: string; fileId: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSettingActive, setIsSettingActive] = useState(false);
+
+    // Edit resume state
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [resumeToEdit, setResumeToEdit] = useState<(Models.Document & ResumeVersion) | null>(null);
+    const [editFileName, setEditFileName] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
 
     // Responsive design hooks
     const theme = useTheme();
@@ -143,6 +153,46 @@ const ResumeManager = () => {
             setError('Failed to delete resume');
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleEditClick = (resume: Models.Document & ResumeVersion) => {
+        setResumeToEdit(resume);
+        setEditFileName(resume.fileName);
+        setEditDescription(resume.description || '');
+        setEditDialogOpen(true);
+    };
+
+    const handleEditCancel = () => {
+        setEditDialogOpen(false);
+        setResumeToEdit(null);
+        setEditFileName('');
+        setEditDescription('');
+    };
+
+    const handleEditConfirm = async () => {
+        if (!resumeToEdit) return;
+
+        setIsEditing(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            await updateResumeVersion(resumeToEdit.$id, {
+                fileName: editFileName,
+                description: editDescription,
+            });
+            setSuccess('Resume updated successfully');
+            setEditDialogOpen(false);
+            setResumeToEdit(null);
+            setEditFileName('');
+            setEditDescription('');
+            await fetchResumeVersions();
+        } catch (error) {
+            console.error('Error updating resume:', error);
+            setError('Failed to update resume');
+        } finally {
+            setIsEditing(false);
         }
     };
 
@@ -281,6 +331,15 @@ const ResumeManager = () => {
                                                     <VisibilityIcon fontSize={isMobile ? 'small' : 'medium'} />
                                                 </IconButton>
                                                 <IconButton
+                                                    color="primary"
+                                                    onClick={() => handleEditClick(resume)}
+                                                    size={isMobile ? 'small' : 'medium'}
+                                                    sx={{ mr: isMobile ? 0 : 1 }}
+                                                    title="Edit resume details"
+                                                >
+                                                    <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                </IconButton>
+                                                <IconButton
                                                     color="error"
                                                     onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
                                                     disabled={isDeleting}
@@ -354,6 +413,61 @@ const ResumeManager = () => {
                         startIcon={isDeleting ? <CircularProgress size={20} /> : null}
                     >
                         {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Edit Dialog */}
+            <Dialog
+                open={editDialogOpen}
+                onClose={handleEditCancel}
+                maxWidth="sm"
+                fullWidth
+                slotProps={{
+                    paper: {
+                        sx: {
+                            overflowX: 'hidden',
+                            '& .MuiDialogContent-root': {
+                                overflowX: 'hidden',
+                            },
+                        },
+                    },
+                }}
+            >
+                <DialogTitle>Edit Resume Details</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 2 }}>
+                        Edit the file name and description for this resume version.
+                    </DialogContentText>
+                    <TextField
+                        fullWidth
+                        label="File Name"
+                        value={editFileName}
+                        onChange={(e) => setEditFileName(e.target.value)}
+                        sx={{ mb: 2 }}
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        label="Description (optional)"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder="e.g., Updated with recent project, Fixed formatting issues"
+                        multiline
+                        rows={2}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleEditCancel} disabled={isEditing}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleEditConfirm}
+                        color="primary"
+                        disabled={isEditing || !editFileName.trim()}
+                        startIcon={isEditing ? <CircularProgress size={20} /> : <SaveIcon />}
+                    >
+                        {isEditing ? 'Saving...' : 'Save'}
                     </Button>
                 </DialogActions>
             </Dialog>
