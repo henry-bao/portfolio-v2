@@ -20,6 +20,8 @@ import {
     DialogTitle,
     TextField,
     Chip,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -28,6 +30,7 @@ import {
     RadioButtonUnchecked as InactiveIcon,
     Description as FileIcon,
     Upload as UploadIcon,
+    Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { Models } from 'appwrite';
 import { getFileUrl } from '../../services/fileProxy';
@@ -52,6 +55,11 @@ const ResumeManager = () => {
     const [resumeToDelete, setResumeToDelete] = useState<{ id: string; fileId: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSettingActive, setIsSettingActive] = useState(false);
+
+    // Responsive design hooks
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect(() => {
         fetchResumeVersions();
@@ -185,10 +193,10 @@ const ResumeManager = () => {
         <Box>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                 <Typography variant="h4" component="h1">
-                    Resume Manager
+                    Resumes
                 </Typography>
                 <Button variant="contained" color="primary" startIcon={<AddIcon />} component="label">
-                    Upload New Resume
+                    {isMobile ? 'Upload' : 'Upload New Resume'}
                     <input type="file" hidden accept=".pdf" onChange={handleResumeFileChange} />
                 </Button>
             </Box>
@@ -206,21 +214,21 @@ const ResumeManager = () => {
             )}
 
             <Paper>
-                <TableContainer>
-                    <Table>
+                <TableContainer sx={{ overflowX: 'auto', overflow: 'hidden' }}>
+                    <Table sx={{ tableLayout: 'fixed' }}>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Status</TableCell>
+                                <TableCell width={isTablet ? '20%' : 'inherit'}>Status</TableCell>
                                 <TableCell>File Name</TableCell>
-                                <TableCell>Upload Date</TableCell>
-                                <TableCell>Description</TableCell>
+                                {!isMobile && <TableCell>Upload Date</TableCell>}
+                                {!isTablet && <TableCell>Description</TableCell>}
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {resumeVersions.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center">
+                                    <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
                                         No resume versions found. Upload your first resume!
                                     </TableCell>
                                 </TableRow>
@@ -231,56 +239,56 @@ const ResumeManager = () => {
                                             {resume.isActive ? (
                                                 <Chip
                                                     icon={<ActiveIcon />}
-                                                    label="Active"
+                                                    label={isTablet ? '' : 'Active'}
                                                     color="success"
                                                     variant="outlined"
+                                                    sx={{
+                                                        '& .MuiChip-label': {
+                                                            padding: isTablet ? 0.6 : undefined,
+                                                        },
+                                                    }}
                                                 />
                                             ) : (
                                                 <Chip
                                                     icon={<InactiveIcon />}
-                                                    label="Inactive"
+                                                    label={isTablet ? '' : 'Set Active'}
                                                     color="default"
                                                     variant="outlined"
+                                                    onClick={() => handleSetActive(resume.$id)}
+                                                    disabled={isSettingActive}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        '& .MuiChip-label': {
+                                                            padding: isTablet ? 0.6 : undefined,
+                                                        },
+                                                    }}
                                                 />
                                             )}
                                         </TableCell>
-                                        <TableCell>
-                                            <Box display="flex" alignItems="center">
-                                                <FileIcon sx={{ mr: 1 }} />
-                                                {resume.fileName}
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>{formatDate(resume.uploadDate)}</TableCell>
-                                        <TableCell>{resume.description || '-'}</TableCell>
+                                        <TableCell sx={{ wordBreak: 'break-word' }}>{resume.fileName}</TableCell>
+                                        {!isMobile && <TableCell>{formatDate(resume.uploadDate)}</TableCell>}
+                                        {!isTablet && <TableCell>{resume.description || '-'}</TableCell>}
                                         <TableCell align="right">
-                                            <Button
-                                                variant="outlined"
-                                                size="small"
-                                                href={getFileUrl(resume.fileId)}
-                                                target="_blank"
-                                                sx={{ mr: 1 }}
-                                            >
-                                                View
-                                            </Button>
-                                            {!resume.isActive && (
-                                                <Button
-                                                    variant="contained"
-                                                    size="small"
+                                            <Box>
+                                                <IconButton
                                                     color="primary"
-                                                    onClick={() => handleSetActive(resume.$id)}
-                                                    disabled={isSettingActive}
-                                                    sx={{ mr: 1 }}
+                                                    href={getFileUrl(resume.fileId)}
+                                                    target="_blank"
+                                                    size={isMobile ? 'small' : 'medium'}
+                                                    sx={{ mr: isMobile ? 0 : 1 }}
+                                                    title="View resume"
                                                 >
-                                                    Set Active
-                                                </Button>
-                                            )}
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
-                                                disabled={isDeleting}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
+                                                    <VisibilityIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                </IconButton>
+                                                <IconButton
+                                                    color="error"
+                                                    onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
+                                                    disabled={isDeleting}
+                                                    size={isMobile ? 'small' : 'medium'}
+                                                >
+                                                    <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                </IconButton>
+                                            </Box>
                                         </TableCell>
                                     </TableRow>
                                 ))
