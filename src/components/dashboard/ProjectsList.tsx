@@ -23,7 +23,12 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, DragIndicator as DragIndicatorIcon } from '@mui/icons-material';
+import {
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    DragIndicator as DragIndicatorIcon,
+} from '@mui/icons-material';
 import { getProjects, deleteProject, updateProject, ProjectData } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
@@ -73,7 +78,6 @@ const SortableTableRow = ({
         transition,
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 1 : 0,
-        position: 'relative' as const,
     };
 
     return (
@@ -104,17 +108,9 @@ const SortableTableRow = ({
             </TableCell>
             <TableCell>
                 {projectImages[project.$id] ? (
-                    <Avatar
-                        src={projectImages[project.$id]}
-                        alt={project.title}
-                        sx={{ width: 40, height: 40 }}
-                    />
+                    <Avatar src={projectImages[project.$id]} alt={project.title} sx={{ width: 40, height: 40 }} />
                 ) : (
-                    <Avatar
-                        src="/img/placeholder.svg"
-                        alt={project.title}
-                        sx={{ width: 40, height: 40 }}
-                    />
+                    <Avatar src="/img/placeholder.svg" alt={project.title} sx={{ width: 40, height: 40 }} />
                 )}
             </TableCell>
             <TableCell>{project.title}</TableCell>
@@ -129,18 +125,10 @@ const SortableTableRow = ({
                 </>
             )}
             <TableCell align="right">
-                <IconButton
-                    color="primary"
-                    onClick={() => onEdit(project.$id)}
-                    title="Edit project"
-                >
+                <IconButton color="primary" onClick={() => onEdit(project.$id)} title="Edit project">
                     <EditIcon />
                 </IconButton>
-                <IconButton
-                    color="error"
-                    onClick={() => onDelete(project.$id)}
-                    title="Delete project"
-                >
+                <IconButton color="error" onClick={() => onDelete(project.$id)} title="Delete project">
                     <DeleteIcon />
                 </IconButton>
             </TableCell>
@@ -191,22 +179,26 @@ const ProjectsList = () => {
         setIsLoading(true);
         try {
             const projectsList = await getProjects();
-            
+
             // Check if any projects are missing the order property
-            const hasUnorderedProjects = projectsList.some(project => project.order === undefined);
-            
+            const hasUnorderedProjects = projectsList.some((project) => project.order === undefined);
+
             if (hasUnorderedProjects) {
                 // Initialize order for projects that don't have it
                 const projectsWithOrder = [...projectsList].map((project, index) => ({
                     ...project,
-                    order: project.order !== undefined ? project.order : index
+                    order: project.order !== undefined ? project.order : index,
                 }));
-                
+
                 // Update the order in the database for projects that don't have it
                 const updatePromises = projectsWithOrder
-                    .filter(project => project.order !== undefined && projectsList.find(p => p.$id === project.$id)?.order === undefined)
-                    .map(project => updateProject(project.$id, { order: project.order }));
-                
+                    .filter(
+                        (project) =>
+                            project.order !== undefined &&
+                            projectsList.find((p) => p.$id === project.$id)?.order === undefined
+                    )
+                    .map((project) => updateProject(project.$id, { order: project.order }));
+
                 if (updatePromises.length > 0) {
                     await Promise.all(updatePromises);
                     // Refetch projects after updating orders
@@ -237,26 +229,26 @@ const ProjectsList = () => {
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
-        
+
         if (!over || active.id === over.id) {
             return;
         }
-        
+
         setIsUpdatingOrder(true);
         try {
             // Find the indices of the dragged item and the drop target
             const oldIndex = projects.findIndex((project) => project.$id === active.id);
             const newIndex = projects.findIndex((project) => project.$id === over.id);
-            
+
             // Update the projects array with the new order
             const updatedProjects = arrayMove(projects, oldIndex, newIndex);
             setProjects(updatedProjects);
-            
+
             // Update the order property for each project
             const updatePromises = updatedProjects.map((project, index) =>
                 updateProject(project.$id, { order: index })
             );
-            
+
             await Promise.all(updatePromises);
         } catch (error) {
             console.error('Error updating project order:', error);
@@ -358,8 +350,13 @@ const ProjectsList = () => {
             </Box>
 
             <Paper>
-                <TableContainer sx={{ overflowX: 'auto' }}>
-                    <Table>
+                <TableContainer
+                    sx={{
+                        overflowX: 'auto',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell padding="none" width="50px"></TableCell>
@@ -379,7 +376,7 @@ const ProjectsList = () => {
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
-                        <TableBody>
+                        <TableBody sx={{ position: 'relative', overflow: 'hidden' }}>
                             {projects.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={isMobile ? 4 : 6} align="center">
@@ -391,9 +388,25 @@ const ProjectsList = () => {
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
                                     onDragEnd={handleDragEnd}
+                                    // Add configuration to prevent out-of-bounds issues and improve mobile experience
+                                    autoScroll={{
+                                        threshold: {
+                                            x: 0, // Disable horizontal scrolling
+                                            y: 0.15, // Lower threshold for mobile
+                                        },
+                                        acceleration: 10, // Faster acceleration for mobile
+                                        interval: 10, // Less frequent updates for better performance on mobile
+                                    }}
+                                    // Use a custom modifier to restrict movement to vertical axis only
+                                    modifiers={[
+                                        ({ transform }) => ({
+                                            ...transform,
+                                            x: 0, // Lock horizontal movement
+                                        }),
+                                    ]}
                                 >
                                     <SortableContext
-                                        items={projects.map(project => project.$id)}
+                                        items={projects.map((project) => project.$id)}
                                         strategy={verticalListSortingStrategy}
                                     >
                                         {projects.map((project) => (
