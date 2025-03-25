@@ -40,6 +40,7 @@ export interface ProjectData {
     link_url?: string;
     link_text?: string;
     isOpen?: boolean;
+    order?: number;
 }
 
 // Authentication functions
@@ -174,7 +175,14 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
 // Database functions for projects
 export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> => {
     try {
-        const data = await databases.listDocuments(DATABASE_ID, PROJECTS_COLLECTION_ID);
+        // Query with sorting by order field
+        const data = await databases.listDocuments(
+            DATABASE_ID,
+            PROJECTS_COLLECTION_ID,
+            [
+                Query.orderAsc('order') // Sort by order ascending
+            ]
+        );
 
         return data.documents as (Models.Document & ProjectData)[];
     } catch (error) {
