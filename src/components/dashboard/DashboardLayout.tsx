@@ -82,6 +82,7 @@ const DashboardLayout = () => {
     const handleMenuItemClick = (path: string) => {
         if (mobileOpen) setMobileOpen(false);
         navigate(path);
+        window.scrollTo(0, 0);
     };
 
     const handleDrawerToggle = () => {
@@ -95,6 +96,7 @@ const DashboardLayout = () => {
     const handleLogout = async () => {
         await logout();
         navigate('/admin/login');
+        window.scrollTo(0, 0);
     };
 
     const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
@@ -178,7 +180,14 @@ const DashboardLayout = () => {
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         Dashboard
                     </Typography>
-                    <Button color="inherit" onClick={() => navigate('/')} startIcon={<Home />}>
+                    <Button
+                        color="inherit"
+                        onClick={() => {
+                            navigate('/');
+                            window.scrollTo(0, 0);
+                        }}
+                        startIcon={<Home />}
+                    >
                         Home
                     </Button>
                 </Toolbar>
