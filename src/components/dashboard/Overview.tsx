@@ -3,10 +3,12 @@ import { Box, Typography, Card, CardContent, Grid, CircularProgress, Button, Pap
 import { getProfileData, getProjects, ProfileData, ProjectData } from '../../services/appwrite';
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
+import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
 
 const Overview = () => {
     const [profileData, setProfileData] = useState<(Models.Document & ProfileData) | null>(null);
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
+    const [resumes, setResumes] = useState<(Models.Document & ResumeVersion)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -16,9 +18,11 @@ const Overview = () => {
             try {
                 const profile = await getProfileData();
                 const projectsList = await getProjects();
+                const resumeList = await getResumeVersions();
 
                 setProfileData(profile);
                 setProjects(projectsList);
+                setResumes(resumeList);
             } catch (error) {
                 console.error('Error fetching overview data:', error);
             } finally {
@@ -94,6 +98,22 @@ const Overview = () => {
                     </Card>
                 </Grid>
 
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                Resumes
+                            </Typography>
+                            <Typography variant="body1">Total Resumes: {resumes.length}</Typography>
+                            <Box mt={2}>
+                                <Button variant="contained" onClick={() => navigate('/admin/resumes')}>
+                                    Manage Resumes
+                                </Button>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
                 {/* Quick Actions */}
                 <Grid item xs={12}>
                     <Paper sx={{ p: 3, mt: 2 }}>
@@ -106,9 +126,6 @@ const Overview = () => {
                             </Button>
                             <Button variant="outlined" onClick={() => navigate('/admin/projects/new')}>
                                 Add New Project
-                            </Button>
-                            <Button variant="outlined" onClick={() => navigate('/admin/resumes')}>
-                                Manage Resumes
                             </Button>
                             <Button variant="outlined" onClick={() => window.open('/', '_blank')}>
                                 View Portfolio
