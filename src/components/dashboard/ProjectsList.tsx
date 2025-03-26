@@ -81,18 +81,20 @@ const SortableTableRow = ({
 
     return (
         <TableRow ref={setNodeRef} style={style}>
-            {!isTablet && (
-                <TableCell padding="none" width="40px">
-                    <IconButton
-                        {...attributes}
-                        {...listeners}
-                        size="small"
-                        sx={{ cursor: 'grab', color: 'text.secondary' }}
-                    >
-                        <DragIndicatorIcon />
-                    </IconButton>
-                </TableCell>
-            )}
+            <TableCell padding="none" width="40px">
+                <IconButton
+                    {...attributes}
+                    {...listeners}
+                    size="small"
+                    sx={{
+                        cursor: 'grab',
+                        color: 'text.secondary',
+                        touchAction: 'none',
+                    }}
+                >
+                    <DragIndicatorIcon />
+                </IconButton>
+            </TableCell>
             <TableCell>
                 {projectImages[project.$id] ? (
                     <Avatar src={projectImages[project.$id]} alt={project.title} sx={{ width: 40, height: 40 }} />
@@ -322,7 +324,7 @@ const ProjectsList = () => {
                     <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
                         <TableHead>
                             <TableRow>
-                                {!isTablet && <TableCell padding="none" width="40px"></TableCell>}
+                                <TableCell padding="none" width="40px"></TableCell>
                                 <TableCell width="60px"></TableCell>
                                 <TableCell>Title</TableCell>
                                 {!isMobile && (
@@ -335,7 +337,6 @@ const ProjectsList = () => {
                                         <TableCell>Date</TableCell>
                                     </>
                                 )}
-
                                 <TableCell align="right">Actions</TableCell>
                             </TableRow>
                         </TableHead>
