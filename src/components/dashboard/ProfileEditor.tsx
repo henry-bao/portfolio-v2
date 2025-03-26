@@ -89,13 +89,14 @@ const SortableChip = ({ id, label, onDelete, isDraggedOver }: SortableChipProps)
                 padding: 0,
                 position: 'relative',
                 borderRadius: '16px',
+                cursor: 'grab',
             }}
             {...attributes}
             {...listeners}
         >
             <RegularChip
                 label={label}
-                onDelete={isDragging ? undefined : onDelete}
+                onDelete={onDelete}
                 sx={{
                     backgroundColor: isDraggedOver ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
                     height: '32px',
@@ -131,16 +132,18 @@ const ProfileEditor = () => {
     const [success, setSuccess] = useState('');
 
     // Form fields
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [pronouns, setPronouns] = useState<string[]>([]);
-    const [newPronoun, setNewPronoun] = useState('');
-    const [education, setEducation] = useState<string[]>([]);
-    const [newEducation, setNewEducation] = useState('');
-    const [languages, setLanguages] = useState<string[]>([]);
-    const [newLanguage, setNewLanguage] = useState('');
-    const [linkedin, setLinkedin] = useState('');
-    const [github, setGithub] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        pronouns: [] as string[],
+        newPronoun: '',
+        education: [] as string[],
+        newEducation: '',
+        languages: [] as string[],
+        newLanguage: '',
+        linkedin: '',
+        github: '',
+    });
 
     // File uploads
     const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -179,13 +182,18 @@ const ProfileEditor = () => {
 
                     // Map Appwrite document fields to our form fields
                     const mappedData = mapDocumentToProfileData(profileData);
-                    setName(mappedData.name);
-                    setEmail(mappedData.email);
-                    setPronouns(mappedData.pronouns || []);
-                    setEducation(mappedData.education || []);
-                    setLanguages(mappedData.languages || []);
-                    setLinkedin(mappedData.linkedin || '');
-                    setGithub(mappedData.github || '');
+                    setFormData({
+                        name: mappedData.name,
+                        email: mappedData.email,
+                        pronouns: mappedData.pronouns || [],
+                        newPronoun: '',
+                        education: mappedData.education || [],
+                        newEducation: '',
+                        languages: mappedData.languages || [],
+                        newLanguage: '',
+                        linkedin: mappedData.linkedin || '',
+                        github: mappedData.github || '',
+                    });
 
                     // Load image preview if exists
                     if (mappedData.profileImageId) {
@@ -231,36 +239,63 @@ const ProfileEditor = () => {
     };
 
     const handleAddPronoun = () => {
-        if (newPronoun.trim() !== '') {
-            setPronouns([...pronouns, newPronoun.trim()]);
-            setNewPronoun('');
+        if (formData.newPronoun.trim() !== '') {
+            setFormData({
+                ...formData,
+                pronouns: [...formData.pronouns, formData.newPronoun.trim()],
+                newPronoun: '',
+            });
         }
     };
 
     const handleRemovePronoun = (index: number) => {
-        setPronouns(pronouns.filter((_, i) => i !== index));
+        setFormData({
+            ...formData,
+            pronouns: formData.pronouns.filter((_, i) => i !== index),
+        });
     };
 
     const handleAddEducation = () => {
-        if (newEducation.trim() !== '') {
-            setEducation([...education, newEducation.trim()]);
-            setNewEducation('');
+        if (formData.newEducation.trim() !== '') {
+            setFormData({
+                ...formData,
+                education: [...formData.education, formData.newEducation.trim()],
+                newEducation: '',
+            });
         }
     };
 
     const handleRemoveEducation = (index: number) => {
-        setEducation(education.filter((_, i) => i !== index));
+        setFormData({
+            ...formData,
+            education: formData.education.filter((_, i) => i !== index),
+        });
     };
 
     const handleAddLanguage = () => {
-        if (newLanguage.trim() !== '') {
-            setLanguages([...languages, newLanguage.trim()]);
-            setNewLanguage('');
+        if (formData.newLanguage.trim() !== '') {
+            setFormData({
+                ...formData,
+                languages: [...formData.languages, formData.newLanguage.trim()],
+                newLanguage: '',
+            });
         }
     };
 
     const handleRemoveLanguage = (index: number) => {
-        setLanguages(languages.filter((_, i) => i !== index));
+        setFormData({
+            ...formData,
+            languages: formData.languages.filter((_, i) => i !== index),
+        });
+    };
+
+    // Handle form field changes
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
     };
 
     // Handle drag over to track the hover state
@@ -302,10 +337,14 @@ const ProfileEditor = () => {
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
-            setPronouns((items) => {
+            setFormData((prev) => {
+                const items = [...prev.pronouns];
                 const oldIndex = items.findIndex((item) => `pronoun-${item}` === active.id);
                 const newIndex = items.findIndex((item) => `pronoun-${item}` === over.id);
-                return arrayMove(items, oldIndex, newIndex);
+                return {
+                    ...prev,
+                    pronouns: arrayMove(items, oldIndex, newIndex),
+                };
             });
         }
     };
@@ -316,10 +355,14 @@ const ProfileEditor = () => {
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
-            setEducation((items) => {
+            setFormData((prev) => {
+                const items = [...prev.education];
                 const oldIndex = items.findIndex((item) => `education-${item}` === active.id);
                 const newIndex = items.findIndex((item) => `education-${item}` === over.id);
-                return arrayMove(items, oldIndex, newIndex);
+                return {
+                    ...prev,
+                    education: arrayMove(items, oldIndex, newIndex),
+                };
             });
         }
     };
@@ -330,17 +373,21 @@ const ProfileEditor = () => {
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
-            setLanguages((items) => {
+            setFormData((prev) => {
+                const items = [...prev.languages];
                 const oldIndex = items.findIndex((item) => `language-${item}` === active.id);
                 const newIndex = items.findIndex((item) => `language-${item}` === over.id);
-                return arrayMove(items, oldIndex, newIndex);
+                return {
+                    ...prev,
+                    languages: arrayMove(items, oldIndex, newIndex),
+                };
             });
         }
     };
 
     const handleSave = async () => {
         // Validate required fields
-        if (!name.trim() || !email.trim()) {
+        if (!formData.name.trim() || !formData.email.trim()) {
             setError('Name and email are required');
             return;
         }
@@ -400,13 +447,13 @@ const ProfileEditor = () => {
 
             // Prepare profile data
             const profileData: ProfileData = {
-                name,
-                email,
-                pronouns,
-                education,
-                languages,
-                linkedin,
-                github,
+                name: formData.name,
+                email: formData.email,
+                pronouns: formData.pronouns,
+                education: formData.education,
+                languages: formData.languages,
+                linkedin: formData.linkedin,
+                github: formData.github,
                 profileImageId,
                 resumeFileId,
             };
@@ -477,8 +524,9 @@ const ProfileEditor = () => {
                                 <TextField
                                     fullWidth
                                     label="Name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
                                     margin="normal"
                                     required
                                 />
@@ -487,8 +535,9 @@ const ProfileEditor = () => {
                                 <TextField
                                     fullWidth
                                     label="Email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
                                     margin="normal"
                                     required
                                 />
@@ -507,8 +556,9 @@ const ProfileEditor = () => {
                             <TextField
                                 fullWidth
                                 label="Add Pronoun"
-                                value={newPronoun}
-                                onChange={(e) => setNewPronoun(e.target.value)}
+                                name="newPronoun"
+                                value={formData.newPronoun}
+                                onChange={handleInputChange}
                                 margin="normal"
                             />
                             <Button
@@ -531,7 +581,7 @@ const ProfileEditor = () => {
                                 onDragCancel={resetDragStates}
                             >
                                 <SortableContext
-                                    items={pronouns.map((p) => `pronoun-${p}`)}
+                                    items={formData.pronouns.map((p) => `pronoun-${p}`)}
                                     strategy={rectSortingStrategy}
                                 >
                                     <Box
@@ -543,7 +593,7 @@ const ProfileEditor = () => {
                                             position: 'relative',
                                         }}
                                     >
-                                        {pronouns.map((pronoun, index) => (
+                                        {formData.pronouns.map((pronoun, index) => (
                                             <SortableChip
                                                 key={`pronoun-${pronoun}`}
                                                 id={`pronoun-${pronoun}`}
@@ -574,8 +624,9 @@ const ProfileEditor = () => {
                             <TextField
                                 fullWidth
                                 label="Add Education"
-                                value={newEducation}
-                                onChange={(e) => setNewEducation(e.target.value)}
+                                name="newEducation"
+                                value={formData.newEducation}
+                                onChange={handleInputChange}
                                 margin="normal"
                             />
                             <Button
@@ -598,7 +649,7 @@ const ProfileEditor = () => {
                                 onDragCancel={resetDragStates}
                             >
                                 <SortableContext
-                                    items={education.map((e) => `education-${e}`)}
+                                    items={formData.education.map((e) => `education-${e}`)}
                                     strategy={rectSortingStrategy}
                                 >
                                     <Box
@@ -610,7 +661,7 @@ const ProfileEditor = () => {
                                             position: 'relative',
                                         }}
                                     >
-                                        {education.map((edu, index) => (
+                                        {formData.education.map((edu, index) => (
                                             <SortableChip
                                                 key={`education-${edu}`}
                                                 id={`education-${edu}`}
@@ -641,8 +692,9 @@ const ProfileEditor = () => {
                             <TextField
                                 fullWidth
                                 label="Add Language"
-                                value={newLanguage}
-                                onChange={(e) => setNewLanguage(e.target.value)}
+                                name="newLanguage"
+                                value={formData.newLanguage}
+                                onChange={handleInputChange}
                                 margin="normal"
                             />
                             <Button
@@ -665,7 +717,7 @@ const ProfileEditor = () => {
                                 onDragCancel={resetDragStates}
                             >
                                 <SortableContext
-                                    items={languages.map((l) => `language-${l}`)}
+                                    items={formData.languages.map((l) => `language-${l}`)}
                                     strategy={rectSortingStrategy}
                                 >
                                     <Box
@@ -677,7 +729,7 @@ const ProfileEditor = () => {
                                             position: 'relative',
                                         }}
                                     >
-                                        {languages.map((language, index) => (
+                                        {formData.languages.map((language, index) => (
                                             <SortableChip
                                                 key={`language-${language}`}
                                                 id={`language-${language}`}
@@ -709,8 +761,9 @@ const ProfileEditor = () => {
                                 <TextField
                                     fullWidth
                                     label="LinkedIn URL"
-                                    value={linkedin}
-                                    onChange={(e) => setLinkedin(e.target.value)}
+                                    name="linkedin"
+                                    value={formData.linkedin}
+                                    onChange={handleInputChange}
                                     margin="normal"
                                 />
                             </Grid>
@@ -718,8 +771,9 @@ const ProfileEditor = () => {
                                 <TextField
                                     fullWidth
                                     label="GitHub URL"
-                                    value={github}
-                                    onChange={(e) => setGithub(e.target.value)}
+                                    name="github"
+                                    value={formData.github}
+                                    onChange={handleInputChange}
                                     margin="normal"
                                 />
                             </Grid>
