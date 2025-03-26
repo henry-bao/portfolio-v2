@@ -13,6 +13,26 @@ import {
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
+import {
+    DndContext,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+    closestCorners,
+    DragStartEvent,
+    DragOverlay,
+    DragOverEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SxProps, Theme } from '@mui/material/styles';
 
 // Helper function to map Appwrite document to ProfileData
 const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
@@ -27,6 +47,80 @@ const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
         profileImageId: doc.profileImageId || undefined,
         resumeFileId: doc.resumeFileId || undefined,
     };
+};
+
+// Regular Chip component (non-sortable)
+const RegularChip = ({ label, onDelete, sx = {} }: { label: string; onDelete?: () => void; sx?: SxProps<Theme> }) => {
+    return (
+        <Chip
+            label={label}
+            onDelete={onDelete}
+            color="primary"
+            variant="outlined"
+            sx={{
+                height: '32px',
+                margin: 0,
+                color: 'white',
+                ...sx,
+            }}
+        />
+    );
+};
+
+// Sortable Chip component
+interface SortableChipProps {
+    id: string;
+    label: string;
+    onDelete: () => void;
+    isDraggedOver?: boolean;
+}
+
+const SortableChip = ({ id, label, onDelete, isDraggedOver }: SortableChipProps) => {
+    const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={{
+                opacity: isDragging ? 0 : 1,
+                margin: '4px 8px 4px 0',
+                display: 'inline-block',
+                touchAction: 'none',
+                padding: 0,
+                position: 'relative',
+                borderRadius: '16px',
+            }}
+            {...attributes}
+            {...listeners}
+        >
+            <RegularChip
+                label={label}
+                onDelete={isDragging ? undefined : onDelete}
+                sx={{
+                    backgroundColor: isDraggedOver ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                    height: '32px',
+                    margin: 0,
+                    '& .MuiChip-label': {
+                        display: 'block',
+                        whiteSpace: 'nowrap',
+                    },
+                }}
+            />
+        </div>
+    );
+};
+
+// Modified DragOverlay component that ensures consistent size
+const StyledDragOverlay = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <DragOverlay
+            dropAnimation={null} // Disable drop animation to prevent any size changes
+            modifiers={[]} // No modifiers that might affect size
+            zIndex={1000}
+        >
+            {children}
+        </DragOverlay>
+    );
 };
 
 const ProfileEditor = () => {
@@ -54,6 +148,25 @@ const ProfileEditor = () => {
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [resumeFileName, setResumeFileName] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    // DnD sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    // Add new state for tracking active drag
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
+
+    // Track which item is being dragged over
+    const [overItemId, setOverItemId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -148,6 +261,81 @@ const ProfileEditor = () => {
 
     const handleRemoveLanguage = (index: number) => {
         setLanguages(languages.filter((_, i) => i !== index));
+    };
+
+    // Handle drag over to track the hover state
+    const handleDragOver = (event: DragOverEvent) => {
+        const { over } = event;
+        setOverItemId(over ? String(over.id) : null);
+    };
+
+    // Update all relevant drag handlers
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        const activeId = active.id as string;
+
+        // Determine which collection the item belongs to and what its label is
+        if (activeId.startsWith('pronoun-')) {
+            const label = activeId.replace('pronoun-', '');
+            setActiveDragData({ type: 'pronoun', label });
+        } else if (activeId.startsWith('education-')) {
+            const label = activeId.replace('education-', '');
+            setActiveDragData({ type: 'education', label });
+        } else if (activeId.startsWith('language-')) {
+            const label = activeId.replace('language-', '');
+            setActiveDragData({ type: 'language', label });
+        }
+
+        setActiveId(activeId);
+    };
+
+    // Reset all tracking states on drag end
+    const resetDragStates = () => {
+        setActiveId(null);
+        setActiveDragData(null);
+        setOverItemId(null);
+    };
+
+    const handleDragEndPronouns = (event: DragEndEvent) => {
+        resetDragStates();
+
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setPronouns((items) => {
+                const oldIndex = items.findIndex((item) => `pronoun-${item}` === active.id);
+                const newIndex = items.findIndex((item) => `pronoun-${item}` === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+
+    const handleDragEndEducation = (event: DragEndEvent) => {
+        resetDragStates();
+
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setEducation((items) => {
+                const oldIndex = items.findIndex((item) => `education-${item}` === active.id);
+                const newIndex = items.findIndex((item) => `education-${item}` === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+
+    const handleDragEndLanguages = (event: DragEndEvent) => {
+        resetDragStates();
+
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setLanguages((items) => {
+                const oldIndex = items.findIndex((item) => `language-${item}` === active.id);
+                const newIndex = items.findIndex((item) => `language-${item}` === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
     };
 
     const handleSave = async () => {
@@ -333,16 +521,45 @@ const ProfileEditor = () => {
                             </Button>
                         </Box>
 
-                        <Box display="flex" flexWrap="wrap" gap={1}>
-                            {pronouns.map((pronoun, index) => (
-                                <Chip
-                                    key={index}
-                                    label={pronoun}
-                                    onDelete={() => handleRemovePronoun(index)}
-                                    color="primary"
-                                    variant="outlined"
-                                />
-                            ))}
+                        <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCorners}
+                                onDragStart={handleDragStart}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEndPronouns}
+                                onDragCancel={resetDragStates}
+                            >
+                                <SortableContext
+                                    items={pronouns.map((p) => `pronoun-${p}`)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <Box
+                                        display="flex"
+                                        flexWrap="wrap"
+                                        width="100%"
+                                        sx={{
+                                            minHeight: '50px',
+                                            position: 'relative',
+                                        }}
+                                    >
+                                        {pronouns.map((pronoun, index) => (
+                                            <SortableChip
+                                                key={`pronoun-${pronoun}`}
+                                                id={`pronoun-${pronoun}`}
+                                                label={pronoun}
+                                                onDelete={() => handleRemovePronoun(index)}
+                                                isDraggedOver={overItemId === `pronoun-${pronoun}`}
+                                            />
+                                        ))}
+                                    </Box>
+                                </SortableContext>
+                                <StyledDragOverlay>
+                                    {activeId && activeDragData?.type === 'pronoun' ? (
+                                        <RegularChip label={activeDragData.label} onDelete={undefined} />
+                                    ) : null}
+                                </StyledDragOverlay>
+                            </DndContext>
                         </Box>
                     </Grid>
 
@@ -371,16 +588,45 @@ const ProfileEditor = () => {
                             </Button>
                         </Box>
 
-                        <Box display="flex" flexWrap="wrap" gap={1}>
-                            {education.map((edu, index) => (
-                                <Chip
-                                    key={index}
-                                    label={edu}
-                                    onDelete={() => handleRemoveEducation(index)}
-                                    color="primary"
-                                    variant="outlined"
-                                />
-                            ))}
+                        <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCorners}
+                                onDragStart={handleDragStart}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEndEducation}
+                                onDragCancel={resetDragStates}
+                            >
+                                <SortableContext
+                                    items={education.map((e) => `education-${e}`)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <Box
+                                        display="flex"
+                                        flexWrap="wrap"
+                                        width="100%"
+                                        sx={{
+                                            minHeight: '50px',
+                                            position: 'relative',
+                                        }}
+                                    >
+                                        {education.map((edu, index) => (
+                                            <SortableChip
+                                                key={`education-${edu}`}
+                                                id={`education-${edu}`}
+                                                label={edu}
+                                                onDelete={() => handleRemoveEducation(index)}
+                                                isDraggedOver={overItemId === `education-${edu}`}
+                                            />
+                                        ))}
+                                    </Box>
+                                </SortableContext>
+                                <StyledDragOverlay>
+                                    {activeId && activeDragData?.type === 'education' ? (
+                                        <RegularChip label={activeDragData.label} onDelete={undefined} />
+                                    ) : null}
+                                </StyledDragOverlay>
+                            </DndContext>
                         </Box>
                     </Grid>
 
@@ -409,16 +655,45 @@ const ProfileEditor = () => {
                             </Button>
                         </Box>
 
-                        <Box display="flex" flexWrap="wrap" gap={1}>
-                            {languages.map((language, index) => (
-                                <Chip
-                                    key={index}
-                                    label={language}
-                                    onDelete={() => handleRemoveLanguage(index)}
-                                    color="primary"
-                                    variant="outlined"
-                                />
-                            ))}
+                        <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCorners}
+                                onDragStart={handleDragStart}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEndLanguages}
+                                onDragCancel={resetDragStates}
+                            >
+                                <SortableContext
+                                    items={languages.map((l) => `language-${l}`)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <Box
+                                        display="flex"
+                                        flexWrap="wrap"
+                                        width="100%"
+                                        sx={{
+                                            minHeight: '50px',
+                                            position: 'relative',
+                                        }}
+                                    >
+                                        {languages.map((language, index) => (
+                                            <SortableChip
+                                                key={`language-${language}`}
+                                                id={`language-${language}`}
+                                                label={language}
+                                                onDelete={() => handleRemoveLanguage(index)}
+                                                isDraggedOver={overItemId === `language-${language}`}
+                                            />
+                                        ))}
+                                    </Box>
+                                </SortableContext>
+                                <StyledDragOverlay>
+                                    {activeId && activeDragData?.type === 'language' ? (
+                                        <RegularChip label={activeDragData.label} onDelete={undefined} />
+                                    ) : null}
+                                </StyledDragOverlay>
+                            </DndContext>
                         </Box>
                     </Grid>
 
