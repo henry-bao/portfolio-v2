@@ -265,14 +265,16 @@ const ResumeManager = () => {
 
             <Paper>
                 <TableContainer sx={{ overflowX: 'auto', overflow: 'hidden' }}>
-                    <Table sx={{ tableLayout: 'fixed' }}>
+                    <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell width={isTablet ? '20%' : 'inherit'}>Status</TableCell>
-                                <TableCell width={isMobile ? '50%' : 'inherit'}>File Name</TableCell>
-                                {!isMobile && <TableCell>Upload Date</TableCell>}
-                                {!isTablet && <TableCell>Description</TableCell>}
-                                <TableCell align="right">Actions</TableCell>
+                                <TableCell sx={{ width: { xs: '5%', sm: '15%' } }}>Status</TableCell>
+                                <TableCell sx={{ width: { xs: '40%', sm: '35%', lg: '20%' } }}>File Name</TableCell>
+                                {!isMobile && <TableCell sx={{ width: { sm: '20%' } }}>Upload Date</TableCell>}
+                                {!isTablet && <TableCell sx={{ width: { md: '25%' } }}>Description</TableCell>}
+                                <TableCell align="right" sx={{ width: { xs: '15%', sm: '10%' } }}>
+                                    Actions
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -319,13 +321,19 @@ const ResumeManager = () => {
                                         {!isMobile && <TableCell>{formatDate(resume.uploadDate)}</TableCell>}
                                         {!isTablet && <TableCell>{resume.description || '-'}</TableCell>}
                                         <TableCell align="right">
-                                            <Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'flex-end',
+                                                    gap: { xs: 0, sm: 1 },
+                                                    flexWrap: 'nowrap',
+                                                }}
+                                            >
                                                 <IconButton
                                                     color="primary"
                                                     href={getFileUrl(resume.fileId)}
                                                     target="_blank"
                                                     size={isMobile ? 'small' : 'medium'}
-                                                    sx={{ mr: isMobile ? 0 : 1 }}
                                                     title="View resume"
                                                 >
                                                     <VisibilityIcon fontSize={isMobile ? 'small' : 'medium'} />
@@ -334,7 +342,6 @@ const ResumeManager = () => {
                                                     color="primary"
                                                     onClick={() => handleEditClick(resume)}
                                                     size={isMobile ? 'small' : 'medium'}
-                                                    sx={{ mr: isMobile ? 0 : 1 }}
                                                     title="Edit resume details"
                                                 >
                                                     <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
