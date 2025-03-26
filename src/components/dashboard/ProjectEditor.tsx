@@ -13,8 +13,15 @@ import {
     FormControlLabel,
     Divider,
     IconButton,
+    Collapse,
 } from '@mui/material';
-import { Delete as DeleteIcon, Upload as UploadIcon, Add as AddIcon } from '@mui/icons-material';
+import {
+    Delete as DeleteIcon,
+    Upload as UploadIcon,
+    Add as AddIcon,
+    ExpandMore as ExpandMoreIcon,
+    ExpandLess as ExpandLessIcon,
+} from '@mui/icons-material';
 import { getProject, createProject, updateProject, uploadFile, deleteFile, ProjectData } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
@@ -42,6 +49,8 @@ const ProjectEditor = () => {
     // Logo upload
     const [logo, setLogo] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(true);
 
     useEffect(() => {
         if (isNewProject) {
@@ -265,35 +274,46 @@ const ProjectEditor = () => {
                             <Typography variant="h6" gutterBottom>
                                 Project Description
                             </Typography>
-                            <Button startIcon={<AddIcon />} onClick={handleAddDescriptionItem} size="small">
-                                Add Item
-                            </Button>
+                            <Box>
+                                <IconButton
+                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                    size="small"
+                                >
+                                    {isDescriptionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                </IconButton>
+                                <Button startIcon={<AddIcon />} onClick={handleAddDescriptionItem} size="small">
+                                    Add Item
+                                </Button>
+                            </Box>
                         </Box>
                         <Divider sx={{ mb: 2 }} />
 
-                        {description.map((item, index) => (
-                            <Box key={index} display="flex" alignItems="center" mb={2}>
-                                <TextField
-                                    fullWidth
-                                    label={`Description Item ${index + 1}`}
-                                    value={item}
-                                    onChange={(e) => handleDescriptionChange(index, e.target.value)}
-                                    margin="normal"
-                                    multiline
-                                    rows={2}
-                                    required
-                                />
-                                {description.length > 1 && (
-                                    <IconButton
-                                        color="error"
-                                        onClick={() => handleRemoveDescriptionItem(index)}
-                                        sx={{ ml: 1 }}
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                )}
-                            </Box>
-                        ))}
+                        <Collapse in={isDescriptionExpanded}>
+                            {description.map((item, index) => (
+                                <Box key={index} display="flex" alignItems="center" mb={2}>
+                                    <TextField
+                                        fullWidth
+                                        label={`Description Item ${index + 1}`}
+                                        value={item}
+                                        onChange={(e) => handleDescriptionChange(index, e.target.value)}
+                                        margin="normal"
+                                        multiline
+                                        minRows={2}
+                                        maxRows={10}
+                                        required
+                                    />
+                                    {description.length > 1 && (
+                                        <IconButton
+                                            color="error"
+                                            onClick={() => handleRemoveDescriptionItem(index)}
+                                            sx={{ ml: 1 }}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            ))}
+                        </Collapse>
                     </Grid>
 
                     {/* Project Link */}

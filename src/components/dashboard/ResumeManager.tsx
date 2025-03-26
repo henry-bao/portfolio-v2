@@ -269,7 +269,7 @@ const ResumeManager = () => {
                         <TableHead>
                             <TableRow>
                                 <TableCell width={isTablet ? '20%' : 'inherit'}>Status</TableCell>
-                                <TableCell>File Name</TableCell>
+                                <TableCell width={isMobile ? '50%' : 'inherit'}>File Name</TableCell>
                                 {!isMobile && <TableCell>Upload Date</TableCell>}
                                 {!isTablet && <TableCell>Description</TableCell>}
                                 <TableCell align="right">Actions</TableCell>
@@ -376,7 +376,8 @@ const ResumeManager = () => {
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="e.g., Updated with recent project, Fixed formatting issues"
                         multiline
-                        rows={2}
+                        minRows={2}
+                        maxRows={10}
                     />
                 </DialogContent>
                 <DialogActions>
@@ -454,7 +455,8 @@ const ResumeManager = () => {
                         onChange={(e) => setEditDescription(e.target.value)}
                         placeholder="e.g., Updated with recent project, Fixed formatting issues"
                         multiline
-                        rows={2}
+                        minRows={2}
+                        maxRows={10}
                     />
                 </DialogContent>
                 <DialogActions>
