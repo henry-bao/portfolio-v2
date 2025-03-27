@@ -64,10 +64,11 @@ const BlogList = () => {
                                     <div className="blog-list-card-content">
                                         <h2 className="blog-list-title">{post.title}</h2>
                                         <p className="blog-list-date">
-                                            {new Date(post.publishedDate).toLocaleDateString('en-US', {
+                                            {new Date(post.publishedDate).toLocaleString('en-US', {
                                                 year: 'numeric',
                                                 month: 'long',
                                                 day: 'numeric',
+                                                timeZone: 'UTC',
                                             })}
                                         </p>
                                         <p className="blog-list-summary">{post.summary}</p>

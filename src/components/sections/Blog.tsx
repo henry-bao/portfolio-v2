@@ -61,7 +61,12 @@ const Blog = () => {
                                         <div className="blog-card-content">
                                             <h3 className="blog-title">{post.title}</h3>
                                             <p className="blog-date">
-                                                {new Date(post.publishedDate).toLocaleDateString()}
+                                                {new Date(post.publishedDate).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    timeZone: 'UTC',
+                                                })}
                                             </p>
                                             <p className="blog-summary">{post.summary}</p>
 

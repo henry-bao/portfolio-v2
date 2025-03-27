@@ -101,10 +101,11 @@ const BlogPost = () => {
 
                     <div className="blog-post-meta">
                         <span className="blog-post-date">
-                            {new Date(post.publishedDate).toLocaleDateString('en-US', {
+                            {new Date(post.publishedDate).toLocaleString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
+                                timeZone: 'UTC',
                             })}
                         </span>
 

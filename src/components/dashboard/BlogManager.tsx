@@ -325,7 +325,14 @@ const BlogManager = () => {
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="body2" color="text.secondary">
-                                {new Date(post.publishedDate).toLocaleDateString()}
+                                {post.isDraft && post.lastSaved
+                                    ? `Last edited: ${new Date(post.lastSaved).toLocaleString()}`
+                                    : new Date(post.publishedDate).toLocaleString('en-US', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                          timeZone: 'UTC',
+                                      })}
                             </Typography>
 
                             {getStatusChip(post)}
@@ -420,7 +427,12 @@ const BlogManager = () => {
                             <TableCell>
                                 {post.isDraft && post.lastSaved
                                     ? `Last edited: ${new Date(post.lastSaved).toLocaleString()}`
-                                    : new Date(post.publishedDate).toLocaleDateString()}
+                                    : new Date(post.publishedDate).toLocaleString('en-US', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                          timeZone: 'UTC',
+                                      })}
                             </TableCell>
                             <TableCell>
                                 {getStatusChip(post)}
