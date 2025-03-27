@@ -180,6 +180,7 @@ const BlogManager = () => {
                                     <TableCell>Title</TableCell>
                                     <TableCell>Date</TableCell>
                                     <TableCell>Status</TableCell>
+                                    <TableCell>Views</TableCell>
                                     <TableCell>Tags</TableCell>
                                     <TableCell align="right">Actions</TableCell>
                                 </TableRow>
@@ -195,6 +196,9 @@ const BlogManager = () => {
                                                 color={post.published ? 'success' : 'default'}
                                                 label={post.published ? 'Published' : 'Draft'}
                                             />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2">{post.viewCount || 0}</Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Box

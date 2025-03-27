@@ -68,15 +68,21 @@ const BlogList = () => {
                                         </p>
                                         <p className="blog-list-summary">{post.summary}</p>
 
-                                        {post.tags && post.tags.length > 0 && (
-                                            <div className="blog-list-tags">
-                                                {post.tags.map((tag, index) => (
-                                                    <span key={index} className="blog-list-tag">
-                                                        {tag}
-                                                    </span>
-                                                ))}
+                                        <div className="blog-list-card-meta">
+                                            {post.tags && post.tags.length > 0 && (
+                                                <div className="blog-list-tags">
+                                                    {post.tags.map((tag, index) => (
+                                                        <span key={index} className="blog-list-tag">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className="blog-list-views">
+                                                <span>{post.viewCount || 0} views</span>
                                             </div>
-                                        )}
+                                        </div>
 
                                         <div className="read-more">Read more →</div>
                                     </div>

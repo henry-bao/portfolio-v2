@@ -3,10 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getBlogPostBySlug, BlogPost as BlogPostType } from '../../services/appwrite';
+import { getBlogPostBySlug, BlogPost as BlogPostType, incrementBlogPostViewCount } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
+import NotFound from '../NotFound';
 import './BlogPost.css';
 
 const BlogPost = () => {
@@ -30,6 +31,34 @@ const BlogPost = () => {
                 }
 
                 setPost(blogPost);
+
+                // Improved view counting logic
+                const handleViewCount = () => {
+                    // Skip counting in development mode
+                    if (import.meta.env.DEV) return;
+
+                    // Get viewed posts from localStorage
+                    const viewedPosts = JSON.parse(localStorage.getItem('henry-blog-viewed-posts') || '{}');
+                    const lastViewedTime = viewedPosts[blogPost.$id] || 0;
+                    const currentTime = Date.now();
+
+                    // Only count a view if it's been more than 24 hours since the last view
+                    // or if the post has never been viewed
+                    if (!lastViewedTime || currentTime - lastViewedTime > 24 * 60 * 60 * 1000) {
+                        // Record this view with the current timestamp
+                        viewedPosts[blogPost.$id] = currentTime;
+                        localStorage.setItem('henry-blog-viewed-posts', JSON.stringify(viewedPosts));
+
+                        // Increment the view count in the database
+                        incrementBlogPostViewCount(blogPost.$id);
+                    }
+                };
+
+                // Add a small delay to ensure the page is actually viewed
+                // This helps avoid counting accidental or bounce views
+                const timer = setTimeout(handleViewCount, 10000);
+
+                return () => clearTimeout(timer);
             } catch (err) {
                 console.error('Error fetching blog post:', err);
                 setError('Failed to load blog post');
@@ -54,21 +83,7 @@ const BlogPost = () => {
     }
 
     if (error || !post) {
-        return (
-            <>
-                <BlogNav />
-                <div className="blog-post-container">
-                    <div className="error-message">
-                        <h2>Error</h2>
-                        <p>{error || 'Blog post not found'}</p>
-                        <Link to="/blogs" className="back-button">
-                            Back to Blogs
-                        </Link>
-                    </div>
-                </div>
-                <Footer resumeUrl={null} />
-            </>
-        );
+        return <NotFound />;
     }
 
     return (
@@ -100,6 +115,10 @@ const BlogPost = () => {
                                 ))}
                             </div>
                         )}
+
+                        <div className="blog-post-views">
+                            <span>{post.viewCount || 0} views</span>
+                        </div>
                     </div>
 
                     {post.coverImageId && (

@@ -53,6 +53,7 @@ export interface BlogPost {
     publishedDate: string;
     published: boolean;
     tags?: string[];
+    viewCount?: number;
 }
 
 // Authentication functions
@@ -289,6 +290,7 @@ export const createBlogPost = async (data: BlogPost) => {
             slug: data.slug,
             publishedDate: data.publishedDate,
             published: data.published || false,
+            viewCount: data.viewCount || 0,
         };
 
         if (data.coverImageId) documentData.coverImageId = data.coverImageId;
@@ -313,6 +315,7 @@ export const updateBlogPost = async (postId: string, data: Partial<BlogPost>) =>
         if (data.published !== undefined) documentData.published = data.published;
         if (data.coverImageId !== undefined) documentData.coverImageId = data.coverImageId;
         if (data.tags !== undefined) documentData.tags = data.tags;
+        if (data.viewCount !== undefined) documentData.viewCount = data.viewCount;
 
         return await databases.updateDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId, documentData);
     } catch (error) {
@@ -328,5 +331,24 @@ export const deleteBlogPost = async (postId: string) => {
     } catch (error) {
         console.error('Error deleting blog post:', error);
         throw error;
+    }
+};
+
+export const incrementBlogPostViewCount = async (postId: string) => {
+    try {
+        // First get the current post to get the current view count
+        const post = await getBlogPost(postId);
+
+        // Increment the view count or set to 1 if it doesn't exist
+        const currentViewCount = post.viewCount || 0;
+        const newViewCount = currentViewCount + 1;
+
+        // Update the post with the new view count
+        return await updateBlogPost(postId, { viewCount: newViewCount });
+    } catch (error) {
+        console.error('Error incrementing blog post view count:', error);
+        // Don't throw error to avoid breaking the user experience
+        // Just silently fail
+        return null;
     }
 };
