@@ -360,7 +360,7 @@ const BlogManager = () => {
                         onClick={handleNewPost}
                         fullWidth={isMobile}
                     >
-                        New Blog Post
+                        New
                     </Button>
                 </Box>
 
