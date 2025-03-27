@@ -170,9 +170,12 @@
     width: 100%;
 }
 
-.loading-spinner {
+.blog-list-loading-spinner {
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
     padding: 4rem 0;
     color: rgba(200, 200, 200);
 }

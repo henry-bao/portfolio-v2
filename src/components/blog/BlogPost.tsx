@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getBlogPostBySlug, BlogPost as BlogPostType, incrementBlogPostViewCount } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
+import { LinearProgress } from '@mui/material';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
@@ -75,7 +76,8 @@ const BlogPost = () => {
             <>
                 <BlogNav />
                 <div className="blog-post-container">
-                    <div className="loading-spinner">Loading...</div>
+                    <p className="loading-message">Loading...</p>
+                    <LinearProgress />
                 </div>
                 <Footer resumeUrl={null} />
             </>

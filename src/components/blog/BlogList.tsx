@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
+import { CircularProgress } from '@mui/material';
 import { getBlogPosts, BlogPost } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import Footer from '../layout/Footer';
@@ -38,7 +39,10 @@ const BlogList = () => {
                 </header>
 
                 {isLoading ? (
-                    <div className="loading-spinner">Loading...</div>
+                    <div className="blog-list-loading-spinner">
+                        <p>Loading...</p>
+                        <CircularProgress />
+                    </div>
                 ) : blogPosts.length === 0 ? (
                     <div className="no-posts-message">
                         <p>No blog posts available yet. Check back soon!</p>
