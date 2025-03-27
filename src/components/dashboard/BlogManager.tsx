@@ -22,6 +22,13 @@ import {
     DialogTitle,
     Alert,
     Snackbar,
+    useTheme,
+    useMediaQuery,
+    Stack,
+    Card,
+    CardContent,
+    CardActions,
+    Divider,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -35,6 +42,10 @@ import { getBlogPosts, deleteBlogPost, updateBlogPost, BlogPost } from '../../se
 
 const BlogManager = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
     const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -139,23 +150,216 @@ const BlogManager = () => {
         }));
     };
 
+    // Card view for mobile and tablet
+    const renderCardView = () => (
+        <Stack spacing={2} mt={2}>
+            {filteredPosts.map((post) => (
+                <Card key={post.$id} variant="outlined">
+                    <CardContent>
+                        <Typography variant="h6" component="div" gutterBottom>
+                            {post.title}
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                {new Date(post.publishedDate).toLocaleDateString()}
+                            </Typography>
+
+                            <Chip
+                                size="small"
+                                color={post.published ? 'success' : 'default'}
+                                label={post.published ? 'Published' : 'Draft'}
+                            />
+                        </Box>
+
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Views: {post.viewCount || 0}
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                            {post.tags &&
+                                post.tags.map((tag, index) => (
+                                    <Chip
+                                        key={index}
+                                        label={tag}
+                                        size="small"
+                                        sx={{
+                                            fontSize: '0.7rem',
+                                            height: '22px',
+                                        }}
+                                    />
+                                ))}
+                        </Box>
+                    </CardContent>
+
+                    <Divider />
+
+                    <CardActions>
+                        <IconButton color="primary" onClick={() => handleEditPost(post)} size="small" title="Edit">
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton color="error" onClick={() => handleDeleteClick(post)} size="small" title="Delete">
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                            color={post.published ? 'warning' : 'success'}
+                            onClick={() => handlePublishToggle(post)}
+                            size="small"
+                            title={post.published ? 'Unpublish' : 'Publish'}
+                        >
+                            {post.published ? (
+                                <VisibilityOffIcon fontSize="small" />
+                            ) : (
+                                <VisibilityIcon fontSize="small" />
+                            )}
+                        </IconButton>
+                        {post.published && (
+                            <IconButton color="info" onClick={() => handleViewPost(post)} size="small" title="View">
+                                <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                        )}
+                    </CardActions>
+                </Card>
+            ))}
+        </Stack>
+    );
+
+    // Table view for desktop
+    const renderTableView = () => (
+        <TableContainer>
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Title</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Views</TableCell>
+                        <TableCell>Tags</TableCell>
+                        <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {filteredPosts.map((post) => (
+                        <TableRow key={post.$id}>
+                            <TableCell>{post.title}</TableCell>
+                            <TableCell>{new Date(post.publishedDate).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                                <Chip
+                                    size="small"
+                                    color={post.published ? 'success' : 'default'}
+                                    label={post.published ? 'Published' : 'Draft'}
+                                />
+                            </TableCell>
+                            <TableCell>
+                                <Typography variant="body2">{post.viewCount || 0}</Typography>
+                            </TableCell>
+                            <TableCell>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: 0.5,
+                                        maxWidth: '200px',
+                                    }}
+                                >
+                                    {post.tags &&
+                                        post.tags.map((tag, index) => (
+                                            <Chip
+                                                key={index}
+                                                label={tag}
+                                                size="small"
+                                                sx={{
+                                                    fontSize: '0.7rem',
+                                                    height: '22px',
+                                                }}
+                                            />
+                                        ))}
+                                </Box>
+                            </TableCell>
+                            <TableCell align="right">
+                                <Box>
+                                    <IconButton
+                                        color="primary"
+                                        onClick={() => handleEditPost(post)}
+                                        size="small"
+                                        title="Edit"
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleDeleteClick(post)}
+                                        size="small"
+                                        title="Delete"
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                        color={post.published ? 'warning' : 'success'}
+                                        onClick={() => handlePublishToggle(post)}
+                                        size="small"
+                                        title={post.published ? 'Unpublish' : 'Publish'}
+                                    >
+                                        {post.published ? (
+                                            <VisibilityOffIcon fontSize="small" />
+                                        ) : (
+                                            <VisibilityIcon fontSize="small" />
+                                        )}
+                                    </IconButton>
+                                    {post.published && (
+                                        <IconButton
+                                            color="info"
+                                            onClick={() => handleViewPost(post)}
+                                            size="small"
+                                            title="View"
+                                        >
+                                            <VisibilityIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
+
     return (
-        <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
+        <Box sx={{ px: { xs: 1, sm: 2 } }}>
+            <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
+                sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}
+            >
                 Blogs
             </Typography>
 
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+                <Box
+                    display="flex"
+                    flexDirection={isMobile ? 'column' : 'row'}
+                    justifyContent="space-between"
+                    alignItems={isMobile ? 'stretch' : 'center'}
+                    gap={isMobile ? 2 : 0}
+                    mb={2}
+                >
                     <TextField
                         label="Search blog posts"
                         variant="outlined"
                         size="small"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        sx={{ width: '300px' }}
+                        sx={{ width: isMobile ? '100%' : '300px' }}
                     />
-                    <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleNewPost}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={handleNewPost}
+                        fullWidth={isMobile}
+                    >
                         New Blog Post
                     </Button>
                 </Box>
@@ -173,108 +377,20 @@ const BlogManager = () => {
                         </Typography>
                     </Box>
                 ) : (
-                    <TableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Title</TableCell>
-                                    <TableCell>Date</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Views</TableCell>
-                                    <TableCell>Tags</TableCell>
-                                    <TableCell align="right">Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredPosts.map((post) => (
-                                    <TableRow key={post.$id}>
-                                        <TableCell>{post.title}</TableCell>
-                                        <TableCell>{new Date(post.publishedDate).toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                size="small"
-                                                color={post.published ? 'success' : 'default'}
-                                                label={post.published ? 'Published' : 'Draft'}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2">{post.viewCount || 0}</Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    flexWrap: 'wrap',
-                                                    gap: 0.5,
-                                                    maxWidth: '200px',
-                                                }}
-                                            >
-                                                {post.tags &&
-                                                    post.tags.map((tag, index) => (
-                                                        <Chip
-                                                            key={index}
-                                                            label={tag}
-                                                            size="small"
-                                                            sx={{
-                                                                fontSize: '0.7rem',
-                                                                height: '22px',
-                                                            }}
-                                                        />
-                                                    ))}
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <Box>
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleEditPost(post)}
-                                                    size="small"
-                                                    title="Edit"
-                                                >
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton
-                                                    color="error"
-                                                    onClick={() => handleDeleteClick(post)}
-                                                    size="small"
-                                                    title="Delete"
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton
-                                                    color={post.published ? 'warning' : 'success'}
-                                                    onClick={() => handlePublishToggle(post)}
-                                                    size="small"
-                                                    title={post.published ? 'Unpublish' : 'Publish'}
-                                                >
-                                                    {post.published ? (
-                                                        <VisibilityOffIcon fontSize="small" />
-                                                    ) : (
-                                                        <VisibilityIcon fontSize="small" />
-                                                    )}
-                                                </IconButton>
-                                                {post.published && (
-                                                    <IconButton
-                                                        color="info"
-                                                        onClick={() => handleViewPost(post)}
-                                                        size="small"
-                                                        title="View"
-                                                    >
-                                                        <VisibilityIcon fontSize="small" />
-                                                    </IconButton>
-                                                )}
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <>
+                        {/* Card view for mobile/tablet, Table view for desktop */}
+                        {isTablet ? renderCardView() : renderTableView()}
+                    </>
                 )}
             </Paper>
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={handleDeleteCancel}
+                fullWidth={isMobile}
+                maxWidth={isMobile ? 'sm' : 'xs'}
+            >
                 <DialogTitle>Confirm Delete</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
