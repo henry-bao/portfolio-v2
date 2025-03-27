@@ -450,7 +450,9 @@ const BlogEditor = () => {
     };
 
     const handleSlugChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setSlug(e.target.value);
+        // Replace spaces with hyphens as the user types
+        const newValue = e.target.value.replace(/\s+/g, '-');
+        setSlug(newValue);
         setSlugManuallyEdited(true);
     };
 
