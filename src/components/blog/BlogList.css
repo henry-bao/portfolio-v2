@@ -149,7 +149,7 @@
 .no-posts-message {
     text-align: center;
     padding: 4rem 0;
-    color: #2f7295;
+    color: rgba(200, 200, 200);
     font-size: 1.2rem;
 }
 

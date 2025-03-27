@@ -42,7 +42,7 @@ const Blog = () => {
             <div className="container">
                 <h2 className="section-title">Blogs</h2>
                 {blogPosts.length === 0 ? (
-                    <p className="no-posts-message">No blog posts available yet.</p>
+                    <p className="blog-no-posts-message">No blog posts available yet.</p>
                 ) : (
                     <>
                         <div className="blog-grid">
