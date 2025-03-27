@@ -21,7 +21,15 @@ import { Upload as UploadIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getBlogPost, createBlogPost, updateBlogPost, uploadFile, deleteFile, BlogPost } from '../../services/appwrite';
+import {
+    getBlogPost,
+    createBlogPost,
+    updateBlogPost,
+    uploadFile,
+    deleteFile,
+    BlogPost,
+    getBlogPostBySlug,
+} from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import './markdown-preview.css';
 
@@ -534,6 +542,24 @@ const BlogEditor = () => {
         setSuccess('');
 
         try {
+            // Check if slug already exists
+            const existingPost = await getBlogPostBySlug(slug);
+
+            // If this is a new post and the slug already exists
+            if (isNewPost && existingPost) {
+                setError('A blog post with this slug already exists. Please choose a different slug.');
+                setIsSaving(false);
+                return;
+            }
+
+            // If this is an existing post being edited, make sure we're not
+            // using a slug that belongs to a different post
+            if (!isNewPost && existingPost && existingPost.$id !== postId) {
+                setError('This slug is already used by another blog post. Please choose a different slug.');
+                setIsSaving(false);
+                return;
+            }
+
             let coverImageId = post?.coverImageId;
 
             // Upload new cover image if changed
@@ -642,19 +668,6 @@ const BlogEditor = () => {
             {success && (
                 <Alert severity="success" sx={{ mb: 2 }}>
                     {success}
-                </Alert>
-            )}
-
-            {isDraft && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                    {lastSaved && (
-                        <>
-                            {lastSaved}
-                            <Button size="small" onClick={handleDiscardDraft} sx={{ ml: 2 }}>
-                                Discard Draft
-                            </Button>
-                        </>
-                    )}
                 </Alert>
             )}
 
@@ -891,6 +904,16 @@ const BlogEditor = () => {
                                     )}
                                 </Button>
                             </Box>
+                            {isDraft && lastSaved && (
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {lastSaved}
+                                    </Typography>
+                                    <Button size="small" onClick={handleDiscardDraft} sx={{ ml: 1 }}>
+                                        Discard
+                                    </Button>
+                                </Box>
+                            )}
                         </Box>
                     </Grid>
                 </Grid>
