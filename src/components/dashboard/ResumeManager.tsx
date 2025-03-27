@@ -22,12 +22,6 @@ import {
     Chip,
     useMediaQuery,
     useTheme,
-    Stack,
-    Card,
-    CardContent,
-    CardActions,
-    Divider,
-    Tooltip,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -230,236 +224,6 @@ const ResumeManager = () => {
         });
     };
 
-    // Card view for mobile and tablet
-    const renderCardView = () => (
-        <Stack spacing={2} mt={2}>
-            {resumeVersions.length === 0 ? (
-                <Typography color="textSecondary" textAlign="center">
-                    No resume versions found. Upload your first resume!
-                </Typography>
-            ) : (
-                resumeVersions.map((resume) => (
-                    <Card key={resume.$id} variant="outlined" sx={{ width: '100%', overflow: 'hidden' }}>
-                        <CardContent sx={{ overflow: 'hidden', p: { xs: 1.5, sm: 2 } }}>
-                            <Box
-                                display="flex"
-                                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                                flexDirection={{ xs: 'column', sm: 'row' }}
-                                justifyContent="space-between"
-                                mb={2}
-                                gap={{ xs: 1, sm: 0 }}
-                            >
-                                <Tooltip title={resume.fileName} placement="top">
-                                    <Typography
-                                        variant="h6"
-                                        component="div"
-                                        sx={{
-                                            mr: { sm: 2 },
-                                            flex: 1,
-                                            textOverflow: 'ellipsis',
-                                            overflow: 'hidden',
-                                            whiteSpace: 'nowrap',
-                                            maxWidth: '100%',
-                                        }}
-                                    >
-                                        {resume.fileName}
-                                    </Typography>
-                                </Tooltip>
-
-                                {resume.isActive ? (
-                                    <Chip icon={<ActiveIcon />} label="Active" color="success" variant="outlined" />
-                                ) : (
-                                    <Chip
-                                        icon={<InactiveIcon />}
-                                        label="Set Active"
-                                        color="default"
-                                        variant="outlined"
-                                        onClick={() => handleSetActive(resume.$id)}
-                                        disabled={isSettingActive}
-                                        sx={{ cursor: 'pointer' }}
-                                    />
-                                )}
-                            </Box>
-
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, wordBreak: 'break-word' }}>
-                                <strong>Uploaded:</strong> {formatDate(resume.uploadDate)}
-                            </Typography>
-
-                            {resume.description && (
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{ mb: 1, wordBreak: 'break-word' }}
-                                >
-                                    <strong>Description:</strong> {resume.description}
-                                </Typography>
-                            )}
-                        </CardContent>
-
-                        <Divider />
-
-                        <CardActions sx={{ justifyContent: 'flex-end' }}>
-                            <IconButton
-                                color="primary"
-                                href={getFileUrl(resume.fileId)}
-                                target="_blank"
-                                size="small"
-                                title="View resume"
-                            >
-                                <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                                color="primary"
-                                onClick={() => handleEditClick(resume)}
-                                size="small"
-                                title="Edit resume details"
-                            >
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                                color="error"
-                                onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
-                                disabled={isDeleting}
-                                size="small"
-                                title="Delete resume"
-                            >
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </CardActions>
-                    </Card>
-                ))
-            )}
-        </Stack>
-    );
-
-    // Table view for desktop
-    const renderTableView = () => (
-        <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell sx={{ width: { xs: '5%', sm: '15%' } }}>Status</TableCell>
-                        <TableCell sx={{ width: { xs: '40%', sm: '35%', lg: '20%' } }}>File Name</TableCell>
-                        {!isMobile && <TableCell sx={{ width: { sm: '20%' } }}>Upload Date</TableCell>}
-                        {!isTablet && <TableCell sx={{ width: { md: '25%' } }}>Description</TableCell>}
-                        <TableCell align="right" sx={{ width: { xs: '15%', sm: '10%' } }}>
-                            Actions
-                        </TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {resumeVersions.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
-                                No resume versions found. Upload your first resume!
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        resumeVersions.map((resume) => (
-                            <TableRow key={resume.$id}>
-                                <TableCell>
-                                    {resume.isActive ? (
-                                        <Chip
-                                            icon={<ActiveIcon />}
-                                            label={isTablet ? '' : 'Active'}
-                                            color="success"
-                                            variant="outlined"
-                                            sx={{
-                                                '& .MuiChip-label': {
-                                                    padding: isTablet ? 0.6 : undefined,
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Chip
-                                            icon={<InactiveIcon />}
-                                            label={isTablet ? '' : 'Set Active'}
-                                            color="default"
-                                            variant="outlined"
-                                            onClick={() => handleSetActive(resume.$id)}
-                                            disabled={isSettingActive}
-                                            sx={{
-                                                cursor: 'pointer',
-                                                '& .MuiChip-label': {
-                                                    padding: isTablet ? 0.6 : undefined,
-                                                },
-                                            }}
-                                        />
-                                    )}
-                                </TableCell>
-                                <TableCell sx={{ wordBreak: 'break-word' }}>
-                                    <Tooltip title={resume.fileName} placement="top">
-                                        <Typography
-                                            sx={{
-                                                textOverflow: 'ellipsis',
-                                                overflow: 'hidden',
-                                                whiteSpace: 'nowrap',
-                                                maxWidth: { xs: '120px', sm: '180px', md: '250px' },
-                                            }}
-                                        >
-                                            {resume.fileName}
-                                        </Typography>
-                                    </Tooltip>
-                                </TableCell>
-                                {!isMobile && <TableCell>{formatDate(resume.uploadDate)}</TableCell>}
-                                {!isTablet && (
-                                    <TableCell sx={{ maxWidth: '300px' }}>
-                                        <Typography
-                                            sx={{
-                                                textOverflow: 'ellipsis',
-                                                overflow: 'hidden',
-                                                whiteSpace: 'nowrap',
-                                                maxWidth: '100%',
-                                            }}
-                                        >
-                                            {resume.description || '-'}
-                                        </Typography>
-                                    </TableCell>
-                                )}
-                                <TableCell align="right">
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            justifyContent: 'flex-end',
-                                            gap: { xs: 0, sm: 1 },
-                                            flexWrap: 'nowrap',
-                                        }}
-                                    >
-                                        <IconButton
-                                            color="primary"
-                                            href={getFileUrl(resume.fileId)}
-                                            target="_blank"
-                                            size={isMobile ? 'small' : 'medium'}
-                                            title="View resume"
-                                        >
-                                            <VisibilityIcon fontSize={isMobile ? 'small' : 'medium'} />
-                                        </IconButton>
-                                        <IconButton
-                                            color="primary"
-                                            onClick={() => handleEditClick(resume)}
-                                            size={isMobile ? 'small' : 'medium'}
-                                            title="Edit resume details"
-                                        >
-                                            <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
-                                        </IconButton>
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
-                                            disabled={isDeleting}
-                                            size={isMobile ? 'small' : 'medium'}
-                                        >
-                                            <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
-                                        </IconButton>
-                                    </Box>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-        </TableContainer>
-    );
-
     if (isLoading) {
         return (
             <Box
@@ -476,37 +240,12 @@ const ResumeManager = () => {
     }
 
     return (
-        <Box
-            sx={{ px: { xs: 1, sm: 2 }, width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
-        >
-            <Box
-                display="flex"
-                flexDirection={isMobile ? 'column' : 'row'}
-                justifyContent="space-between"
-                alignItems={isMobile ? 'flex-start' : 'center'}
-                mb={3}
-                gap={isMobile ? 2 : 0}
-                sx={{ maxWidth: '100%' }}
-            >
-                <Typography
-                    variant="h4"
-                    component="h1"
-                    sx={{
-                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
+        <Box>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h4" component="h1">
                     Resumes
                 </Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    component="label"
-                    fullWidth={isMobile}
-                >
+                <Button variant="contained" color="primary" startIcon={<AddIcon />} component="label">
                     {isMobile ? 'Upload' : 'Upload New Resume'}
                     <input type="file" hidden accept=".pdf" onChange={handleResumeFileChange} />
                 </Button>
@@ -524,24 +263,118 @@ const ResumeManager = () => {
                 </Alert>
             )}
 
-            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, width: '100%', overflow: 'hidden' }}>
-                {/* Card view for mobile/tablet, Table view for desktop */}
-                {isTablet ? renderCardView() : renderTableView()}
+            <Paper>
+                <TableContainer sx={{ overflowX: 'auto', overflow: 'hidden' }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{ width: { xs: '5%', sm: '15%' } }}>Status</TableCell>
+                                <TableCell sx={{ width: { xs: '40%', sm: '35%', lg: '20%' } }}>File Name</TableCell>
+                                {!isMobile && <TableCell sx={{ width: { sm: '20%' } }}>Upload Date</TableCell>}
+                                {!isTablet && <TableCell sx={{ width: { md: '25%' } }}>Description</TableCell>}
+                                <TableCell align="right" sx={{ width: { xs: '15%', sm: '10%' } }}>
+                                    Actions
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {resumeVersions.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
+                                        No resume versions found. Upload your first resume!
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                resumeVersions.map((resume) => (
+                                    <TableRow key={resume.$id}>
+                                        <TableCell>
+                                            {resume.isActive ? (
+                                                <Chip
+                                                    icon={<ActiveIcon />}
+                                                    label={isTablet ? '' : 'Active'}
+                                                    color="success"
+                                                    variant="outlined"
+                                                    sx={{
+                                                        '& .MuiChip-label': {
+                                                            padding: isTablet ? 0.6 : undefined,
+                                                        },
+                                                    }}
+                                                />
+                                            ) : (
+                                                <Chip
+                                                    icon={<InactiveIcon />}
+                                                    label={isTablet ? '' : 'Set Active'}
+                                                    color="default"
+                                                    variant="outlined"
+                                                    onClick={() => handleSetActive(resume.$id)}
+                                                    disabled={isSettingActive}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        '& .MuiChip-label': {
+                                                            padding: isTablet ? 0.6 : undefined,
+                                                        },
+                                                    }}
+                                                />
+                                            )}
+                                        </TableCell>
+                                        <TableCell sx={{ wordBreak: 'break-word' }}>{resume.fileName}</TableCell>
+                                        {!isMobile && <TableCell>{formatDate(resume.uploadDate)}</TableCell>}
+                                        {!isTablet && <TableCell>{resume.description || '-'}</TableCell>}
+                                        <TableCell align="right">
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'flex-end',
+                                                    gap: { xs: 0, sm: 1 },
+                                                    flexWrap: 'nowrap',
+                                                }}
+                                            >
+                                                <IconButton
+                                                    color="primary"
+                                                    href={getFileUrl(resume.fileId)}
+                                                    target="_blank"
+                                                    size={isMobile ? 'small' : 'medium'}
+                                                    title="View resume"
+                                                >
+                                                    <VisibilityIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                </IconButton>
+                                                <IconButton
+                                                    color="primary"
+                                                    onClick={() => handleEditClick(resume)}
+                                                    size={isMobile ? 'small' : 'medium'}
+                                                    title="Edit resume details"
+                                                >
+                                                    <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                </IconButton>
+                                                <IconButton
+                                                    color="error"
+                                                    onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
+                                                    disabled={isDeleting}
+                                                    size={isMobile ? 'small' : 'medium'}
+                                                >
+                                                    <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                </IconButton>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             </Paper>
 
             {/* Upload Dialog */}
-            <Dialog open={uploadDialogOpen} onClose={handleUploadCancel} fullWidth maxWidth={isMobile ? 'sm' : 'xs'}>
+            <Dialog open={uploadDialogOpen} onClose={handleUploadCancel}>
                 <DialogTitle>Upload New Resume</DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ mb: 2 }}>
                         You are about to upload a new resume version. Please provide a description to help identify this
                         version.
                     </DialogContentText>
-                    <Box display="flex" alignItems="center" mb={2} sx={{ overflow: 'hidden' }}>
-                        <FileIcon sx={{ mr: 1, flexShrink: 0 }} />
-                        <Typography sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {newResumeFile?.name}
-                        </Typography>
+                    <Box display="flex" alignItems="center" mb={2}>
+                        <FileIcon sx={{ mr: 1 }} />
+                        <Typography>{newResumeFile?.name}</Typography>
                     </Box>
                     <TextField
                         fullWidth
@@ -570,12 +403,7 @@ const ResumeManager = () => {
             </Dialog>
 
             {/* Delete Confirmation Dialog */}
-            <Dialog
-                open={deleteDialogOpen}
-                onClose={handleDeleteCancel}
-                fullWidth={isMobile}
-                maxWidth={isMobile ? 'sm' : 'xs'}
-            >
+            <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
                 <DialogTitle>Delete Resume Version</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
