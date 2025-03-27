@@ -27,6 +27,7 @@ import {
     CardContent,
     CardActions,
     Divider,
+    Tooltip,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -238,12 +239,32 @@ const ResumeManager = () => {
                 </Typography>
             ) : (
                 resumeVersions.map((resume) => (
-                    <Card key={resume.$id} variant="outlined">
-                        <CardContent>
-                            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                                <Typography variant="h6" component="div" sx={{ mr: 2, flex: 1 }}>
-                                    {resume.fileName}
-                                </Typography>
+                    <Card key={resume.$id} variant="outlined" sx={{ width: '100%', overflow: 'hidden' }}>
+                        <CardContent sx={{ overflow: 'hidden', p: { xs: 1.5, sm: 2 } }}>
+                            <Box
+                                display="flex"
+                                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                                flexDirection={{ xs: 'column', sm: 'row' }}
+                                justifyContent="space-between"
+                                mb={2}
+                                gap={{ xs: 1, sm: 0 }}
+                            >
+                                <Tooltip title={resume.fileName} placement="top">
+                                    <Typography
+                                        variant="h6"
+                                        component="div"
+                                        sx={{
+                                            mr: { sm: 2 },
+                                            flex: 1,
+                                            textOverflow: 'ellipsis',
+                                            overflow: 'hidden',
+                                            whiteSpace: 'nowrap',
+                                            maxWidth: '100%',
+                                        }}
+                                    >
+                                        {resume.fileName}
+                                    </Typography>
+                                </Tooltip>
 
                                 {resume.isActive ? (
                                     <Chip icon={<ActiveIcon />} label="Active" color="success" variant="outlined" />
@@ -260,12 +281,16 @@ const ResumeManager = () => {
                                 )}
                             </Box>
 
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, wordBreak: 'break-word' }}>
                                 <strong>Uploaded:</strong> {formatDate(resume.uploadDate)}
                             </Typography>
 
                             {resume.description && (
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{ mb: 1, wordBreak: 'break-word' }}
+                                >
                                     <strong>Description:</strong> {resume.description}
                                 </Typography>
                             )}
@@ -273,7 +298,7 @@ const ResumeManager = () => {
 
                         <Divider />
 
-                        <CardActions>
+                        <CardActions sx={{ justifyContent: 'flex-end' }}>
                             <IconButton
                                 color="primary"
                                 href={getFileUrl(resume.fileId)}
@@ -309,7 +334,7 @@ const ResumeManager = () => {
 
     // Table view for desktop
     const renderTableView = () => (
-        <TableContainer sx={{ overflowX: 'auto', overflow: 'hidden' }}>
+        <TableContainer sx={{ overflowX: 'auto' }}>
             <Table>
                 <TableHead>
                     <TableRow>
@@ -362,9 +387,35 @@ const ResumeManager = () => {
                                         />
                                     )}
                                 </TableCell>
-                                <TableCell sx={{ wordBreak: 'break-word' }}>{resume.fileName}</TableCell>
+                                <TableCell sx={{ wordBreak: 'break-word' }}>
+                                    <Tooltip title={resume.fileName} placement="top">
+                                        <Typography
+                                            sx={{
+                                                textOverflow: 'ellipsis',
+                                                overflow: 'hidden',
+                                                whiteSpace: 'nowrap',
+                                                maxWidth: { xs: '120px', sm: '180px', md: '250px' },
+                                            }}
+                                        >
+                                            {resume.fileName}
+                                        </Typography>
+                                    </Tooltip>
+                                </TableCell>
                                 {!isMobile && <TableCell>{formatDate(resume.uploadDate)}</TableCell>}
-                                {!isTablet && <TableCell>{resume.description || '-'}</TableCell>}
+                                {!isTablet && (
+                                    <TableCell sx={{ maxWidth: '300px' }}>
+                                        <Typography
+                                            sx={{
+                                                textOverflow: 'ellipsis',
+                                                overflow: 'hidden',
+                                                whiteSpace: 'nowrap',
+                                                maxWidth: '100%',
+                                            }}
+                                        >
+                                            {resume.description || '-'}
+                                        </Typography>
+                                    </TableCell>
+                                )}
                                 <TableCell align="right">
                                     <Box
                                         sx={{
@@ -425,7 +476,9 @@ const ResumeManager = () => {
     }
 
     return (
-        <Box sx={{ px: { xs: 1, sm: 2 } }}>
+        <Box
+            sx={{ px: { xs: 1, sm: 2 }, width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+        >
             <Box
                 display="flex"
                 flexDirection={isMobile ? 'column' : 'row'}
@@ -433,8 +486,18 @@ const ResumeManager = () => {
                 alignItems={isMobile ? 'flex-start' : 'center'}
                 mb={3}
                 gap={isMobile ? 2 : 0}
+                sx={{ maxWidth: '100%' }}
             >
-                <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
                     Resumes
                 </Typography>
                 <Button
@@ -461,7 +524,7 @@ const ResumeManager = () => {
                 </Alert>
             )}
 
-            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, width: '100%', overflow: 'hidden' }}>
                 {/* Card view for mobile/tablet, Table view for desktop */}
                 {isTablet ? renderCardView() : renderTableView()}
             </Paper>
@@ -474,9 +537,11 @@ const ResumeManager = () => {
                         You are about to upload a new resume version. Please provide a description to help identify this
                         version.
                     </DialogContentText>
-                    <Box display="flex" alignItems="center" mb={2}>
-                        <FileIcon sx={{ mr: 1 }} />
-                        <Typography>{newResumeFile?.name}</Typography>
+                    <Box display="flex" alignItems="center" mb={2} sx={{ overflow: 'hidden' }}>
+                        <FileIcon sx={{ mr: 1, flexShrink: 0 }} />
+                        <Typography sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {newResumeFile?.name}
+                        </Typography>
                     </Box>
                     <TextField
                         fullWidth

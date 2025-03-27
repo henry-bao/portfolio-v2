@@ -27,6 +27,7 @@ import {
     CardActions,
     Divider,
     Stack,
+    Tooltip,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -147,13 +148,22 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
         transition,
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 1 : 0,
-        touchAction: 'none',
     };
 
     return (
-        <Card ref={setNodeRef} style={style} variant="outlined">
-            <CardContent>
+        <Card
+            ref={setNodeRef}
+            style={style}
+            variant="outlined"
+            sx={{
+                width: '100%',
+                overflow: 'hidden',
+                touchAction: 'pan-y', // Allow vertical touch scrolling
+            }}
+        >
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    {/* Only the drag handle has touchAction: 'none' */}
                     <IconButton
                         {...attributes}
                         {...listeners}
@@ -161,27 +171,47 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
                         sx={{
                             cursor: 'grab',
                             color: 'text.secondary',
+                            touchAction: 'none', // Disable touch scrolling only on the drag handle
+                            flexShrink: 0,
                         }}
                     >
                         <DragIndicatorIcon />
                     </IconButton>
 
                     {projectImages[project.$id] ? (
-                        <Avatar src={projectImages[project.$id]} alt={project.title} sx={{ width: 40, height: 40 }} />
+                        <Avatar
+                            src={projectImages[project.$id]}
+                            alt={project.title}
+                            sx={{ width: 40, height: 40, flexShrink: 0 }}
+                        />
                     ) : (
-                        <Avatar src="/img/placeholder.svg" alt={project.title} sx={{ width: 40, height: 40 }} />
+                        <Avatar
+                            src="/img/placeholder.svg"
+                            alt={project.title}
+                            sx={{ width: 40, height: 40, flexShrink: 0 }}
+                        />
                     )}
 
-                    <Typography variant="h6" component="div">
-                        {project.title}
-                    </Typography>
+                    <Tooltip title={project.title} placement="top">
+                        <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {project.title}
+                        </Typography>
+                    </Tooltip>
                 </Box>
 
                 <Box sx={{ pl: 6 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1, wordBreak: 'break-word' }}>
                         <strong>Role:</strong> {project.role}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
                         <strong>Date:</strong> {project.date}
                     </Typography>
                 </Box>
@@ -189,15 +219,13 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
 
             <Divider />
 
-            <CardActions>
-                <Box sx={{ ml: 'auto' }}>
-                    <IconButton color="primary" onClick={() => onEdit(project.$id)} title="Edit project">
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => onDelete(project.$id)} title="Delete project">
-                        <DeleteIcon />
-                    </IconButton>
-                </Box>
+            <CardActions sx={{ justifyContent: 'flex-end' }}>
+                <IconButton color="primary" onClick={() => onEdit(project.$id)} title="Edit project">
+                    <EditIcon />
+                </IconButton>
+                <IconButton color="error" onClick={() => onDelete(project.$id)} title="Delete project">
+                    <DeleteIcon />
+                </IconButton>
             </CardActions>
         </Card>
     );
@@ -217,11 +245,14 @@ const ProjectsList = () => {
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
 
-    // Set up sensors for drag and drop
+    // Set up sensors for drag and drop with improved touch handling
     const sensors = useSensors(
         useSensor(PointerSensor, {
+            // Increased distance for touch devices to differentiate between dragging and scrolling
             activationConstraint: {
-                distance: 8,
+                distance: 10, // Increase this value to require more movement before drag starts
+                tolerance: 5, // Add tolerance to help with touch precision
+                delay: 150, // Short delay to help determine user intent
             },
         }),
         useSensor(KeyboardSensor, {
@@ -351,9 +382,30 @@ const ProjectsList = () => {
 
     // Card view for mobile and tablet
     const renderCardView = () => (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            // Improved configuration for touch devices
+            autoScroll={{
+                threshold: {
+                    x: 0.05,
+                    y: 0.05,
+                },
+                acceleration: 5,
+                interval: 5,
+            }}
+        >
             <SortableContext items={projects.map((project) => project.$id)} strategy={verticalListSortingStrategy}>
-                <Stack spacing={2} mt={2}>
+                <Stack
+                    spacing={2}
+                    mt={2}
+                    sx={{
+                        touchAction: 'pan-y', // Enable vertical scrolling on touch
+                        overflowY: 'auto',
+                        width: '100%',
+                    }}
+                >
                     {projects.length === 0 ? (
                         <Typography color="textSecondary" textAlign="center">
                             No projects found. Create your first project!
@@ -471,7 +523,15 @@ const ProjectsList = () => {
     }
 
     return (
-        <Box sx={{ px: { xs: 1, sm: 2 } }}>
+        <Box
+            sx={{
+                px: { xs: 1, sm: 2 },
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+                overflow: 'hidden',
+            }}
+        >
             <Box
                 display="flex"
                 flexDirection={isMobile ? 'column' : 'row'}
@@ -506,7 +566,7 @@ const ProjectsList = () => {
                 </Alert>
             )}
 
-            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, width: '100%', overflow: 'hidden' }}>
                 {/* Card view for mobile/tablet, Table view for desktop */}
                 {isTablet ? renderCardView() : renderTableView()}
             </Paper>

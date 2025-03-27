@@ -194,7 +194,7 @@ const BlogManager = () => {
 
                     <Divider />
 
-                    <CardActions>
+                    <CardActions sx={{ justifyContent: 'flex-end' }}>
                         <IconButton color="primary" onClick={() => handleEditPost(post)} size="small" title="Edit">
                             <EditIcon fontSize="small" />
                         </IconButton>
