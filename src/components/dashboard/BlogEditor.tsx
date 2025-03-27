@@ -16,8 +16,38 @@ import {
     InputAdornment,
     Tab,
     Tabs,
+    IconButton,
+    Tooltip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Card,
+    CardMedia,
+    CardActions,
+    CardContent,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
 } from '@mui/material';
-import { Upload as UploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import {
+    Upload as UploadIcon,
+    Delete as DeleteIcon,
+    FormatBold as FormatBoldIcon,
+    FormatItalic as FormatItalicIcon,
+    FormatListBulleted as FormatListBulletedIcon,
+    FormatListNumbered as FormatListNumberedIcon,
+    Image as ImageIcon,
+    Link as LinkIcon,
+    Code as CodeIcon,
+    FormatQuote as FormatQuoteIcon,
+    HorizontalRule as HorizontalRuleIcon,
+    FormatSize as HeadingIcon,
+    Edit as EditIcon,
+    MoreVert as MoreVertIcon,
+    PhotoLibrary as PhotoLibraryIcon,
+} from '@mui/icons-material';
 import { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -29,6 +59,12 @@ import {
     deleteFile,
     BlogPost,
     getBlogPostBySlug,
+    uploadContentImage,
+    getContentImages,
+    updateContentImage,
+    getContentImagePreviewUrl,
+    CONTENT_IMAGES_BUCKET_ID,
+    ALLOWED_IMAGE_TYPES,
 } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import './markdown-preview.css';
@@ -96,6 +132,27 @@ const BlogEditor = () => {
 
     // Draft saving timer
     const draftSaveTimerRef = useRef<number | null>(null);
+
+    // For content image uploads
+    const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+    const [contentImage, setContentImage] = useState<File | null>(null);
+    const [contentImageName, setContentImageName] = useState('');
+    const [isUploadingContentImage, setIsUploadingContentImage] = useState(false);
+    const textFieldRef = useRef<HTMLTextAreaElement | null>(null);
+
+    // For editor cursor position tracking
+    const [cursorPosition, setCursorPosition] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
+
+    // For image library
+    const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
+    const [contentImages, setContentImages] = useState<Models.File[]>([]);
+    const [loadingImages, setLoadingImages] = useState(false);
+    const [selectedLibraryImage, setSelectedLibraryImage] = useState<Models.File | null>(null);
+    const [imageMenuAnchorEl, setImageMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const [targetImageId, setTargetImageId] = useState<string | null>(null);
+    const [isEditingImage, setIsEditingImage] = useState(false);
+    const [imageToEdit, setImageToEdit] = useState<Models.File | null>(null);
+    const [newImageFile, setNewImageFile] = useState<File | null>(null);
 
     // Update ref when state changes
     useEffect(() => {
@@ -413,8 +470,18 @@ const BlogEditor = () => {
     const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setCoverImage(file);
-            setCoverImagePreview(URL.createObjectURL(file));
+            try {
+                if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+                    setError(`Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`);
+                    return;
+                }
+
+                setCoverImage(file);
+                setCoverImagePreview(URL.createObjectURL(file));
+            } catch (error) {
+                console.error('Error processing cover image:', error);
+                setError('Failed to process image');
+            }
         }
     };
 
@@ -640,6 +707,306 @@ const BlogEditor = () => {
         navigate,
     ]);
 
+    // Handle text cursor position tracking - we need to use onMouseUp, onKeyUp, etc.
+    // since onSelect has typing issues with TextField
+    const trackSelectionChange = () => {
+        if (textFieldRef.current) {
+            setCursorPosition({
+                start: textFieldRef.current.selectionStart,
+                end: textFieldRef.current.selectionEnd,
+            });
+        }
+    };
+
+    // Helper to insert text at cursor position
+    const insertTextAtCursor = (textToInsert: string) => {
+        if (!textFieldRef.current) return;
+
+        const newContent =
+            content.substring(0, cursorPosition.start) + textToInsert + content.substring(cursorPosition.end);
+
+        setContent(newContent);
+
+        // Focus back on the text field after inserting
+        setTimeout(() => {
+            if (!textFieldRef.current) return;
+            textFieldRef.current.focus();
+
+            // Calculate new cursor position (usually at the end of inserted text)
+            const newPosition = cursorPosition.start + textToInsert.length;
+            textFieldRef.current.setSelectionRange(newPosition, newPosition);
+        }, 0);
+    };
+
+    // Format actions
+    const applyBoldFormat = () => {
+        const selectedText = content.substring(cursorPosition.start, cursorPosition.end);
+        const replacement = selectedText ? `**${selectedText}**` : '**bold text**';
+        insertTextAtCursor(replacement);
+    };
+
+    const applyItalicFormat = () => {
+        const selectedText = content.substring(cursorPosition.start, cursorPosition.end);
+        const replacement = selectedText ? `*${selectedText}*` : '*italic text*';
+        insertTextAtCursor(replacement);
+    };
+
+    const applyHeadingFormat = () => {
+        // Get the current line
+        const textBeforeCursor = content.substring(0, cursorPosition.start);
+        const textAfterCursor = content.substring(cursorPosition.end);
+
+        // Find the start of the current line
+        const lastNewlineBeforeCursor = textBeforeCursor.lastIndexOf('\n') + 1;
+        const currentLineStart = textBeforeCursor.substring(lastNewlineBeforeCursor);
+
+        // Check if the line already starts with heading marks
+        const headingLevel = currentLineStart.match(/^(#{1,6})\s/);
+
+        let newText;
+        if (headingLevel) {
+            // If already a heading, increase level or remove if at level 6
+            const level = headingLevel[1].length;
+            if (level < 6) {
+                newText = `${'#'.repeat(level + 1)} ${currentLineStart.substring(level + 1)}`;
+            } else {
+                newText = currentLineStart.substring(level + 1);
+            }
+        } else {
+            // If not a heading, add level 1 heading
+            newText = `# ${currentLineStart}`;
+        }
+
+        // Replace current line with new text
+        const updatedContent = textBeforeCursor.substring(0, lastNewlineBeforeCursor) + newText + textAfterCursor;
+
+        setContent(updatedContent);
+    };
+
+    const applyListFormat = (ordered: boolean) => {
+        const selectedText = content.substring(cursorPosition.start, cursorPosition.end);
+        let replacement;
+
+        if (selectedText) {
+            // Format each line of the selection
+            const lines = selectedText.split('\n');
+            replacement = lines
+                .map((line, index) => {
+                    if (line.trim() === '') return '';
+                    return ordered ? `${index + 1}. ${line}` : `- ${line}`;
+                })
+                .join('\n');
+        } else {
+            replacement = ordered ? '1. List item' : '- List item';
+        }
+
+        insertTextAtCursor(replacement);
+    };
+
+    const applyLinkFormat = () => {
+        const selectedText = content.substring(cursorPosition.start, cursorPosition.end);
+        const replacement = selectedText ? `[${selectedText}](url)` : '[link text](url)';
+        insertTextAtCursor(replacement);
+    };
+
+    const applyCodeFormat = () => {
+        const selectedText = content.substring(cursorPosition.start, cursorPosition.end);
+
+        // If multiple lines, use code block. Otherwise use inline code
+        if (selectedText && selectedText.includes('\n')) {
+            insertTextAtCursor(`\`\`\`\n${selectedText}\n\`\`\``);
+        } else {
+            const replacement = selectedText ? `\`${selectedText}\`` : '`code`';
+            insertTextAtCursor(replacement);
+        }
+    };
+
+    const applyQuoteFormat = () => {
+        const selectedText = content.substring(cursorPosition.start, cursorPosition.end);
+
+        if (selectedText) {
+            // Format each line of the selection as a quote
+            const lines = selectedText.split('\n');
+            const replacement = lines
+                .map((line) => {
+                    if (line.trim() === '') return '';
+                    return `> ${line}`;
+                })
+                .join('\n');
+            insertTextAtCursor(replacement);
+        } else {
+            insertTextAtCursor('> Quoted text');
+        }
+    };
+
+    const insertHorizontalRule = () => {
+        insertTextAtCursor('\n\n---\n\n');
+    };
+
+    // Content image handling
+    const handleContentImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setContentImage(file);
+            setContentImageName(file.name);
+        }
+    };
+
+    const handleOpenImageDialog = () => {
+        setContentImage(null);
+        setContentImageName('');
+        setIsImageDialogOpen(true);
+    };
+
+    const handleCloseImageDialog = () => {
+        setIsImageDialogOpen(false);
+    };
+
+    const handleInsertContentImage = async () => {
+        if (!contentImage) return;
+
+        setIsUploadingContentImage(true);
+
+        try {
+            // Upload the image and get markdown-ready URL
+            const { fileId, url } = await uploadContentImage(contentImage);
+
+            // Insert markdown image syntax at cursor position
+            const altText = contentImageName.split('.')[0] || 'image';
+            const markdownImage = `![${altText}](${url})`;
+            insertTextAtCursor(markdownImage);
+
+            // Store the fileId if needed for future reference
+            console.log('Content image uploaded with ID:', fileId);
+
+            // Close dialog
+            setIsImageDialogOpen(false);
+            setSuccess('Image uploaded successfully');
+        } catch (error) {
+            console.error('Error uploading content image:', error);
+            // Display a more helpful error message
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('Failed to upload image');
+            }
+        } finally {
+            setIsUploadingContentImage(false);
+        }
+    };
+
+    // Load content images when media library opens
+    useEffect(() => {
+        if (isMediaLibraryOpen) {
+            loadContentImages();
+        }
+    }, [isMediaLibraryOpen]);
+
+    const loadContentImages = async () => {
+        setLoadingImages(true);
+        try {
+            const images = await getContentImages();
+            setContentImages(images);
+        } catch (error) {
+            console.error('Error loading images:', error);
+            setError('Failed to load media library');
+        } finally {
+            setLoadingImages(false);
+        }
+    };
+
+    // Image library handlers
+    const handleOpenMediaLibrary = () => {
+        setIsMediaLibraryOpen(true);
+    };
+
+    const handleCloseMediaLibrary = () => {
+        setIsMediaLibraryOpen(false);
+        setSelectedLibraryImage(null);
+    };
+
+    const handleSelectLibraryImage = (image: Models.File) => {
+        setSelectedLibraryImage(image);
+    };
+
+    const handleInsertLibraryImage = () => {
+        if (!selectedLibraryImage) return;
+
+        const url = getContentImagePreviewUrl(selectedLibraryImage.$id);
+        const altText = selectedLibraryImage.name.split('.')[0] || 'image';
+        const markdownImage = `![${altText}](${url})`;
+        insertTextAtCursor(markdownImage);
+
+        setIsMediaLibraryOpen(false);
+        setSelectedLibraryImage(null);
+    };
+
+    const handleImageMenuOpen = (event: React.MouseEvent<HTMLElement>, imageId: string) => {
+        setImageMenuAnchorEl(event.currentTarget);
+        setTargetImageId(imageId);
+    };
+
+    const handleImageMenuClose = () => {
+        setImageMenuAnchorEl(null);
+        setTargetImageId(null);
+    };
+
+    const handleDeleteImage = async () => {
+        if (!targetImageId) return;
+
+        try {
+            // Use deleteFile with the content images bucket
+            await deleteFile(targetImageId, CONTENT_IMAGES_BUCKET_ID);
+            await loadContentImages(); // Refresh the list
+            setSuccess('Image deleted successfully');
+        } catch (error) {
+            console.error('Error deleting image:', error);
+            setError('Failed to delete image');
+        } finally {
+            handleImageMenuClose();
+        }
+    };
+
+    const handleOpenEditImage = () => {
+        if (!targetImageId) return;
+
+        const imageToEdit = contentImages.find((img) => img.$id === targetImageId) || null;
+        setImageToEdit(imageToEdit);
+        setIsEditingImage(true);
+        handleImageMenuClose();
+    };
+
+    const handleCloseEditImage = () => {
+        setIsEditingImage(false);
+        setImageToEdit(null);
+        setNewImageFile(null);
+    };
+
+    const handleNewImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setNewImageFile(e.target.files[0]);
+        }
+    };
+
+    const handleUpdateImage = async () => {
+        if (!imageToEdit || !newImageFile) return;
+
+        try {
+            await updateContentImage(imageToEdit.$id, newImageFile);
+            await loadContentImages(); // Refresh the list
+            setSuccess('Image updated successfully');
+            handleCloseEditImage();
+        } catch (error) {
+            console.error('Error updating image:', error);
+            // Display a more helpful error message
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('Failed to update image');
+            }
+        }
+    };
+
     if (isLoading) {
         return (
             <Box
@@ -824,10 +1191,20 @@ const BlogEditor = () => {
                         )}
 
                         {!coverImagePreview && (
-                            <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
-                                Upload Cover Image
-                                <input type="file" hidden accept="image/*" onChange={handleCoverImageChange} />
-                            </Button>
+                            <Box>
+                                <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+                                    Upload Cover Image
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept={ALLOWED_IMAGE_TYPES.join(',')}
+                                        onChange={handleCoverImageChange}
+                                    />
+                                </Button>
+                                <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
+                                    Allowed formats: JPG, PNG, GIF, WebP, SVG
+                                </Typography>
+                            </Box>
                         )}
                     </Grid>
 
@@ -844,22 +1221,97 @@ const BlogEditor = () => {
                         </Tabs>
 
                         {editorTab === 0 ? (
-                            <TextField
-                                fullWidth
-                                multiline
-                                minRows={15}
-                                maxRows={30}
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                required
-                                placeholder="Write your blog post content in Markdown format..."
-                                sx={{
-                                    '& .MuiInputBase-root': {
-                                        fontFamily: 'monospace',
-                                        fontSize: '0.9rem',
-                                    },
-                                }}
-                            />
+                            <>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        gap: 0.5,
+                                        mb: 1,
+                                        p: 1,
+                                        borderBottom: '1px solid #e0e0e0',
+                                        flexWrap: 'wrap',
+                                    }}
+                                >
+                                    <Tooltip title="Bold">
+                                        <IconButton size="small" onClick={applyBoldFormat}>
+                                            <FormatBoldIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Italic">
+                                        <IconButton size="small" onClick={applyItalicFormat}>
+                                            <FormatItalicIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Heading">
+                                        <IconButton size="small" onClick={applyHeadingFormat}>
+                                            <HeadingIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Divider orientation="vertical" flexItem />
+                                    <Tooltip title="Bullet List">
+                                        <IconButton size="small" onClick={() => applyListFormat(false)}>
+                                            <FormatListBulletedIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Numbered List">
+                                        <IconButton size="small" onClick={() => applyListFormat(true)}>
+                                            <FormatListNumberedIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Divider orientation="vertical" flexItem />
+                                    <Tooltip title="Link">
+                                        <IconButton size="small" onClick={applyLinkFormat}>
+                                            <LinkIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Code">
+                                        <IconButton size="small" onClick={applyCodeFormat}>
+                                            <CodeIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Quote">
+                                        <IconButton size="small" onClick={applyQuoteFormat}>
+                                            <FormatQuoteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Horizontal Rule">
+                                        <IconButton size="small" onClick={insertHorizontalRule}>
+                                            <HorizontalRuleIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Divider orientation="vertical" flexItem />
+                                    <Tooltip title="Insert Image">
+                                        <IconButton size="small" onClick={handleOpenImageDialog}>
+                                            <ImageIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Media Library">
+                                        <IconButton size="small" onClick={handleOpenMediaLibrary}>
+                                            <PhotoLibraryIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    minRows={15}
+                                    maxRows={30}
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    onMouseUp={trackSelectionChange}
+                                    onKeyUp={trackSelectionChange}
+                                    onClick={trackSelectionChange}
+                                    inputRef={textFieldRef}
+                                    required
+                                    placeholder="Write your blog post content in Markdown format..."
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.9rem',
+                                        },
+                                    }}
+                                />
+                            </>
                         ) : (
                             <Paper
                                 variant="outlined"
@@ -877,6 +1329,254 @@ const BlogEditor = () => {
                             </Paper>
                         )}
                     </Grid>
+
+                    {/* Image Upload Dialog */}
+                    <Dialog open={isImageDialogOpen} onClose={handleCloseImageDialog}>
+                        <DialogTitle>Insert Image</DialogTitle>
+                        <DialogContent>
+                            <Box sx={{ mt: 1 }}>
+                                {contentImage ? (
+                                    <Box textAlign="center">
+                                        <img
+                                            src={URL.createObjectURL(contentImage)}
+                                            alt="Preview"
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '200px',
+                                                marginBottom: '10px',
+                                            }}
+                                        />
+                                        <Typography variant="body2">
+                                            {contentImage.name} ({Math.round(contentImage.size / 1024)} KB)
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <Box>
+                                        <Button
+                                            variant="outlined"
+                                            component="label"
+                                            startIcon={<UploadIcon />}
+                                            fullWidth
+                                        >
+                                            Select Image
+                                            <input
+                                                type="file"
+                                                hidden
+                                                accept={ALLOWED_IMAGE_TYPES.join(',')}
+                                                onChange={handleContentImageChange}
+                                            />
+                                        </Button>
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{ mt: 1, color: 'text.secondary' }}
+                                        >
+                                            Allowed formats: JPG, PNG, GIF, WebP, SVG
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseImageDialog}>Cancel</Button>
+                            <Button
+                                onClick={handleInsertContentImage}
+                                disabled={!contentImage || isUploadingContentImage}
+                                variant="contained"
+                            >
+                                {isUploadingContentImage ? <CircularProgress size={24} /> : 'Insert Image'}
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Media Library Dialog */}
+                    <Dialog open={isMediaLibraryOpen} onClose={handleCloseMediaLibrary} fullWidth maxWidth="md">
+                        <DialogTitle>Media Library</DialogTitle>
+                        <DialogContent>
+                            {loadingImages ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                    <CircularProgress />
+                                </Box>
+                            ) : contentImages.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', my: 4 }}>
+                                    <Typography color="textSecondary">No images found</Typography>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<UploadIcon />}
+                                        sx={{ mt: 2 }}
+                                        onClick={handleOpenImageDialog}
+                                    >
+                                        Upload New Image
+                                    </Button>
+                                </Box>
+                            ) : (
+                                <Box>
+                                    <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
+                                        {contentImages.map((image) => (
+                                            <Grid item xs={12} sm={6} md={4} key={image.$id}>
+                                                <Card
+                                                    sx={{
+                                                        border:
+                                                            selectedLibraryImage?.$id === image.$id
+                                                                ? '2px solid #1976d2'
+                                                                : 'none',
+                                                        height: '100%',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                    }}
+                                                    onClick={() => handleSelectLibraryImage(image)}
+                                                >
+                                                    <CardMedia
+                                                        component="img"
+                                                        image={getContentImagePreviewUrl(image.$id)}
+                                                        alt={image.name}
+                                                        sx={{ height: 140, objectFit: 'cover' }}
+                                                    />
+                                                    <CardContent sx={{ flexGrow: 1, pb: 1, pt: 1 }}>
+                                                        <Typography variant="body2" noWrap>
+                                                            {image.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="textSecondary">
+                                                            {new Date(image.$createdAt).toLocaleDateString()}
+                                                        </Typography>
+                                                    </CardContent>
+                                                    <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                                                        <Button
+                                                            size="small"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSelectLibraryImage(image);
+                                                            }}
+                                                        >
+                                                            Select
+                                                        </Button>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleImageMenuOpen(e, image.$id);
+                                                            }}
+                                                        >
+                                                            <MoreVertIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </CardActions>
+                                                </Card>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Box>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseMediaLibrary}>Cancel</Button>
+                            <Button
+                                variant="contained"
+                                disabled={!selectedLibraryImage}
+                                onClick={handleInsertLibraryImage}
+                            >
+                                Insert Selected Image
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Image Menu */}
+                    <Menu anchorEl={imageMenuAnchorEl} open={Boolean(imageMenuAnchorEl)} onClose={handleImageMenuClose}>
+                        <MenuItem onClick={handleOpenEditImage}>
+                            <ListItemIcon>
+                                <EditIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Edit</ListItemText>
+                        </MenuItem>
+                        <MenuItem onClick={handleDeleteImage}>
+                            <ListItemIcon>
+                                <DeleteIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Delete</ListItemText>
+                        </MenuItem>
+                    </Menu>
+
+                    {/* Edit Image Dialog */}
+                    <Dialog open={isEditingImage} onClose={handleCloseEditImage}>
+                        <DialogTitle>Edit Image</DialogTitle>
+                        <DialogContent>
+                            <Box sx={{ mt: 1 }}>
+                                {imageToEdit && (
+                                    <Box sx={{ mb: 3, textAlign: 'center' }}>
+                                        <Typography variant="subtitle2" gutterBottom>
+                                            Current Image
+                                        </Typography>
+                                        <img
+                                            src={getContentImagePreviewUrl(imageToEdit.$id)}
+                                            alt={imageToEdit.name}
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '150px',
+                                                display: 'block',
+                                                margin: '0 auto',
+                                                marginBottom: '10px',
+                                            }}
+                                        />
+                                        <Typography variant="caption">
+                                            {imageToEdit.name} ({Math.round(imageToEdit.sizeOriginal / 1024)} KB)
+                                        </Typography>
+                                    </Box>
+                                )}
+
+                                <Divider sx={{ my: 2 }} />
+
+                                <Typography variant="subtitle2" gutterBottom>
+                                    Replace with new image
+                                </Typography>
+
+                                {newImageFile ? (
+                                    <Box textAlign="center">
+                                        <img
+                                            src={URL.createObjectURL(newImageFile)}
+                                            alt="New image preview"
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '150px',
+                                                marginBottom: '10px',
+                                            }}
+                                        />
+                                        <Typography variant="body2">
+                                            {newImageFile.name} ({Math.round(newImageFile.size / 1024)} KB)
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <Box>
+                                        <Button
+                                            variant="outlined"
+                                            component="label"
+                                            startIcon={<UploadIcon />}
+                                            fullWidth
+                                        >
+                                            Select New Image
+                                            <input
+                                                type="file"
+                                                hidden
+                                                accept={ALLOWED_IMAGE_TYPES.join(',')}
+                                                onChange={handleNewImageSelect}
+                                            />
+                                        </Button>
+                                        <Typography
+                                            variant="caption"
+                                            display="block"
+                                            sx={{ mt: 1, color: 'text.secondary' }}
+                                        >
+                                            Allowed formats: JPG, PNG, GIF, WebP, SVG
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseEditImage}>Cancel</Button>
+                            <Button onClick={handleUpdateImage} disabled={!newImageFile} variant="contained">
+                                Update Image
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
 
                     {/* Save Button */}
                     <Grid item xs={12}>

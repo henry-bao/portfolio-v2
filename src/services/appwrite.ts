@@ -14,10 +14,19 @@ export const databases = new Databases(client);
 
 // Bucket and database IDs
 export const BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
+export const CONTENT_IMAGES_BUCKET_ID = import.meta.env.VITE_APPWRITE_CONTENT_IMAGES_BUCKET_ID;
 export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 export const PROFILE_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROFILE_COLLECTION_ID;
 export const PROJECTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROJECTS_COLLECTION_ID;
 export const BLOG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BLOG_COLLECTION_ID;
+
+// Allowed file type configurations
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+export const ALLOWED_DOCUMENT_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
 
 // Define interfaces for our data
 export interface ProfileData {
@@ -98,9 +107,22 @@ export const logout = async () => {
     }
 };
 
+// File validation functions
+export const validateFileType = (file: File, allowedTypes: string[]): boolean => {
+    return allowedTypes.includes(file.type);
+};
+
 // File storage functions
-export const uploadFile = async (file: File) => {
+export const uploadFile = async (file: File, options?: { allowedTypes?: string[] }) => {
     try {
+        // Default to image types if not specified
+        const allowedTypes = options?.allowedTypes || ALLOWED_IMAGE_TYPES;
+
+        // Validate file type
+        if (!validateFileType(file, allowedTypes)) {
+            throw new Error(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
+        }
+
         const result = await storage.createFile(BUCKET_ID, ID.unique(), file);
         return result;
     } catch (error) {
@@ -113,9 +135,9 @@ export const getFilePreview = (fileId: string) => {
     return storage.getFilePreview(BUCKET_ID, fileId);
 };
 
-export const deleteFile = async (fileId: string) => {
+export const deleteFile = async (fileId: string, bucketId = BUCKET_ID) => {
     try {
-        await storage.deleteFile(BUCKET_ID, fileId);
+        await storage.deleteFile(bucketId, fileId);
         return true;
     } catch (error) {
         console.error('Error deleting file:', error);
@@ -351,4 +373,60 @@ export const incrementBlogPostViewCount = async (postId: string) => {
         // Just silently fail
         return null;
     }
+};
+
+// Functions for managing content images
+export const getContentImages = async (limit = 50): Promise<Models.File[]> => {
+    try {
+        const images = await storage.listFiles(CONTENT_IMAGES_BUCKET_ID, [
+            Query.limit(limit),
+            Query.orderDesc('$createdAt'),
+        ]);
+        return images.files;
+    } catch (error) {
+        console.error('Error getting content images:', error);
+        return [];
+    }
+};
+
+export const updateContentImage = async (fileId: string, file: File): Promise<Models.File> => {
+    try {
+        // Validate file type
+        if (!validateFileType(file, ALLOWED_IMAGE_TYPES)) {
+            throw new Error(`Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`);
+        }
+
+        // Delete the old file
+        await storage.deleteFile(CONTENT_IMAGES_BUCKET_ID, fileId);
+
+        // Upload the new file with the same ID
+        const result = await storage.createFile(CONTENT_IMAGES_BUCKET_ID, fileId, file);
+        return result;
+    } catch (error) {
+        console.error('Error updating content image:', error);
+        throw error;
+    }
+};
+
+// Function to upload an image for blog content and return a markdown-ready URL
+export const uploadContentImage = async (file: File): Promise<{ fileId: string; url: string }> => {
+    try {
+        // Validate file type
+        if (!validateFileType(file, ALLOWED_IMAGE_TYPES)) {
+            throw new Error(`Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`);
+        }
+
+        const result = await storage.createFile(CONTENT_IMAGES_BUCKET_ID, ID.unique(), file);
+        const fileId = result.$id;
+        const url = storage.getFileView(CONTENT_IMAGES_BUCKET_ID, fileId);
+        return { fileId, url };
+    } catch (error) {
+        console.error('Error uploading content image:', error);
+        throw error;
+    }
+};
+
+// Utility function to get content image preview URL
+export const getContentImagePreviewUrl = (fileId: string): string => {
+    return storage.getFileView(CONTENT_IMAGES_BUCKET_ID, fileId);
 };
