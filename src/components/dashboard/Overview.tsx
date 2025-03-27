@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent, CircularProgress, Button, Paper, Stack, Divider } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Card,
+    CardContent,
+    // CircularProgress,
+    LinearProgress,
+    Button,
+    Paper,
+    Stack,
+    Divider,
+} from '@mui/material';
 import { getProfileData, getProjects, ProfileData, ProjectData } from '../../services/appwrite';
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
@@ -41,13 +52,14 @@ const Overview = () => {
         return (
             <Box
                 sx={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 1,
                 }}
             >
-                <CircularProgress />
+                <LinearProgress sx={{ width: '40%' }} />
             </Box>
         );
     }

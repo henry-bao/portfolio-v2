@@ -28,6 +28,7 @@ import {
     Divider,
     Stack,
     Tooltip,
+    LinearProgress,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -511,13 +512,14 @@ const ProjectsList = () => {
         return (
             <Box
                 sx={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 1,
                 }}
             >
-                <CircularProgress />
+                <LinearProgress sx={{ width: '40%' }} />
             </Box>
         );
     }

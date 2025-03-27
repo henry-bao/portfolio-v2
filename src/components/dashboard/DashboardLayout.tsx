@@ -241,6 +241,9 @@ const DashboardLayout = () => {
                     flexGrow: 1,
                     p: isMobile ? 2 : 3,
                     backgroundColor: 'background.default',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '100vh',
                 }}
             >
                 <Toolbar />

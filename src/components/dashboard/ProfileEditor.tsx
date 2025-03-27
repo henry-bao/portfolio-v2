@@ -1,6 +1,18 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid, Paper, CircularProgress, Alert, Chip, Divider } from '@mui/material';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Grid,
+    Paper,
+    CircularProgress,
+    Alert,
+    Chip,
+    Divider,
+    LinearProgress,
+} from '@mui/material';
 import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import {
     getProfileData,
@@ -481,13 +493,14 @@ const ProfileEditor = () => {
         return (
             <Box
                 sx={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 1,
                 }}
             >
-                <CircularProgress />
+                <LinearProgress sx={{ width: '40%' }} />
             </Box>
         );
     }
