@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { CircularProgress } from '@mui/material';
-import { getBlogPosts, BlogPost } from '../../services/appwrite';
-import { getFilePreviewUrl } from '../../services/fileProxy';
+import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import './BlogList.css';
@@ -55,7 +54,7 @@ const BlogList = () => {
                                     {post.coverImageId && (
                                         <div className="blog-list-card-image">
                                             <img
-                                                src={getFilePreviewUrl(post.coverImageId)}
+                                                src={getContentImagePreviewUrl(post.coverImageId)}
                                                 alt={post.title}
                                                 loading="lazy"
                                             />

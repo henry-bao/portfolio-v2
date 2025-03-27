@@ -3,8 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getBlogPostBySlug, BlogPost as BlogPostType, incrementBlogPostViewCount } from '../../services/appwrite';
-import { getFilePreviewUrl } from '../../services/fileProxy';
+import {
+    getBlogPostBySlug,
+    BlogPost as BlogPostType,
+    incrementBlogPostViewCount,
+    getContentImagePreviewUrl,
+} from '../../services/appwrite';
 import { LinearProgress } from '@mui/material';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
@@ -126,7 +130,7 @@ const BlogPost = () => {
 
                     {post.coverImageId && (
                         <div className="blog-post-cover">
-                            <img src={getFilePreviewUrl(post.coverImageId)} alt={post.title} />
+                            <img src={getContentImagePreviewUrl(post.coverImageId)} alt={post.title} />
                         </div>
                     )}
                 </div>

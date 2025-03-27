@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
-import { getBlogPosts, BlogPost } from '../../services/appwrite';
-import { getFilePreviewUrl } from '../../services/fileProxy';
+import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
 import './Blog.css';
 
 const Blog = () => {
@@ -52,7 +51,7 @@ const Blog = () => {
                                         {post.coverImageId && (
                                             <div className="blog-card-image">
                                                 <img
-                                                    src={getFilePreviewUrl(post.coverImageId)}
+                                                    src={getContentImagePreviewUrl(post.coverImageId)}
                                                     alt={post.title}
                                                     loading="lazy"
                                                 />

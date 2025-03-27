@@ -55,7 +55,6 @@ import {
     getBlogPost,
     createBlogPost,
     updateBlogPost,
-    uploadFile,
     deleteFile,
     BlogPost,
     getBlogPostBySlug,
@@ -639,8 +638,8 @@ const BlogEditor = () => {
                 }
 
                 // Upload new cover image
-                const uploadResult = await uploadFile(coverImage);
-                coverImageId = uploadResult.$id;
+                const uploadResult = await uploadContentImage(coverImage);
+                coverImageId = uploadResult.fileId;
             } else if (coverImagePreview === null && coverImageId) {
                 // User removed the cover image
                 await deleteFile(coverImageId);

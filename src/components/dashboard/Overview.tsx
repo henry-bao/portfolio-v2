@@ -4,11 +4,13 @@ import { getProfileData, getProjects, ProfileData, ProjectData } from '../../ser
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
+import { getBlogPosts, BlogPost } from '../../services/appwrite';
 
 const Overview = () => {
     const [profileData, setProfileData] = useState<(Models.Document & ProfileData) | null>(null);
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
     const [resumes, setResumes] = useState<(Models.Document & ResumeVersion)[]>([]);
+    const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -19,10 +21,12 @@ const Overview = () => {
                 const profile = await getProfileData();
                 const projectsList = await getProjects();
                 const resumeList = await getResumeVersions();
+                const blogs = await getBlogPosts(false); // Get all blogs including unpublished
 
                 setProfileData(profile);
                 setProjects(projectsList);
                 setResumes(resumeList);
+                setBlogPosts(blogs);
             } catch (error) {
                 console.error('Error fetching overview data:', error);
             } finally {
@@ -67,7 +71,7 @@ const Overview = () => {
                         {/* Profile Summary Card */}
                         <Card
                             sx={{
-                                flex: { xs: '1 1 100%', md: '1 1 calc(33% - 12px)' },
+                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
                                 display: 'flex',
                                 flexDirection: 'column',
                             }}
@@ -97,7 +101,7 @@ const Overview = () => {
                         {/* Projects Summary Card */}
                         <Card
                             sx={{
-                                flex: { xs: '1 1 100%', md: '1 1 calc(33% - 12px)' },
+                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
                                 display: 'flex',
                                 flexDirection: 'column',
                             }}
@@ -115,10 +119,34 @@ const Overview = () => {
                             </CardContent>
                         </Card>
 
+                        {/* Blog Posts Card */}
+                        <Card
+                            sx={{
+                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
+                            <CardContent sx={{ flexGrow: 1 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Blogs
+                                </Typography>
+                                <Typography variant="body1">Total Posts: {blogPosts.length}</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Published: {blogPosts.filter((post) => post.published).length}
+                                </Typography>
+                                <Box mt={2}>
+                                    <Button variant="contained" onClick={() => navigate('/admin/blogs')}>
+                                        Manage Blogs
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+
                         {/* Resumes Card */}
                         <Card
                             sx={{
-                                flex: { xs: '1 1 100%', md: '1 1 calc(33% - 12px)' },
+                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
                                 display: 'flex',
                                 flexDirection: 'column',
                             }}
@@ -162,6 +190,9 @@ const Overview = () => {
                             </Button>
                             <Button variant="outlined" onClick={() => navigate('/admin/projects/new')}>
                                 Add New Project
+                            </Button>
+                            <Button variant="outlined" onClick={() => navigate('/admin/blogs/new')}>
+                                Create Blog Post
                             </Button>
                             <Button variant="outlined" onClick={() => window.open('/', '_blank')}>
                                 View Portfolio
