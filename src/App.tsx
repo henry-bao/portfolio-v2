@@ -15,6 +15,7 @@ import BlogManager from './components/dashboard/BlogManager';
 import BlogEditor from './components/dashboard/BlogEditor';
 import BlogPost from './components/blog/BlogPost';
 import BlogList from './components/blog/BlogList';
+import NotFound from './components/NotFound';
 
 function App() {
     return (
@@ -44,6 +45,9 @@ function App() {
                                 <Route path="blogs/edit/:postId" element={<BlogEditor />} />
                             </Route>
                         </Route>
+
+                        {/* 404 Not Found Route */}
+                        <Route path="*" element={<NotFound />} />
                     </Routes>
                 </AuthProvider>
             </Router>
