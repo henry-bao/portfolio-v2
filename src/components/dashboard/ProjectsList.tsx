@@ -22,6 +22,11 @@ import {
     Avatar,
     useMediaQuery,
     useTheme,
+    Card,
+    CardContent,
+    CardActions,
+    Divider,
+    Stack,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -122,6 +127,79 @@ const SortableTableRow = ({
                 </IconButton>
             </TableCell>
         </TableRow>
+    );
+};
+
+// Sortable Card component for mobile/tablet view
+interface SortableCardProps {
+    id: string;
+    project: Models.Document & ProjectData;
+    projectImages: Record<string, string>;
+    onEdit: (id: string) => void;
+    onDelete: (id: string) => void;
+}
+
+const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: SortableCardProps) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 1 : 0,
+        touchAction: 'none',
+    };
+
+    return (
+        <Card ref={setNodeRef} style={style} variant="outlined">
+            <CardContent>
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    <IconButton
+                        {...attributes}
+                        {...listeners}
+                        size="small"
+                        sx={{
+                            cursor: 'grab',
+                            color: 'text.secondary',
+                        }}
+                    >
+                        <DragIndicatorIcon />
+                    </IconButton>
+
+                    {projectImages[project.$id] ? (
+                        <Avatar src={projectImages[project.$id]} alt={project.title} sx={{ width: 40, height: 40 }} />
+                    ) : (
+                        <Avatar src="/img/placeholder.svg" alt={project.title} sx={{ width: 40, height: 40 }} />
+                    )}
+
+                    <Typography variant="h6" component="div">
+                        {project.title}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ pl: 6 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <strong>Role:</strong> {project.role}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        <strong>Date:</strong> {project.date}
+                    </Typography>
+                </Box>
+            </CardContent>
+
+            <Divider />
+
+            <CardActions>
+                <Box sx={{ ml: 'auto' }}>
+                    <IconButton color="primary" onClick={() => onEdit(project.$id)} title="Edit project">
+                        <EditIcon />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => onDelete(project.$id)} title="Delete project">
+                        <DeleteIcon />
+                    </IconButton>
+                </Box>
+            </CardActions>
+        </Card>
     );
 };
 
@@ -271,6 +349,112 @@ const ProjectsList = () => {
         setProjectToDelete(null);
     };
 
+    // Card view for mobile and tablet
+    const renderCardView = () => (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={projects.map((project) => project.$id)} strategy={verticalListSortingStrategy}>
+                <Stack spacing={2} mt={2}>
+                    {projects.length === 0 ? (
+                        <Typography color="textSecondary" textAlign="center">
+                            No projects found. Create your first project!
+                        </Typography>
+                    ) : (
+                        projects.map((project) => (
+                            <SortableCard
+                                key={project.$id}
+                                id={project.$id}
+                                project={project}
+                                projectImages={projectImages}
+                                onEdit={handleEditProject}
+                                onDelete={handleDeleteClick}
+                            />
+                        ))
+                    )}
+                </Stack>
+            </SortableContext>
+        </DndContext>
+    );
+
+    // Table view for desktop
+    const renderTableView = () => (
+        <TableContainer
+            sx={{
+                overflowX: 'auto',
+                overflow: 'hidden',
+            }}
+        >
+            <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
+                <TableHead>
+                    <TableRow>
+                        <TableCell padding="none" width="40px"></TableCell>
+                        <TableCell width="60px"></TableCell>
+                        <TableCell>Title</TableCell>
+                        {!isMobile && (
+                            <>
+                                <TableCell>Role</TableCell>
+                            </>
+                        )}
+                        {!isTablet && (
+                            <>
+                                <TableCell>Date</TableCell>
+                            </>
+                        )}
+                        <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody sx={{ position: 'relative', overflow: 'hidden' }}>
+                    {projects.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={isMobile ? 4 : 6} align="center">
+                                No projects found. Create your first project!
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                            // Add configuration to prevent out-of-bounds issues
+                            autoScroll={{
+                                threshold: {
+                                    x: 0, // Disable horizontal scrolling
+                                    y: 0.2, // Reduce vertical scroll sensitivity
+                                },
+                                acceleration: 5, // Slower acceleration
+                                interval: 5, // More frequent but smaller scrolls
+                            }}
+                            // Use a custom modifier to restrict movement to vertical axis only
+                            modifiers={[
+                                ({ transform }) => ({
+                                    ...transform,
+                                    x: 0, // Lock horizontal movement
+                                }),
+                            ]}
+                        >
+                            <SortableContext
+                                items={projects.map((project) => project.$id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {projects.map((project) => (
+                                    <SortableTableRow
+                                        key={project.$id}
+                                        id={project.$id}
+                                        project={project}
+                                        projectImages={projectImages}
+                                        isMobile={isMobile}
+                                        isTablet={isTablet}
+                                        onEdit={handleEditProject}
+                                        onDelete={handleDeleteClick}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </DndContext>
+                    )}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
+
     if (isLoading) {
         return (
             <Box
@@ -287,9 +471,16 @@ const ProjectsList = () => {
     }
 
     return (
-        <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4" component="h1">
+        <Box sx={{ px: { xs: 1, sm: 2 } }}>
+            <Box
+                display="flex"
+                flexDirection={isMobile ? 'column' : 'row'}
+                justifyContent="space-between"
+                alignItems={isMobile ? 'flex-start' : 'center'}
+                mb={3}
+                gap={isMobile ? 2 : 0}
+            >
+                <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
                     Projects
                 </Typography>
                 <Button
@@ -297,6 +488,7 @@ const ProjectsList = () => {
                     color="primary"
                     startIcon={<AddIcon />}
                     onClick={() => navigate('/admin/projects/new')}
+                    fullWidth={isMobile}
                 >
                     {isMobile ? 'Add' : 'Add Project'}
                 </Button>
@@ -314,87 +506,18 @@ const ProjectsList = () => {
                 </Alert>
             )}
 
-            <Paper>
-                <TableContainer
-                    sx={{
-                        overflowX: 'auto',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell padding="none" width="40px"></TableCell>
-                                <TableCell width="60px"></TableCell>
-                                <TableCell>Title</TableCell>
-                                {!isMobile && (
-                                    <>
-                                        <TableCell>Role</TableCell>
-                                    </>
-                                )}
-                                {!isTablet && (
-                                    <>
-                                        <TableCell>Date</TableCell>
-                                    </>
-                                )}
-                                <TableCell align="right">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody sx={{ position: 'relative', overflow: 'hidden' }}>
-                            {projects.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={isMobile ? 4 : 6} align="center">
-                                        No projects found. Create your first project!
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
-                                    // Add configuration to prevent out-of-bounds issues
-                                    autoScroll={{
-                                        threshold: {
-                                            x: 0, // Disable horizontal scrolling
-                                            y: 0.2, // Reduce vertical scroll sensitivity
-                                        },
-                                        acceleration: 5, // Slower acceleration
-                                        interval: 5, // More frequent but smaller scrolls
-                                    }}
-                                    // Use a custom modifier to restrict movement to vertical axis only
-                                    modifiers={[
-                                        ({ transform }) => ({
-                                            ...transform,
-                                            x: 0, // Lock horizontal movement
-                                        }),
-                                    ]}
-                                >
-                                    <SortableContext
-                                        items={projects.map((project) => project.$id)}
-                                        strategy={verticalListSortingStrategy}
-                                    >
-                                        {projects.map((project) => (
-                                            <SortableTableRow
-                                                key={project.$id}
-                                                id={project.$id}
-                                                project={project}
-                                                projectImages={projectImages}
-                                                isMobile={isMobile}
-                                                isTablet={isTablet}
-                                                onEdit={handleEditProject}
-                                                onDelete={handleDeleteClick}
-                                            />
-                                        ))}
-                                    </SortableContext>
-                                </DndContext>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+                {/* Card view for mobile/tablet, Table view for desktop */}
+                {isTablet ? renderCardView() : renderTableView()}
             </Paper>
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={handleDeleteCancel}
+                fullWidth={isMobile}
+                maxWidth={isMobile ? 'sm' : 'xs'}
+            >
                 <DialogTitle>Delete Project</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
