@@ -20,6 +20,14 @@
     justify-content: space-between;
 }
 
+.nav-admin-button {
+    background-color: #2f7295;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
 .menu-list {
     display: inline-flex;
     list-style: none;

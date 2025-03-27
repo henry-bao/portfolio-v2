@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link as ScrollLink } from 'react-scroll';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import './Navbar.css';
+import '../layout/Navbar.css';
 
-const Navbar = () => {
+const BlogNav = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const { isAuthenticated } = useAuth();
@@ -32,30 +31,15 @@ const Navbar = () => {
         <nav className={`nav ${isSticky ? 'sticky' : ''}`}>
             <div className="nav-content">
                 <div className="logo">
-                    <ScrollLink to="home" duration={20} onClick={closeMenu}>
+                    <RouterLink to="/" onClick={closeMenu}>
                         Henry Bao
-                    </ScrollLink>
+                    </RouterLink>
                 </div>
                 <ul className={`menu-list ${menuOpen ? 'active' : ''}`}>
                     <li>
-                        <ScrollLink to="home" duration={20} onClick={closeMenu}>
-                            Home
-                        </ScrollLink>
-                    </li>
-                    <li>
-                        <ScrollLink to="about" duration={20} onClick={closeMenu}>
-                            About Me
-                        </ScrollLink>
-                    </li>
-                    <li>
-                        <ScrollLink to="projects" duration={20} onClick={closeMenu}>
-                            Projects
-                        </ScrollLink>
-                    </li>
-                    <li>
-                        <ScrollLink to="blogs" duration={20} onClick={closeMenu}>
-                            Blogs
-                        </ScrollLink>
+                        <RouterLink to="/" onClick={closeMenu}>
+                            Back to Home
+                        </RouterLink>
                     </li>
                     {isAuthenticated && (
                         <li>
@@ -73,4 +57,4 @@ const Navbar = () => {
     );
 };
 
-export default Navbar;
+export default BlogNav;

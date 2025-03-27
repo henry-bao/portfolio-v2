@@ -11,6 +11,10 @@ import ProfileEditor from './components/dashboard/ProfileEditor';
 import ProjectsList from './components/dashboard/ProjectsList';
 import ProjectEditor from './components/dashboard/ProjectEditor';
 import ResumeManager from './components/dashboard/ResumeManager';
+import BlogManager from './components/dashboard/BlogManager';
+import BlogEditor from './components/dashboard/BlogEditor';
+import BlogPost from './components/blog/BlogPost';
+import BlogList from './components/blog/BlogList';
 
 function App() {
     return (
@@ -20,6 +24,8 @@ function App() {
                     <Routes>
                         {/* Public Portfolio Routes */}
                         <Route path="/" element={<Portfolio />} />
+                        <Route path="/blogs" element={<BlogList />} />
+                        <Route path="/blogs/:slug" element={<BlogPost />} />
 
                         <Route path="/admin/login" element={<Login />} />
 
@@ -33,6 +39,9 @@ function App() {
                                 <Route path="projects/new" element={<ProjectEditor />} />
                                 <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
                                 <Route path="resumes" element={<ResumeManager />} />
+                                <Route path="blogs" element={<BlogManager />} />
+                                <Route path="blogs/new" element={<BlogEditor />} />
+                                <Route path="blogs/edit/:postId" element={<BlogEditor />} />
                             </Route>
                         </Route>
                     </Routes>

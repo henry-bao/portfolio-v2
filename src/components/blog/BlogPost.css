@@ -1,0 +1,244 @@
+/* Import shared variables */
+@import '../shared/markdown-variables.css';
+
+.blog-post-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 6rem 1rem 2rem;
+    color: var(--primary-text-color);
+}
+
+.blog-post-header {
+    margin-bottom: 2rem;
+}
+
+.back-to-blog {
+    display: inline-block;
+    margin-bottom: 2rem;
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+    border-bottom: 1px solid var(--link-color);
+}
+
+.back-to-blog:hover {
+    color: var(--link-hover-color);
+    border-color: var(--link-hover-color);
+}
+
+.blog-post-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--primary-text-color);
+    line-height: 1.2;
+}
+
+.blog-post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.blog-post-date {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+.blog-post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.blog-post-tag {
+    background-color: var(--tag-bg-color);
+    color: var(--primary-text-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.blog-post-cover {
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.blog-post-cover img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+}
+
+.blog-post-content {
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+/* Markdown content styling - now using variables defined in :root */
+.blog-post-content h1,
+.blog-post-content h2,
+.blog-post-content h3,
+.blog-post-content h4,
+.blog-post-content h5,
+.blog-post-content h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-text-color);
+    font-weight: 600;
+}
+
+.blog-post-content h1 {
+    font-size: 2rem;
+}
+
+.blog-post-content h2 {
+    font-size: 1.75rem;
+}
+
+.blog-post-content h3 {
+    font-size: 1.5rem;
+}
+
+.blog-post-content h4 {
+    font-size: 1.25rem;
+}
+
+.blog-post-content p {
+    margin-bottom: 1.5rem;
+}
+
+.blog-post-content a {
+    color: var(--link-color);
+    text-decoration: none;
+    border-bottom: 1px solid var(--link-color);
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.blog-post-content a:hover {
+    color: var(--link-hover-color);
+    border-color: var(--link-hover-color);
+}
+
+.blog-post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.blog-post-content ul,
+.blog-post-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.blog-post-content ul {
+    list-style-type: disc;
+}
+
+.blog-post-content ol {
+    list-style-type: decimal;
+    margin-left: 1em;
+}
+
+.blog-post-content li {
+    margin-bottom: 0.5rem;
+}
+
+.blog-post-content blockquote {
+    border-left: 4px solid var(--blockquote-border-color);
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+    font-style: italic;
+    color: var(--muted-text-color);
+}
+
+.blog-post-content pre {
+    background-color: var(--code-bg-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.blog-post-content code {
+    background-color: var(--code-bg-color);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.blog-post-content pre code {
+    padding: 0;
+    background-color: transparent;
+}
+
+.blog-post-content hr {
+    border: none;
+    height: 1px;
+    background-color: var(--muted-text-color);
+    margin: 2rem 0;
+}
+
+.blog-post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.blog-post-content th,
+.blog-post-content td {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.blog-post-content th {
+    background-color: var(--code-bg-color);
+    font-weight: 600;
+}
+
+.loading-spinner,
+.error-message {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.error-message h2 {
+    color: red;
+    margin-bottom: 1rem;
+}
+
+.back-button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--link-color);
+    color: var(--primary-text-color);
+    text-decoration: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: var(--link-hover-color);
+}
+
+@media (max-width: 768px) {
+    .blog-post-title {
+        font-size: 2rem;
+    }
+
+    .blog-post-content {
+        font-size: 1rem;
+    }
+}

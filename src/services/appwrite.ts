@@ -17,6 +17,7 @@ export const BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
 export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 export const PROFILE_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROFILE_COLLECTION_ID;
 export const PROJECTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROJECTS_COLLECTION_ID;
+export const BLOG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BLOG_COLLECTION_ID;
 
 // Define interfaces for our data
 export interface ProfileData {
@@ -41,6 +42,17 @@ export interface ProjectData {
     link_text?: string;
     isOpen?: boolean;
     order?: number;
+}
+
+export interface BlogPost {
+    title: string;
+    content: string;
+    summary: string;
+    slug: string;
+    coverImageId?: string;
+    publishedDate: string;
+    published: boolean;
+    tags?: string[];
 }
 
 // Authentication functions
@@ -176,13 +188,9 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
 export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> => {
     try {
         // Query with sorting by order field
-        const data = await databases.listDocuments(
-            DATABASE_ID,
-            PROJECTS_COLLECTION_ID,
-            [
-                Query.orderAsc('order') // Sort by order ascending
-            ]
-        );
+        const data = await databases.listDocuments(DATABASE_ID, PROJECTS_COLLECTION_ID, [
+            Query.orderAsc('order'), // Sort by order ascending
+        ]);
 
         return data.documents as (Models.Document & ProjectData)[];
     } catch (error) {
@@ -225,6 +233,100 @@ export const deleteProject = async (projectId: string) => {
         return true;
     } catch (error) {
         console.error('Error deleting project:', error);
+        throw error;
+    }
+};
+
+// Database functions for blog posts
+export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Document & BlogPost)[]> => {
+    try {
+        const queries = [Query.orderDesc('publishedDate')];
+
+        // If we only want published posts (for public view)
+        if (publishedOnly) {
+            queries.push(Query.equal('published', true));
+        }
+
+        const data = await databases.listDocuments(DATABASE_ID, BLOG_COLLECTION_ID, queries);
+        return data.documents as (Models.Document & BlogPost)[];
+    } catch (error) {
+        console.error('Error getting blog posts:', error);
+        return [];
+    }
+};
+
+export const getBlogPost = async (postId: string): Promise<Models.Document & BlogPost> => {
+    try {
+        return (await databases.getDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId)) as Models.Document & BlogPost;
+    } catch (error) {
+        console.error('Error getting blog post:', error);
+        throw error;
+    }
+};
+
+export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document & BlogPost) | null> => {
+    try {
+        const data = await databases.listDocuments(DATABASE_ID, BLOG_COLLECTION_ID, [Query.equal('slug', slug)]);
+
+        if (data.documents.length === 0) {
+            return null;
+        }
+
+        return data.documents[0] as Models.Document & BlogPost;
+    } catch (error) {
+        console.error('Error getting blog post by slug:', error);
+        return null;
+    }
+};
+
+export const createBlogPost = async (data: BlogPost) => {
+    try {
+        // Create a document with the correct structure
+        const documentData: Record<string, unknown> = {
+            title: data.title,
+            content: data.content,
+            summary: data.summary,
+            slug: data.slug,
+            publishedDate: data.publishedDate,
+            published: data.published || false,
+        };
+
+        if (data.coverImageId) documentData.coverImageId = data.coverImageId;
+        if (data.tags) documentData.tags = data.tags;
+
+        return await databases.createDocument(DATABASE_ID, BLOG_COLLECTION_ID, ID.unique(), documentData);
+    } catch (error) {
+        console.error('Error creating blog post:', error);
+        throw error;
+    }
+};
+
+export const updateBlogPost = async (postId: string, data: Partial<BlogPost>) => {
+    try {
+        const documentData: Record<string, unknown> = {};
+
+        if (data.title !== undefined) documentData.title = data.title;
+        if (data.content !== undefined) documentData.content = data.content;
+        if (data.summary !== undefined) documentData.summary = data.summary;
+        if (data.slug !== undefined) documentData.slug = data.slug;
+        if (data.publishedDate !== undefined) documentData.publishedDate = data.publishedDate;
+        if (data.published !== undefined) documentData.published = data.published;
+        if (data.coverImageId !== undefined) documentData.coverImageId = data.coverImageId;
+        if (data.tags !== undefined) documentData.tags = data.tags;
+
+        return await databases.updateDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId, documentData);
+    } catch (error) {
+        console.error('Error updating blog post:', error);
+        throw error;
+    }
+};
+
+export const deleteBlogPost = async (postId: string) => {
+    try {
+        await databases.deleteDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId);
+        return true;
+    } catch (error) {
+        console.error('Error deleting blog post:', error);
         throw error;
     }
 };

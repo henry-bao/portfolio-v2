@@ -1,0 +1,10 @@
+:root {
+    --primary-text-color: white;
+    --muted-text-color: rgba(200, 200, 200);
+    --link-color: #2f7295;
+    --link-hover-color: #c0738b;
+    --code-bg-color: rgba(40, 40, 40);
+    --border-color: rgba(200, 200, 200, 0.3);
+    --blockquote-border-color: #2f7295;
+    --tag-bg-color: #2f7295;
+}

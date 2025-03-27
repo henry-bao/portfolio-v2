@@ -9,6 +9,7 @@ import Navbar from './components/layout/Navbar';
 import About from './components/sections/About';
 import Landing from './components/sections/Landing';
 import Projects from './components/sections/Projects';
+import Blog from './components/sections/Blog';
 
 import './Portfolio.css';
 
@@ -62,6 +63,7 @@ function Portfolio() {
                 <Landing />
                 <About profile={profile} resumeUrl={resumeUrl} profileImageUrl={profileImageUrl} />
                 <Projects />
+                <Blog />
             </main>
             <Footer resumeUrl={resumeUrl} />
         </>

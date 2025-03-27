@@ -29,6 +29,7 @@ import {
     KeyboardDoubleArrowRight as RightIcon,
     Home,
     Description as ResumeIcon,
+    Book as BlogIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
@@ -104,6 +105,7 @@ const DashboardLayout = () => {
         { text: 'Overview', icon: <DashboardIcon />, path: '/admin/overview' },
         { text: 'Profile', icon: <PersonIcon />, path: '/admin/profile' },
         { text: 'Projects', icon: <WorkIcon />, path: '/admin/projects' },
+        { text: 'Blogs', icon: <BlogIcon />, path: '/admin/blogs' },
         { text: 'Resumes', icon: <ResumeIcon />, path: '/admin/resumes' },
     ];
 
