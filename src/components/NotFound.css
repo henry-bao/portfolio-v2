@@ -2,10 +2,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
     background-color: black;
     color: white;
     padding: 2rem;
+    min-height: 100dvh;
 }
 
 .not-found-content {

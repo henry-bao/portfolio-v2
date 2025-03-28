@@ -1,7 +1,7 @@
 .about-css {
     background-color: rgba(245, 245, 245);
     color: black;
-    min-height: 100vh;
+    min-height: 100dvh;
     padding-left: 3em;
     padding-right: 3em;
     padding-top: 5em;

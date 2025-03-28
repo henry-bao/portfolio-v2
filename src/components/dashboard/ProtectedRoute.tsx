@@ -7,7 +7,7 @@ const ProtectedRoute = () => {
 
     if (isLoading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100dvh">
                 <CircularProgress />
             </Box>
         );
