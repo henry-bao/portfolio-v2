@@ -406,7 +406,7 @@ const ProjectsManager = () => {
                     }}
                 >
                     {isLoading ? (
-                        <Box>
+                        <Box display="flex" justifyContent="center" alignItems="center" py={2}>
                             <CircularProgress />
                         </Box>
                     ) : projects.length === 0 ? (

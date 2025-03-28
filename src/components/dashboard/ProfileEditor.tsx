@@ -496,7 +496,7 @@ const ProfileEditor = () => {
     return (
         <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-                {loading ? 'Loading Profile' : profile ? 'Edit Profile' : 'Create Profile'}
+                Profile
             </Typography>
 
             {error && (

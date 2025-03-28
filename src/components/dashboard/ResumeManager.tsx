@@ -257,7 +257,7 @@ const ResumeManager = () => {
                 </Alert>
             )}
 
-            <Paper>
+            <Paper sx={{ mb: 3 }}>
                 <TableContainer sx={{ overflowX: 'auto', overflow: 'hidden' }}>
                     <Table>
                         <TableHead>
