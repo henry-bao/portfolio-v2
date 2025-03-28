@@ -28,7 +28,6 @@ import {
     Divider,
     Stack,
     Tooltip,
-    LinearProgress,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -232,7 +231,7 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
     );
 };
 
-const ProjectsList = () => {
+const ProjectsManager = () => {
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
     const [projectImages, setProjectImages] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -400,14 +399,17 @@ const ProjectsList = () => {
             <SortableContext items={projects.map((project) => project.$id)} strategy={verticalListSortingStrategy}>
                 <Stack
                     spacing={2}
-                    mt={2}
                     sx={{
                         touchAction: 'pan-y', // Enable vertical scrolling on touch
                         overflowY: 'auto',
                         width: '100%',
                     }}
                 >
-                    {projects.length === 0 ? (
+                    {isLoading ? (
+                        <Box>
+                            <CircularProgress />
+                        </Box>
+                    ) : projects.length === 0 ? (
                         <Typography color="textSecondary" textAlign="center">
                             No projects found. Create your first project!
                         </Typography>
@@ -456,9 +458,15 @@ const ProjectsList = () => {
                     </TableRow>
                 </TableHead>
                 <TableBody sx={{ position: 'relative', overflow: 'hidden' }}>
-                    {projects.length === 0 ? (
+                    {isLoading ? (
                         <TableRow>
-                            <TableCell colSpan={isMobile ? 4 : 6} align="center">
+                            <TableCell colSpan={isMobile ? 4 : isTablet ? 5 : 6} align="center">
+                                <CircularProgress />
+                            </TableCell>
+                        </TableRow>
+                    ) : projects.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={isMobile ? 4 : isTablet ? 5 : 6} align="center">
                                 No projects found. Create your first project!
                             </TableCell>
                         </TableRow>
@@ -508,35 +516,11 @@ const ProjectsList = () => {
         </TableContainer>
     );
 
-    if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flex: 1,
-                }}
-            >
-                <LinearProgress sx={{ width: '40%' }} />
-            </Box>
-        );
-    }
-
     return (
-        <Box
-            sx={{
-                px: { xs: 1, sm: 2 },
-                width: '100%',
-                maxWidth: '100%',
-                boxSizing: 'border-box',
-                overflow: 'hidden',
-            }}
-        >
+        <Box>
             <Box
                 display="flex"
-                flexDirection={isMobile ? 'column' : 'row'}
+                flexDirection="row"
                 justifyContent="space-between"
                 alignItems={isMobile ? 'flex-start' : 'center'}
                 mb={3}
@@ -550,9 +534,8 @@ const ProjectsList = () => {
                     color="primary"
                     startIcon={<AddIcon />}
                     onClick={() => navigate('/admin/projects/new')}
-                    fullWidth={isMobile}
                 >
-                    {isMobile ? 'Add' : 'Add Project'}
+                    Add
                 </Button>
             </Box>
 
@@ -568,7 +551,7 @@ const ProjectsList = () => {
                 </Alert>
             )}
 
-            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, width: '100%', overflow: 'hidden' }}>
+            <Paper sx={{ p: { xs: 2, sm:0 }, mb: 3, width: '100%', overflow: 'hidden' }}>
                 {/* Card view for mobile/tablet, Table view for desktop */}
                 {isTablet ? renderCardView() : renderTableView()}
             </Paper>
@@ -604,4 +587,4 @@ const ProjectsList = () => {
     );
 };
 
-export default ProjectsList;
+export default ProjectsManager;

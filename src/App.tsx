@@ -8,7 +8,7 @@ import Login from './components/dashboard/Login';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 import Overview from './components/dashboard/Overview';
 import ProfileEditor from './components/dashboard/ProfileEditor';
-import ProjectsList from './components/dashboard/ProjectsList';
+import ProjectsManager from './components/dashboard/ProjectsManager';
 import ProjectEditor from './components/dashboard/ProjectEditor';
 import ResumeManager from './components/dashboard/ResumeManager';
 import BlogManager from './components/dashboard/BlogManager';
@@ -36,7 +36,7 @@ function App() {
                             <Route element={<DashboardLayout />}>
                                 <Route path="overview" element={<Overview />} />
                                 <Route path="profile" element={<ProfileEditor />} />
-                                <Route path="projects" element={<ProjectsList />} />
+                                <Route path="projects" element={<ProjectsManager />} />
                                 <Route path="projects/new" element={<ProjectEditor />} />
                                 <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
                                 <Route path="resumes" element={<ResumeManager />} />

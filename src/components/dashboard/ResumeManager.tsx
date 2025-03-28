@@ -22,7 +22,6 @@ import {
     Chip,
     useMediaQuery,
     useTheme,
-    LinearProgress,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -225,30 +224,23 @@ const ResumeManager = () => {
         });
     };
 
-    if (isLoading) {
-        return (
+    return (
+        <Box>
             <Box
                 sx={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flex: 1,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: { xs: 2, sm: 0 },
+                    mb: 3,
                 }}
             >
-                <LinearProgress sx={{ width: '40%' }} />
-            </Box>
-        );
-    }
-
-    return (
-        <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4" component="h1">
+                <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
                     Resumes
                 </Typography>
                 <Button variant="contained" color="primary" startIcon={<AddIcon />} component="label">
-                    {isMobile ? 'Upload' : 'Upload New Resume'}
+                    Upload
                     <input type="file" hidden accept=".pdf" onChange={handleResumeFileChange} />
                 </Button>
             </Box>
@@ -280,7 +272,13 @@ const ResumeManager = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {resumeVersions.length === 0 ? (
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
+                                        <CircularProgress />
+                                    </TableCell>
+                                </TableRow>
+                            ) : resumeVersions.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
                                         No resume versions found. Upload your first resume!

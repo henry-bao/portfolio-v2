@@ -524,15 +524,29 @@ const BlogManager = () => {
     );
 
     return (
-        <Box sx={{ px: { xs: 1, sm: 2 } }}>
-            <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}
+        <Box>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    gap: { xs: 2, sm: 0 },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    mb: 3,
+                }}
             >
-                Blogs
-            </Typography>
+                <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
+                    Blogs
+                </Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    onClick={handleNewPost}
+                >
+                    New
+                </Button>
+            </Box>
 
             <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
                 <Box
@@ -551,15 +565,6 @@ const BlogManager = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         sx={{ width: isMobile ? '100%' : '300px' }}
                     />
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={handleNewPost}
-                        fullWidth={isMobile}
-                    >
-                        New
-                    </Button>
                 </Box>
 
                 {isLoading ? (
