@@ -11,7 +11,7 @@ import {
     Alert,
     Chip,
     Divider,
-    LinearProgress,
+    Skeleton,
 } from '@mui/material';
 import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import {
@@ -138,7 +138,7 @@ const StyledDragOverlay = ({ children }: { children: React.ReactNode }) => {
 
 const ProfileEditor = () => {
     const [profile, setProfile] = useState<Models.Document | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -185,7 +185,6 @@ const ProfileEditor = () => {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            setIsLoading(true);
             try {
                 const profileData = await getProfileData();
 
@@ -214,23 +213,28 @@ const ProfileEditor = () => {
                     }
 
                     // Check for active resume first
-                    const activeResume = await getActiveResumeVersion();
-                    if (activeResume) {
-                        setResumeFileName(activeResume.fileName);
-                    }
-                    // Fallback to profile resumeFileId if no active resume
-                    else if (mappedData.resumeFileId) {
-                        setResumeFileName('Resume.pdf'); // Default name, could be stored in metadata
+                    try {
+                        const activeResume = await getActiveResumeVersion();
+                        if (activeResume) {
+                            setResumeFileName(activeResume.fileName);
+                        }
+                        // Fallback to profile resumeFileId if no active resume
+                        else if (mappedData.resumeFileId) {
+                            setResumeFileName('Resume.pdf'); // Default name, could be stored in metadata
+                        }
+                    } catch (error) {
+                        console.error('Error fetching active resume:', error);
                     }
                 }
             } catch (error) {
                 console.error('Error fetching profile:', error);
                 setError('Failed to load profile data');
             } finally {
-                setIsLoading(false);
+                setLoading(false);
             }
         };
 
+        // Start loading data after initial render
         fetchProfile();
     }, []);
 
@@ -489,26 +493,10 @@ const ProfileEditor = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flex: 1,
-                }}
-            >
-                <LinearProgress sx={{ width: '40%' }} />
-            </Box>
-        );
-    }
-
     return (
         <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-                {profile ? 'Edit Profile' : 'Create Profile'}
+                {loading ? 'Loading Profile' : profile ? 'Edit Profile' : 'Create Profile'}
             </Typography>
 
             {error && (
@@ -534,26 +522,34 @@ const ProfileEditor = () => {
 
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Name"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    margin="normal"
-                                    required
-                                />
+                                {loading ? (
+                                    <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                ) : (
+                                    <TextField
+                                        fullWidth
+                                        label="Name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                        required
+                                    />
+                                )}
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="Email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    margin="normal"
-                                    required
-                                />
+                                {loading ? (
+                                    <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                ) : (
+                                    <TextField
+                                        fullWidth
+                                        label="Email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                        required
+                                    />
+                                )}
                             </Grid>
                         </Grid>
                     </Grid>
@@ -565,65 +561,78 @@ const ProfileEditor = () => {
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <TextField
-                                fullWidth
-                                label="Add Pronoun"
-                                name="newPronoun"
-                                value={formData.newPronoun}
-                                onChange={handleInputChange}
-                                margin="normal"
-                            />
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddPronoun}
-                                sx={{ ml: 2, mt: 1 }}
-                            >
-                                Add
-                            </Button>
-                        </Box>
-
-                        <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCorners}
-                                onDragStart={handleDragStart}
-                                onDragOver={handleDragOver}
-                                onDragEnd={handleDragEndPronouns}
-                                onDragCancel={resetDragStates}
-                            >
-                                <SortableContext
-                                    items={formData.pronouns.map((p) => `pronoun-${p}`)}
-                                    strategy={rectSortingStrategy}
-                                >
-                                    <Box
-                                        display="flex"
-                                        flexWrap="wrap"
-                                        width="100%"
-                                        sx={{
-                                            minHeight: '50px',
-                                            position: 'relative',
-                                        }}
+                        {loading ? (
+                            <>
+                                <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                                    <Skeleton animation="wave" height={32} width={100} sx={{ mr: 1 }} />
+                                    <Skeleton animation="wave" height={32} width={120} sx={{ mr: 1 }} />
+                                    <Skeleton animation="wave" height={32} width={80} />
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <Box display="flex" alignItems="center" mb={2}>
+                                    <TextField
+                                        fullWidth
+                                        label="Add Pronoun"
+                                        name="newPronoun"
+                                        value={formData.newPronoun}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={handleAddPronoun}
+                                        sx={{ ml: 2, mt: 1 }}
                                     >
-                                        {formData.pronouns.map((pronoun, index) => (
-                                            <SortableChip
-                                                key={`pronoun-${pronoun}`}
-                                                id={`pronoun-${pronoun}`}
-                                                label={pronoun}
-                                                onDelete={() => handleRemovePronoun(index)}
-                                                isDraggedOver={overItemId === `pronoun-${pronoun}`}
-                                            />
-                                        ))}
-                                    </Box>
-                                </SortableContext>
-                                <StyledDragOverlay>
-                                    {activeId && activeDragData?.type === 'pronoun' ? (
-                                        <RegularChip label={activeDragData.label} onDelete={undefined} />
-                                    ) : null}
-                                </StyledDragOverlay>
-                            </DndContext>
-                        </Box>
+                                        Add
+                                    </Button>
+                                </Box>
+
+                                <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCorners}
+                                        onDragStart={handleDragStart}
+                                        onDragOver={handleDragOver}
+                                        onDragEnd={handleDragEndPronouns}
+                                        onDragCancel={resetDragStates}
+                                    >
+                                        <SortableContext
+                                            items={formData.pronouns.map((p) => `pronoun-${p}`)}
+                                            strategy={rectSortingStrategy}
+                                        >
+                                            <Box
+                                                display="flex"
+                                                flexWrap="wrap"
+                                                width="100%"
+                                                sx={{
+                                                    minHeight: '50px',
+                                                    position: 'relative',
+                                                }}
+                                            >
+                                                {formData.pronouns.map((pronoun, index) => (
+                                                    <SortableChip
+                                                        key={`pronoun-${pronoun}`}
+                                                        id={`pronoun-${pronoun}`}
+                                                        label={pronoun}
+                                                        onDelete={() => handleRemovePronoun(index)}
+                                                        isDraggedOver={overItemId === `pronoun-${pronoun}`}
+                                                    />
+                                                ))}
+                                            </Box>
+                                        </SortableContext>
+                                        <StyledDragOverlay>
+                                            {activeId && activeDragData?.type === 'pronoun' ? (
+                                                <RegularChip label={activeDragData.label} onDelete={undefined} />
+                                            ) : null}
+                                        </StyledDragOverlay>
+                                    </DndContext>
+                                </Box>
+                            </>
+                        )}
                     </Grid>
 
                     {/* Education */}
@@ -633,65 +642,78 @@ const ProfileEditor = () => {
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <TextField
-                                fullWidth
-                                label="Add Education"
-                                name="newEducation"
-                                value={formData.newEducation}
-                                onChange={handleInputChange}
-                                margin="normal"
-                            />
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddEducation}
-                                sx={{ ml: 2, mt: 1 }}
-                            >
-                                Add
-                            </Button>
-                        </Box>
-
-                        <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCorners}
-                                onDragStart={handleDragStart}
-                                onDragOver={handleDragOver}
-                                onDragEnd={handleDragEndEducation}
-                                onDragCancel={resetDragStates}
-                            >
-                                <SortableContext
-                                    items={formData.education.map((e) => `education-${e}`)}
-                                    strategy={rectSortingStrategy}
-                                >
-                                    <Box
-                                        display="flex"
-                                        flexWrap="wrap"
-                                        width="100%"
-                                        sx={{
-                                            minHeight: '50px',
-                                            position: 'relative',
-                                        }}
+                        {loading ? (
+                            <>
+                                <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                                    <Skeleton animation="wave" height={32} width={120} sx={{ mr: 1 }} />
+                                    <Skeleton animation="wave" height={32} width={150} sx={{ mr: 1 }} />
+                                    <Skeleton animation="wave" height={32} width={180} />
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <Box display="flex" alignItems="center" mb={2}>
+                                    <TextField
+                                        fullWidth
+                                        label="Add Education"
+                                        name="newEducation"
+                                        value={formData.newEducation}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={handleAddEducation}
+                                        sx={{ ml: 2, mt: 1 }}
                                     >
-                                        {formData.education.map((edu, index) => (
-                                            <SortableChip
-                                                key={`education-${edu}`}
-                                                id={`education-${edu}`}
-                                                label={edu}
-                                                onDelete={() => handleRemoveEducation(index)}
-                                                isDraggedOver={overItemId === `education-${edu}`}
-                                            />
-                                        ))}
-                                    </Box>
-                                </SortableContext>
-                                <StyledDragOverlay>
-                                    {activeId && activeDragData?.type === 'education' ? (
-                                        <RegularChip label={activeDragData.label} onDelete={undefined} />
-                                    ) : null}
-                                </StyledDragOverlay>
-                            </DndContext>
-                        </Box>
+                                        Add
+                                    </Button>
+                                </Box>
+
+                                <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCorners}
+                                        onDragStart={handleDragStart}
+                                        onDragOver={handleDragOver}
+                                        onDragEnd={handleDragEndEducation}
+                                        onDragCancel={resetDragStates}
+                                    >
+                                        <SortableContext
+                                            items={formData.education.map((e) => `education-${e}`)}
+                                            strategy={rectSortingStrategy}
+                                        >
+                                            <Box
+                                                display="flex"
+                                                flexWrap="wrap"
+                                                width="100%"
+                                                sx={{
+                                                    minHeight: '50px',
+                                                    position: 'relative',
+                                                }}
+                                            >
+                                                {formData.education.map((edu, index) => (
+                                                    <SortableChip
+                                                        key={`education-${edu}`}
+                                                        id={`education-${edu}`}
+                                                        label={edu}
+                                                        onDelete={() => handleRemoveEducation(index)}
+                                                        isDraggedOver={overItemId === `education-${edu}`}
+                                                    />
+                                                ))}
+                                            </Box>
+                                        </SortableContext>
+                                        <StyledDragOverlay>
+                                            {activeId && activeDragData?.type === 'education' ? (
+                                                <RegularChip label={activeDragData.label} onDelete={undefined} />
+                                            ) : null}
+                                        </StyledDragOverlay>
+                                    </DndContext>
+                                </Box>
+                            </>
+                        )}
                     </Grid>
 
                     {/* Languages */}
@@ -701,65 +723,78 @@ const ProfileEditor = () => {
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
-                        <Box display="flex" alignItems="center" mb={2}>
-                            <TextField
-                                fullWidth
-                                label="Add Language"
-                                name="newLanguage"
-                                value={formData.newLanguage}
-                                onChange={handleInputChange}
-                                margin="normal"
-                            />
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddLanguage}
-                                sx={{ ml: 2, mt: 1 }}
-                            >
-                                Add
-                            </Button>
-                        </Box>
-
-                        <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCorners}
-                                onDragStart={handleDragStart}
-                                onDragOver={handleDragOver}
-                                onDragEnd={handleDragEndLanguages}
-                                onDragCancel={resetDragStates}
-                            >
-                                <SortableContext
-                                    items={formData.languages.map((l) => `language-${l}`)}
-                                    strategy={rectSortingStrategy}
-                                >
-                                    <Box
-                                        display="flex"
-                                        flexWrap="wrap"
-                                        width="100%"
-                                        sx={{
-                                            minHeight: '50px',
-                                            position: 'relative',
-                                        }}
+                        {loading ? (
+                            <>
+                                <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                                    <Skeleton animation="wave" height={32} width={100} sx={{ mr: 1 }} />
+                                    <Skeleton animation="wave" height={32} width={110} sx={{ mr: 1 }} />
+                                    <Skeleton animation="wave" height={32} width={90} />
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <Box display="flex" alignItems="center" mb={2}>
+                                    <TextField
+                                        fullWidth
+                                        label="Add Language"
+                                        name="newLanguage"
+                                        value={formData.newLanguage}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={handleAddLanguage}
+                                        sx={{ ml: 2, mt: 1 }}
                                     >
-                                        {formData.languages.map((language, index) => (
-                                            <SortableChip
-                                                key={`language-${language}`}
-                                                id={`language-${language}`}
-                                                label={language}
-                                                onDelete={() => handleRemoveLanguage(index)}
-                                                isDraggedOver={overItemId === `language-${language}`}
-                                            />
-                                        ))}
-                                    </Box>
-                                </SortableContext>
-                                <StyledDragOverlay>
-                                    {activeId && activeDragData?.type === 'language' ? (
-                                        <RegularChip label={activeDragData.label} onDelete={undefined} />
-                                    ) : null}
-                                </StyledDragOverlay>
-                            </DndContext>
-                        </Box>
+                                        Add
+                                    </Button>
+                                </Box>
+
+                                <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCorners}
+                                        onDragStart={handleDragStart}
+                                        onDragOver={handleDragOver}
+                                        onDragEnd={handleDragEndLanguages}
+                                        onDragCancel={resetDragStates}
+                                    >
+                                        <SortableContext
+                                            items={formData.languages.map((l) => `language-${l}`)}
+                                            strategy={rectSortingStrategy}
+                                        >
+                                            <Box
+                                                display="flex"
+                                                flexWrap="wrap"
+                                                width="100%"
+                                                sx={{
+                                                    minHeight: '50px',
+                                                    position: 'relative',
+                                                }}
+                                            >
+                                                {formData.languages.map((language, index) => (
+                                                    <SortableChip
+                                                        key={`language-${language}`}
+                                                        id={`language-${language}`}
+                                                        label={language}
+                                                        onDelete={() => handleRemoveLanguage(index)}
+                                                        isDraggedOver={overItemId === `language-${language}`}
+                                                    />
+                                                ))}
+                                            </Box>
+                                        </SortableContext>
+                                        <StyledDragOverlay>
+                                            {activeId && activeDragData?.type === 'language' ? (
+                                                <RegularChip label={activeDragData.label} onDelete={undefined} />
+                                            ) : null}
+                                        </StyledDragOverlay>
+                                    </DndContext>
+                                </Box>
+                            </>
+                        )}
                     </Grid>
 
                     {/* Social Links */}
@@ -771,24 +806,32 @@ const ProfileEditor = () => {
 
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="LinkedIn URL"
-                                    name="linkedin"
-                                    value={formData.linkedin}
-                                    onChange={handleInputChange}
-                                    margin="normal"
-                                />
+                                {loading ? (
+                                    <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                ) : (
+                                    <TextField
+                                        fullWidth
+                                        label="LinkedIn URL"
+                                        name="linkedin"
+                                        value={formData.linkedin}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                    />
+                                )}
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="GitHub URL"
-                                    name="github"
-                                    value={formData.github}
-                                    onChange={handleInputChange}
-                                    margin="normal"
-                                />
+                                {loading ? (
+                                    <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
+                                ) : (
+                                    <TextField
+                                        fullWidth
+                                        label="GitHub URL"
+                                        name="github"
+                                        value={formData.github}
+                                        onChange={handleInputChange}
+                                        margin="normal"
+                                    />
+                                )}
                             </Grid>
                         </Grid>
                     </Grid>
@@ -807,25 +850,45 @@ const ProfileEditor = () => {
                                     Profile Image
                                 </Typography>
 
-                                {profileImagePreview && (
+                                {loading ? (
                                     <Box mb={2}>
-                                        <img
-                                            src={profileImagePreview}
-                                            alt="Profile Preview"
-                                            style={{
-                                                maxWidth: '100%',
-                                                maxHeight: '200px',
-                                                display: 'block',
-                                                marginBottom: '10px',
-                                            }}
+                                        <Skeleton
+                                            animation="wave"
+                                            variant="rectangular"
+                                            height={150}
+                                            width="100%"
+                                            sx={{ mb: 2 }}
                                         />
+                                        <Skeleton animation="wave" height={36} width={120} />
                                     </Box>
-                                )}
+                                ) : (
+                                    <>
+                                        {profileImagePreview && (
+                                            <Box mb={2}>
+                                                <img
+                                                    src={profileImagePreview}
+                                                    alt="Profile Preview"
+                                                    style={{
+                                                        maxWidth: '100%',
+                                                        maxHeight: '200px',
+                                                        display: 'block',
+                                                        marginBottom: '10px',
+                                                    }}
+                                                />
+                                            </Box>
+                                        )}
 
-                                <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
-                                    Upload Image
-                                    <input type="file" hidden accept="image/*" onChange={handleProfileImageChange} />
-                                </Button>
+                                        <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+                                            Upload Image
+                                            <input
+                                                type="file"
+                                                hidden
+                                                accept="image/*"
+                                                onChange={handleProfileImageChange}
+                                            />
+                                        </Button>
+                                    </>
+                                )}
                             </Grid>
 
                             {/* Resume */}
@@ -834,25 +897,37 @@ const ProfileEditor = () => {
                                     Resume
                                 </Typography>
 
-                                {resumeFileName && (
-                                    <Box mb={2} display="flex" alignItems="center">
-                                        <Typography variant="body2">{resumeFileName}</Typography>
+                                {loading ? (
+                                    <Box mb={2}>
+                                        <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 2 }} />
+                                        <Box display="flex" gap={2}>
+                                            <Skeleton animation="wave" height={36} width={120} />
+                                            <Skeleton animation="wave" height={36} width={150} />
+                                        </Box>
                                     </Box>
-                                )}
+                                ) : (
+                                    <>
+                                        {resumeFileName && (
+                                            <Box mb={2} display="flex" alignItems="center">
+                                                <Typography variant="body2">{resumeFileName}</Typography>
+                                            </Box>
+                                        )}
 
-                                <Box display="flex" gap={2}>
-                                    <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
-                                        Upload Resume
-                                        <input type="file" hidden accept=".pdf" onChange={handleResumeChange} />
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        onClick={() => navigate('/admin/resumes')}
-                                    >
-                                        Manage Resume Versions
-                                    </Button>
-                                </Box>
+                                        <Box display="flex" gap={2}>
+                                            <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+                                                Upload Resume
+                                                <input type="file" hidden accept=".pdf" onChange={handleResumeChange} />
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => navigate('/admin/resumes')}
+                                            >
+                                                Manage Resume Versions
+                                            </Button>
+                                        </Box>
+                                    </>
+                                )}
                             </Grid>
                         </Grid>
                     </Grid>
@@ -860,21 +935,25 @@ const ProfileEditor = () => {
                     {/* Save Button */}
                     <Grid item xs={12}>
                         <Box display="flex" justifyContent="flex-end" mt={2}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                size="large"
-                            >
-                                {isSaving ? (
-                                    <CircularProgress size={24} />
-                                ) : profile ? (
-                                    'Save Changes'
-                                ) : (
-                                    'Create Profile'
-                                )}
-                            </Button>
+                            {loading ? (
+                                <Skeleton animation="wave" height={36} width={120} />
+                            ) : (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    size="large"
+                                >
+                                    {isSaving ? (
+                                        <CircularProgress size={24} />
+                                    ) : profile ? (
+                                        'Save Changes'
+                                    ) : (
+                                        'Create Profile'
+                                    )}
+                                </Button>
+                            )}
                         </Box>
                     </Grid>
                 </Grid>

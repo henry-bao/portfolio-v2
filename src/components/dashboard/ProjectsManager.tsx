@@ -551,7 +551,7 @@ const ProjectsManager = () => {
                 </Alert>
             )}
 
-            <Paper sx={{ p: { xs: 2, sm:0 }, mb: 3, width: '100%', overflow: 'hidden' }}>
+            <Paper sx={{ p: { xs: 2, md: 0 }, mb: 3, width: '100%', overflow: 'hidden' }}>
                 {/* Card view for mobile/tablet, Table view for desktop */}
                 {isTablet ? renderCardView() : renderTableView()}
             </Paper>
