@@ -65,7 +65,6 @@ import {
     CONTENT_IMAGES_BUCKET_ID,
     ALLOWED_IMAGE_TYPES,
 } from '../../services/appwrite';
-import { getFilePreviewUrl } from '../../services/fileProxy';
 import './markdown-preview.css';
 
 // Type for draft blog post
@@ -268,7 +267,7 @@ const BlogEditor = () => {
                         setCoverImagePreview(existingDraft.coverImageUrl);
                     } else if (postData.coverImageId) {
                         // Fall back to the post's cover image if the draft doesn't have one
-                        const imageUrl = getFilePreviewUrl(postData.coverImageId);
+                        const imageUrl = getContentImagePreviewUrl(postData.coverImageId);
                         setCoverImagePreview(imageUrl);
                     }
                     setLastSaved(`Draft last saved: ${new Date(existingDraft.lastSaved).toLocaleString()}`);
@@ -290,7 +289,7 @@ const BlogEditor = () => {
 
                     // Load cover image preview if exists
                     if (postData.coverImageId) {
-                        const imageUrl = getFilePreviewUrl(postData.coverImageId);
+                        const imageUrl = getContentImagePreviewUrl(postData.coverImageId);
                         setCoverImagePreview(imageUrl);
                     }
                 }
@@ -563,7 +562,7 @@ const BlogEditor = () => {
 
             // Load cover image preview if exists
             if (post.coverImageId) {
-                const imageUrl = getFilePreviewUrl(post.coverImageId);
+                const imageUrl = getContentImagePreviewUrl(post.coverImageId);
                 setCoverImagePreview(imageUrl);
             } else {
                 setCoverImagePreview(null);

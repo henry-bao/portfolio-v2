@@ -33,7 +33,7 @@ const Login = () => {
             navigate('/admin/overview');
         } catch (err) {
             console.error('Login error:', err);
-            setError('Invalid email or password. Please try again.');
+            setError(`Login failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
         } finally {
             setIsLoading(false);
         }
