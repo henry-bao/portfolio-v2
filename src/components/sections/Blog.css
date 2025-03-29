@@ -46,8 +46,8 @@
     flex-direction: column;
     border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: rgb(215, 215, 215);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    background-color: rgb(235, 235, 235);
     transition: box-shadow 0.3s ease;
 }
 
