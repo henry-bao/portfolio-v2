@@ -32,28 +32,28 @@ const Navbar = () => {
         <nav className={`nav ${isSticky ? 'sticky' : ''}`}>
             <div className="nav-content">
                 <div className="logo">
-                    <ScrollLink to="home" duration={20} onClick={closeMenu}>
+                    <ScrollLink to="home" duration={300} onClick={closeMenu}>
                         Henry Bao
                     </ScrollLink>
                 </div>
                 <ul className={`menu-list ${menuOpen ? 'active' : ''}`}>
                     <li>
-                        <ScrollLink to="home" duration={20} onClick={closeMenu}>
+                        <ScrollLink to="home" duration={300} onClick={closeMenu}>
                             Home
                         </ScrollLink>
                     </li>
                     <li>
-                        <ScrollLink to="about" duration={20} onClick={closeMenu}>
+                        <ScrollLink to="about" duration={300} onClick={closeMenu}>
                             About Me
                         </ScrollLink>
                     </li>
                     <li>
-                        <ScrollLink to="projects" duration={20} onClick={closeMenu}>
+                        <ScrollLink to="projects" duration={300} onClick={closeMenu}>
                             Projects
                         </ScrollLink>
                     </li>
                     <li>
-                        <ScrollLink to="blogs" duration={20} onClick={closeMenu}>
+                        <ScrollLink to="blogs" duration={300} onClick={closeMenu}>
                             Blogs
                         </ScrollLink>
                     </li>

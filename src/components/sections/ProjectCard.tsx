@@ -73,8 +73,8 @@ const ProjectCard = ({
     };
 
     return (
-        <details open={isExpanded}>
-            <summary
+        <details className="project-details" open={isExpanded}>
+            <summary className="project-summary"
                 onClick={(e) => {
                     e.preventDefault();
                     setIsExpanded(!isExpanded);
