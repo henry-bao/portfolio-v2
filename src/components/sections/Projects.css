@@ -2,10 +2,10 @@
     background-color: rgba(235, 235, 235);
     color: black;
     min-height: 100dvh;
-    padding-left: 8em;
-    padding-right: 8em;
-    padding-top: 5em;
-    padding-bottom: 2em;
+    padding-left: 8rem;
+    padding-right: 8rem;
+    padding-top: 5rem;
+    padding-bottom: 2rem;
 }
 
 .projects-css .description h1 {
@@ -34,7 +34,7 @@
 
 .empty-container {
     flex-direction: column;
-    gap:1rem;
+    gap: 1rem;
 }
 
 .loading-container {

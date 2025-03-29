@@ -2,17 +2,17 @@
     background-color: rgba(245, 245, 245);
     color: black;
     min-height: 100dvh;
-    padding-left: 3em;
-    padding-right: 3em;
-    padding-top: 5em;
-    padding-bottom: 2em;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    padding-top: 5rem;
+    padding-bottom: 2rem;
 }
 
 .sec-title {
     font-size: 30px;
     font-weight: 600;
     text-align: center;
-    padding-top: 1em;
+    padding-top: 1rem;
 }
 
 .my-pic-container {
@@ -23,6 +23,7 @@
 
 .my-pic {
     width: 300px;
+    border-radius: 10px;
 }
 
 .about {

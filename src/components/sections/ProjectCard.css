@@ -1,7 +1,8 @@
 summary {
     display: block;
     cursor: pointer;
-    padding: 10px;
+    padding-bottom: 0.5rem;
+    margin-bottom: 2rem;
     font-size: 22px;
     transition: 0.3s;
     border-bottom: 2px solid;
@@ -20,7 +21,7 @@ details > div {
     flex-direction: column;
     overflow: auto;
     height: 100%;
-    padding: 0 20px;
+    margin-bottom: 2rem;
     font-family: 'Karla', sans-serif;
     line-height: 1.5;
     font-size: 13px;
@@ -31,6 +32,7 @@ details > div > img {
     width: 12rem;
     margin-top: 20px;
     margin-bottom: 10px;
+    border-radius: 10px;
 }
 
 details > div > .description {
@@ -66,7 +68,7 @@ details[open] > summary {
         animation-delay: 0.2s;
         animation-fill-mode: forwards;
         margin: 0;
-        padding-left: 20px;
+        margin-left: 20px;
         display: flex;
         justify-content: space-evenly;
         flex-direction: column;
@@ -102,7 +104,7 @@ details[open] > summary {
     to {
         opacity: 1;
         height: var(--contentHeight);
-        padding: 20px;
+        margin-top: 1rem;
     }
 }
 

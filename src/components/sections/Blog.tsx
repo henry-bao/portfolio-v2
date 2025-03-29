@@ -29,7 +29,7 @@ const Blog = () => {
         return (
             <section id="blogs" className="blog-section">
                 <div className="container">
-                    <h2 className="section-title">Blogs</h2>
+                    <h1 className="section-title">Blogs</h1>
                     <div className="loading-spinner">Loading...</div>
                 </div>
             </section>
@@ -39,7 +39,7 @@ const Blog = () => {
     return (
         <section id="blogs" className="blog-section">
             <div className="container">
-                <h2 className="section-title">Blogs</h2>
+                <h1 className="section-title">Blogs</h1>
                 {blogPosts.length === 0 ? (
                     <p className="blog-no-posts-message">No blog posts available yet.</p>
                 ) : (
