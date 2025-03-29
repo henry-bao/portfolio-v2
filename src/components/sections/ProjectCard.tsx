@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme, useMediaQuery } from '@mui/material';
+import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
 import './ProjectCard.css';
 
 interface ProjectCardProps {
@@ -78,8 +79,19 @@ const ProjectCard = ({
                     e.preventDefault();
                     setIsExpanded(!isExpanded);
                 }}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                }}
             >
                 {title}
+                {isExpanded ? (
+                    <ArrowDropDown style={{ fontSize: '3rem' }} />
+                ) : (
+                    <ArrowDropUp style={{ fontSize: '3rem' }} />
+                )}
             </summary>
             {renderContent()}
         </details>
