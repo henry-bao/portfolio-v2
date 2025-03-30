@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -9,61 +9,100 @@ import {
     incrementBlogPostViewCount,
     getContentImagePreviewUrl,
 } from '../../services/appwrite';
-import { LinearProgress } from '@mui/material';
+import { LinearProgress, Alert } from '@mui/material';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
 import './BlogPost.css';
 
+// Interface for preview blog post
+interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
+    isPreview: boolean;
+}
+
 const BlogPost = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
-    const [post, setPost] = useState<(Models.Document & BlogPostType) | null>(null);
+    const [searchParams] = useSearchParams();
+    const isPreview = searchParams.get('preview') === 'true' || slug === 'preview';
+
+    const [post, setPost] = useState<(Models.Document & BlogPostType) | PreviewBlogPost | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchBlogPost = async () => {
-            if (!slug) return;
+            setIsLoading(true);
+
+            // Check if this is a preview from session storage (for drafts)
+            if (slug === 'preview') {
+                try {
+                    const previewData = sessionStorage.getItem('preview_blog_post');
+                    if (!previewData) {
+                        setError('Preview data not found');
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    const previewPost = JSON.parse(previewData) as PreviewBlogPost;
+                    setPost(previewPost);
+                    setIsLoading(false);
+                    return;
+                } catch (err) {
+                    console.error('Error loading preview data:', err);
+                    setError('Failed to load preview');
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            // Otherwise load from database
+            if (!slug) {
+                setIsLoading(false);
+                return;
+            }
 
             try {
                 const blogPost = await getBlogPostBySlug(slug);
 
-                // If post not found or not published, redirect to blog list
-                if (!blogPost || !blogPost.published) {
-                    // navigate('/blogs');
+                // If post not found or not published (and not in preview mode), show not found
+                if (!blogPost || (!blogPost.published && !isPreview)) {
+                    setError('Post not found');
+                    setIsLoading(false);
                     return;
                 }
 
                 setPost(blogPost);
 
-                // Improved view counting logic
-                const handleViewCount = () => {
-                    // Skip counting in development mode
-                    if (import.meta.env.DEV) return;
+                // Only increment view count if not in preview mode
+                if (!isPreview) {
+                    // Improved view counting logic
+                    const handleViewCount = () => {
+                        // Skip counting in development mode
+                        if (import.meta.env.DEV) return;
 
-                    // Get viewed posts from localStorage
-                    const viewedPosts = JSON.parse(localStorage.getItem('henry-blog-viewed-posts') || '{}');
-                    const lastViewedTime = viewedPosts[blogPost.$id] || 0;
-                    const currentTime = Date.now();
+                        // Get viewed posts from localStorage
+                        const viewedPosts = JSON.parse(localStorage.getItem('henry-blog-viewed-posts') || '{}');
+                        const lastViewedTime = viewedPosts[blogPost.$id] || 0;
+                        const currentTime = Date.now();
 
-                    // Only count a view if it's been more than 24 hours since the last view
-                    // or if the post has never been viewed
-                    if (!lastViewedTime || currentTime - lastViewedTime > 24 * 60 * 60 * 1000) {
-                        // Record this view with the current timestamp
-                        viewedPosts[blogPost.$id] = currentTime;
-                        localStorage.setItem('henry-blog-viewed-posts', JSON.stringify(viewedPosts));
+                        // Only count a view if it's been more than 24 hours since the last view
+                        // or if the post has never been viewed
+                        if (!lastViewedTime || currentTime - lastViewedTime > 24 * 60 * 60 * 1000) {
+                            // Record this view with the current timestamp
+                            viewedPosts[blogPost.$id] = currentTime;
+                            localStorage.setItem('henry-blog-viewed-posts', JSON.stringify(viewedPosts));
 
-                        // Increment the view count in the database
-                        incrementBlogPostViewCount(blogPost.$id);
-                    }
-                };
+                            // Increment the view count in the database
+                            incrementBlogPostViewCount(blogPost.$id);
+                        }
+                    };
 
-                // Add a small delay to ensure the page is actually viewed
-                // This helps avoid counting accidental or bounce views
-                const timer = setTimeout(handleViewCount, 10000);
-
-                return () => clearTimeout(timer);
+                    // Add a small delay to ensure the page is actually viewed
+                    // This helps avoid counting accidental or bounce views
+                    const timer = setTimeout(handleViewCount, 10000);
+                    return () => clearTimeout(timer);
+                }
             } catch (err) {
                 console.error('Error fetching blog post:', err);
                 setError('Failed to load blog post');
@@ -73,7 +112,7 @@ const BlogPost = () => {
         };
 
         fetchBlogPost();
-    }, [slug, navigate]);
+    }, [slug, navigate, isPreview]);
 
     if (isLoading) {
         return (
@@ -94,12 +133,20 @@ const BlogPost = () => {
 
     return (
         <>
-            <BlogNav />
-            <div className="blog-post-container">
+            {!isPreview && <BlogNav />}
+            <div className="blog-post-container" style={isPreview ? { paddingTop: '2rem' } : undefined}>
+                {isPreview && (
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                        This is a preview of your blog post. It is not yet published.
+                    </Alert>
+                )}
+
                 <div className="blog-post-header">
-                    <Link to="/blogs" className="back-to-blog">
-                        Back to Blogs
-                    </Link>
+                    {!isPreview && (
+                        <Link to="/blogs" className="back-to-blog">
+                            Back to Blogs
+                        </Link>
+                    )}
 
                     <h1 className="blog-post-title">{post.title}</h1>
 
@@ -124,7 +171,7 @@ const BlogPost = () => {
                         )}
 
                         <div className="blog-post-views">
-                            <span>{post.viewCount || 0} views</span>
+                            <span>{isPreview ? 'Preview' : `${post.viewCount || 0} views`}</span>
                         </div>
                     </div>
 

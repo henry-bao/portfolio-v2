@@ -36,6 +36,7 @@ import {
     Delete as DeleteIcon,
     Visibility as VisibilityIcon,
     VisibilityOff as VisibilityOffIcon,
+    Preview as PreviewIcon,
 } from '@mui/icons-material';
 import { getBlogPosts, deleteBlogPost, updateBlogPost } from '../../services/appwrite';
 
@@ -277,6 +278,43 @@ const BlogManager = () => {
         window.open(`/blogs/${post.slug}`, '_blank');
     };
 
+    const handlePreviewPost = (post: DisplayBlogPost) => {
+        // For drafts, first set the preview post
+        if (post.isDraft) {
+            // Find the draft content in localStorage
+            const draftsJson = localStorage.getItem(DRAFTS_STORAGE_KEY);
+            const drafts: DraftBlogPost[] = draftsJson ? JSON.parse(draftsJson) : [];
+
+            // Find the matching draft
+            const draftContent = drafts.find((draft) => (post.id && draft.id === post.id) || post.$id === draft.id);
+
+            if (draftContent) {
+                // Store in session storage for the preview page to access
+                sessionStorage.setItem(
+                    'preview_blog_post',
+                    JSON.stringify({
+                        title: draftContent.title,
+                        content: draftContent.content,
+                        summary: draftContent.summary,
+                        slug: draftContent.slug || 'preview',
+                        publishedDate: draftContent.publishedDate || new Date().toISOString(),
+                        tags: draftContent.tags || [],
+                        viewCount: 0,
+                        isPreview: true,
+                    })
+                );
+
+                // Open in a new tab
+                window.open('/blogs/preview', '_blank');
+            } else {
+                showSnackbar('Could not find draft content to preview', 'error');
+            }
+        } else {
+            // For published posts, just open the existing post
+            window.open(`/blogs/${post.slug}?preview=true`, '_blank');
+        }
+    };
+
     const filteredPosts = allPosts.filter(
         (post) =>
             post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -375,6 +413,14 @@ const BlogManager = () => {
                     <Divider />
 
                     <CardActions sx={{ justifyContent: 'flex-end' }}>
+                        <IconButton
+                            color="secondary"
+                            onClick={() => handlePreviewPost(post)}
+                            size="small"
+                            title="Preview"
+                        >
+                            <PreviewIcon fontSize="small" />
+                        </IconButton>
                         <IconButton color="primary" onClick={() => handleEditPost(post)} size="small" title="Edit">
                             <EditIcon fontSize="small" />
                         </IconButton>
@@ -475,6 +521,14 @@ const BlogManager = () => {
                             <TableCell align="right">
                                 <Box>
                                     <IconButton
+                                        color="secondary"
+                                        onClick={() => handlePreviewPost(post)}
+                                        size="small"
+                                        title="Preview"
+                                    >
+                                        <PreviewIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
                                         color="primary"
                                         onClick={() => handleEditPost(post)}
                                         size="small"
@@ -538,12 +592,7 @@ const BlogManager = () => {
                 <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
                     Blogs
                 </Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={handleNewPost}
-                >
+                <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleNewPost}>
                     New
                 </Button>
             </Box>
