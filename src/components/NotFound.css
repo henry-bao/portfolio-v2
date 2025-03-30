@@ -13,7 +13,7 @@
     max-width: 600px;
     background-color: rgb(30, 30, 30);
     padding: 3rem;
-    border-radius: 0.5rem;
+    border-radius: 4px;
 }
 
 .not-found-title {
@@ -42,7 +42,7 @@
     background-color: #2f7295;
     color: white;
     text-decoration: none;
-    border-radius: 0.5rem;
+    border-radius: 4px;
     font-weight: 500;
     transition: all 0.3s ease;
 }
