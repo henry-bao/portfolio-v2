@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Models } from 'appwrite';
-import { getProfileData } from './services/appwrite';
+import { getProfileData, getSectionVisibility, SectionVisibility } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
-import { getActiveResumeVersion } from './services/resumeService';
 
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
@@ -17,53 +16,41 @@ function Portfolio() {
     const [resumeUrl, setResumeUrl] = useState<string | null>(null);
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
     const [profile, setProfile] = useState<Models.Document | null>(null);
+    const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
+
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchData = async () => {
             try {
-                const profileData = await getProfileData();
+                const [profileData, visibilityData] = await Promise.all([getProfileData(), getSectionVisibility()]);
+
                 setProfile(profileData);
+                setSectionVisibility(visibilityData);
 
-                // Get profile image if available
-                if (profileData && profileData.profileImageId) {
-                    const imageUrl = getFilePreviewUrl(profileData.profileImageId);
-                    setProfileImageUrl(imageUrl);
+                if (profileData?.profileImageId) {
+                    setProfileImageUrl(getFilePreviewUrl(profileData.profileImageId));
                 }
 
-                // Try to get active resume from versioning system first
-                try {
-                    const activeResume = await getActiveResumeVersion();
-                    if (activeResume) {
-                        const fileUrl = getFileUrl(activeResume.fileId);
-                        setResumeUrl(fileUrl);
-                    } else if (profileData && profileData.resumeFileId) {
-                        // Fallback to profile's resumeFileId if no active resume
-                        const fileUrl = getFileUrl(profileData.resumeFileId);
-                        setResumeUrl(fileUrl);
-                    }
-                } catch (error) {
-                    console.error('Error fetching active resume:', error);
-                    // Fallback to profile's resumeFileId if error
-                    if (profileData && profileData.resumeFileId) {
-                        const fileUrl = getFileUrl(profileData.resumeFileId);
-                        setResumeUrl(fileUrl);
-                    }
+                if (profileData?.resumeFileId) {
+                    setResumeUrl(getFileUrl(profileData.resumeFileId));
                 }
-            } catch (err) {
-                console.error('Error fetching profile for About section:', err);
-                // Continue with fallback values
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
         };
 
-        fetchProfile();
+        fetchData();
     }, []);
+
     return (
         <>
             <Navbar />
             <main>
                 <Landing />
-                <About profile={profile} resumeUrl={resumeUrl} profileImageUrl={profileImageUrl} />
-                <Projects />
-                <Blog />
+                {(!sectionVisibility || sectionVisibility.about) && (
+                    <About profile={profile} resumeUrl={resumeUrl} profileImageUrl={profileImageUrl} />
+                )}
+                {(!sectionVisibility || sectionVisibility.projects) && <Projects />}
+                {(!sectionVisibility || sectionVisibility.blogs) && <Blog />}
             </main>
             <Footer resumeUrl={resumeUrl} />
         </>

@@ -1,21 +1,57 @@
 import { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent, Button, Paper, Stack, Divider, Skeleton } from '@mui/material';
-import { getProfileData, getProjects, ProfileData, ProjectData } from '../../services/appwrite';
+import {
+    Box,
+    Typography,
+    Card,
+    CardContent,
+    Button,
+    Paper,
+    Stack,
+    Divider,
+    Skeleton,
+    Switch,
+    FormControlLabel,
+    useTheme,
+    alpha,
+} from '@mui/material';
+import {
+    getProfileData,
+    getProjects,
+    ProfileData,
+    ProjectData,
+    getSectionVisibility,
+    updateSectionVisibility,
+    SectionVisibility,
+} from '../../services/appwrite';
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
 import { getBlogPosts, BlogPost } from '../../services/appwrite';
+import {
+    Visibility as VisibilityIcon,
+    Person as PersonIcon,
+    Code as CodeIcon,
+    Article as ArticleIcon,
+    Description as DescriptionIcon,
+    Edit as EditIcon,
+    Add as AddIcon,
+    Launch as LaunchIcon,
+    Settings as SettingsIcon,
+} from '@mui/icons-material';
 
 const Overview = () => {
+    const theme = useTheme();
     const [profileData, setProfileData] = useState<(Models.Document & ProfileData) | null>(null);
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
     const [resumes, setResumes] = useState<(Models.Document & ResumeVersion)[]>([]);
     const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
+    const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
     const [loading, setLoading] = useState({
         profile: true,
         projects: true,
         resumes: true,
         blogs: true,
+        visibility: true,
     });
     const navigate = useNavigate();
 
@@ -64,196 +100,388 @@ const Overview = () => {
             }
         };
 
+        const fetchSectionVisibility = async () => {
+            try {
+                const visibility = await getSectionVisibility();
+                setSectionVisibility(visibility);
+            } catch (error) {
+                console.error('Error fetching section visibility:', error);
+            } finally {
+                setLoading((prev) => ({ ...prev, visibility: false }));
+            }
+        };
+
         fetchProfile();
         fetchProjects();
         fetchResumes();
         fetchBlogs();
+        fetchSectionVisibility();
     }, []);
 
-    return (
-        <>
-            <Typography variant="h4" component="h1" mb={3}>
-                Overview
-            </Typography>
+    const handleVisibilityToggle = async (section: keyof SectionVisibility) => {
+        if (!sectionVisibility) return;
 
-            <Box>
-                <Stack spacing={3}>
-                    {/* Top Cards Section - Flexbox layout */}
+        try {
+            const newVisibility = {
+                ...sectionVisibility,
+                [section]: !sectionVisibility[section],
+            };
+            await updateSectionVisibility(sectionVisibility.$id, { [section]: newVisibility[section] });
+            setSectionVisibility(newVisibility);
+        } catch (error) {
+            console.error('Error updating section visibility:', error);
+        }
+    };
+
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h4" component="h1">
+                    Overview
+                </Typography>
+            </Box>
+
+            <Stack spacing={4}>
+                {/* Section Visibility Controls */}
+                <Card>
+                    <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                            <SettingsIcon sx={{ mr: 1, color: 'primary.main' }} />
+                            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                Section Visibility
+                            </Typography>
+                        </Box>
+                        {loading.visibility ? (
+                            <Box
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                                    gap: 2,
+                                }}
+                            >
+                                <Skeleton animation="wave" height={48} />
+                                <Skeleton animation="wave" height={48} />
+                                <Skeleton animation="wave" height={48} />
+                                <Skeleton animation="wave" height={48} />
+                            </Box>
+                        ) : (
+                            <Box
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                                    gap: 2,
+                                }}
+                            >
+                                <Paper
+                                    sx={{
+                                        p: 2,
+
+                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={sectionVisibility?.about ?? true}
+                                                onChange={() => handleVisibilityToggle('about')}
+                                                color="primary"
+                                            />
+                                        }
+                                        label={
+                                            <Box>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                    About Section
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Personal information and bio
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                    />
+                                </Paper>
+
+                                <Paper
+                                    sx={{
+                                        p: 2,
+
+                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={sectionVisibility?.projects ?? true}
+                                                onChange={() => handleVisibilityToggle('projects')}
+                                                color="primary"
+                                            />
+                                        }
+                                        label={
+                                            <Box>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                    Projects Section
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Your portfolio projects
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                    />
+                                </Paper>
+
+                                <Paper
+                                    sx={{
+                                        p: 2,
+
+                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={sectionVisibility?.blogs ?? true}
+                                                onChange={() => handleVisibilityToggle('blogs')}
+                                                color="primary"
+                                            />
+                                        }
+                                        label={
+                                            <Box>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                    Blogs Section
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Your blog posts and articles
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                    />
+                                </Paper>
+
+                                <Paper
+                                    sx={{
+                                        p: 2,
+
+                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={sectionVisibility?.resumes ?? true}
+                                                onChange={() => handleVisibilityToggle('resumes')}
+                                                color="primary"
+                                            />
+                                        }
+                                        label={
+                                            <Box>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                    Resumes Section
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Your resume versions
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                    />
+                                </Paper>
+                            </Box>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Stats Cards Section */}
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            md: 'repeat(4, 1fr)',
+                        },
+                        gap: 3,
+                    }}
+                >
+                    {/* Profile Summary Card */}
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                    Profile
+                                </Typography>
+                            </Box>
+                            {loading.profile ? (
+                                <>
+                                    <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 1 }} />
+                                    <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 2 }} />
+                                    <Skeleton animation="wave" height={36} width="40%" />
+                                </>
+                            ) : profileData ? (
+                                <>
+                                    <Typography variant="body1" sx={{ mb: 1 }}>
+                                        Name: {profileData.name}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ mb: 2 }}>
+                                        Email: {profileData.email}
+                                    </Typography>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<EditIcon />}
+                                        onClick={() => navigate('/admin/profile')}
+                                    >
+                                        Edit Profile
+                                    </Button>
+                                </>
+                            ) : (
+                                <Typography variant="body1" color="text.secondary">
+                                    No profile data found. Create your profile to get started.
+                                </Typography>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Projects Summary Card */}
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <CodeIcon sx={{ mr: 1, color: 'primary.main' }} />
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                    Projects
+                                </Typography>
+                            </Box>
+                            {loading.projects ? (
+                                <>
+                                    <Skeleton animation="wave" height={24} width="70%" sx={{ mb: 2 }} />
+                                    <Skeleton animation="wave" height={36} width="40%" />
+                                </>
+                            ) : (
+                                <>
+                                    <Typography variant="body1" sx={{ mb: 2 }}>
+                                        Total Projects: {projects.length}
+                                    </Typography>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={() => navigate('/admin/projects')}
+                                    >
+                                        Manage Projects
+                                    </Button>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Blog Posts Card */}
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <ArticleIcon sx={{ mr: 1, color: 'primary.main' }} />
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                    Blogs
+                                </Typography>
+                            </Box>
+                            {loading.blogs ? (
+                                <>
+                                    <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 1 }} />
+                                    <Skeleton animation="wave" height={24} width="40%" sx={{ mb: 2 }} />
+                                    <Skeleton animation="wave" height={36} width="40%" />
+                                </>
+                            ) : (
+                                <>
+                                    <Typography variant="body1" sx={{ mb: 1 }}>
+                                        Total Posts: {blogPosts.length}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        Published: {blogPosts.filter((post) => post.published).length}
+                                    </Typography>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={() => navigate('/admin/blogs')}
+                                    >
+                                        Manage Blogs
+                                    </Button>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Resumes Card */}
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                    Resumes
+                                </Typography>
+                            </Box>
+                            {loading.resumes ? (
+                                <>
+                                    <Skeleton animation="wave" height={24} width="70%" sx={{ mb: 2 }} />
+                                    <Skeleton animation="wave" height={36} width="40%" />
+                                </>
+                            ) : (
+                                <>
+                                    <Typography variant="body1" sx={{ mb: 2 }}>
+                                        Total Resumes: {resumes.length}
+                                    </Typography>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={() => navigate('/admin/resumes')}
+                                    >
+                                        Manage Resumes
+                                    </Button>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Box>
+
+                {/* Quick Actions Section */}
+                <Paper>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <VisibilityIcon sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                            Quick Actions
+                        </Typography>
+                    </Box>
+                    <Divider sx={{ mb: 3 }} />
                     <Box
                         sx={{
                             display: 'flex',
+                            gap: 2,
                             flexWrap: 'wrap',
-                            gap: 3,
+                            justifyContent: 'flex-start',
                         }}
                     >
-                        {/* Profile Summary Card */}
-                        <Card
-                            sx={{
-                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
+                        <Button variant="outlined" startIcon={<EditIcon />} onClick={() => navigate('/admin/profile')}>
+                            Update Profile
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate('/admin/projects/new')}
                         >
-                            <CardContent sx={{ flexGrow: 1 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Profile
-                                </Typography>
-                                {loading.profile ? (
-                                    <>
-                                        <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 1 }} />
-                                        <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 2 }} />
-                                        <Skeleton animation="wave" height={36} width="40%" />
-                                    </>
-                                ) : profileData ? (
-                                    <>
-                                        <Typography variant="body1">Name: {profileData.name}</Typography>
-                                        <Typography variant="body1">Email: {profileData.email}</Typography>
-                                        <Box mt={2}>
-                                            <Button variant="contained" onClick={() => navigate('/admin/profile')}>
-                                                Edit Profile
-                                            </Button>
-                                        </Box>
-                                    </>
-                                ) : (
-                                    <Typography variant="body1" color="text.secondary">
-                                        No profile data found. Create your profile to get started.
-                                    </Typography>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Projects Summary Card */}
-                        <Card
-                            sx={{
-                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
+                            Add New Project
+                        </Button>
+                        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate('/admin/blogs/new')}>
+                            Create Blog Post
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<LaunchIcon />}
+                            onClick={() => window.open('/', '_blank')}
                         >
-                            <CardContent sx={{ flexGrow: 1 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Projects
-                                </Typography>
-                                {loading.projects ? (
-                                    <>
-                                        <Skeleton animation="wave" height={24} width="70%" sx={{ mb: 2 }} />
-                                        <Skeleton animation="wave" height={36} width="40%" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Typography variant="body1">Total Projects: {projects.length}</Typography>
-                                        <Box mt={2}>
-                                            <Button variant="contained" onClick={() => navigate('/admin/projects')}>
-                                                Manage Projects
-                                            </Button>
-                                        </Box>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Blog Posts Card */}
-                        <Card
-                            sx={{
-                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <CardContent sx={{ flexGrow: 1 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Blogs
-                                </Typography>
-                                {loading.blogs ? (
-                                    <>
-                                        <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 1 }} />
-                                        <Skeleton animation="wave" height={24} width="40%" sx={{ mb: 2 }} />
-                                        <Skeleton animation="wave" height={36} width="40%" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Typography variant="body1">Total Posts: {blogPosts.length}</Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Published: {blogPosts.filter((post) => post.published).length}
-                                        </Typography>
-                                        <Box mt={2}>
-                                            <Button variant="contained" onClick={() => navigate('/admin/blogs')}>
-                                                Manage Blogs
-                                            </Button>
-                                        </Box>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Resumes Card */}
-                        <Card
-                            sx={{
-                                flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 12px)' },
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <CardContent sx={{ flexGrow: 1 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Resumes
-                                </Typography>
-                                {loading.resumes ? (
-                                    <>
-                                        <Skeleton animation="wave" height={24} width="70%" sx={{ mb: 2 }} />
-                                        <Skeleton animation="wave" height={36} width="40%" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Typography variant="body1">Total Resumes: {resumes.length}</Typography>
-                                        <Box mt={2}>
-                                            <Button variant="contained" onClick={() => navigate('/admin/resumes')}>
-                                                Manage Resumes
-                                            </Button>
-                                        </Box>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
+                            View Portfolio
+                        </Button>
                     </Box>
-
-                    {/* Quick Actions Section */}
-                    <Paper
-                        elevation={1}
-                        sx={{
-                            p: 3,
-                            borderRadius: 2,
-                        }}
-                    >
-                        <Typography variant="h6" gutterBottom>
-                            Quick Actions
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                gap: 2,
-                                flexWrap: 'wrap',
-                                justifyContent: 'flex-start',
-                            }}
-                        >
-                            <Button variant="outlined" onClick={() => navigate('/admin/profile')}>
-                                Update Profile
-                            </Button>
-                            <Button variant="outlined" onClick={() => navigate('/admin/projects/new')}>
-                                Add New Project
-                            </Button>
-                            <Button variant="outlined" onClick={() => navigate('/admin/blogs/new')}>
-                                Create Blog Post
-                            </Button>
-                            <Button variant="outlined" onClick={() => window.open('/', '_blank')}>
-                                View Portfolio
-                            </Button>
-                        </Box>
-                    </Paper>
-                </Stack>
-            </Box>
-        </>
+                </Paper>
+            </Stack>
+        </Box>
     );
 };
 

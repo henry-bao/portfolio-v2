@@ -19,6 +19,7 @@ export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 export const PROFILE_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROFILE_COLLECTION_ID;
 export const PROJECTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROJECTS_COLLECTION_ID;
 export const BLOG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BLOG_COLLECTION_ID;
+export const SECTION_VISIBILITY_COLLECTION_ID = import.meta.env.VITE_APPWRITE_SECTION_VISIBILITY_COLLECTION_ID;
 
 // Allowed file type configurations
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
@@ -63,6 +64,13 @@ export interface BlogPost {
     published: boolean;
     tags?: string[];
     viewCount?: number;
+}
+
+export interface SectionVisibility {
+    about: boolean;
+    projects: boolean;
+    blogs: boolean;
+    resumes: boolean;
 }
 
 // Authentication functions
@@ -429,4 +437,64 @@ export const uploadContentImage = async (file: File): Promise<{ fileId: string; 
 // Utility function to get content image preview URL
 export const getContentImagePreviewUrl = (fileId: string): string => {
     return storage.getFileView(CONTENT_IMAGES_BUCKET_ID, fileId);
+};
+
+export const getSectionVisibility = async (): Promise<(Models.Document & SectionVisibility) | null> => {
+    try {
+        const data = await databases.listDocuments(DATABASE_ID, SECTION_VISIBILITY_COLLECTION_ID, [Query.limit(1)]);
+
+        if (data.documents.length === 0) {
+            // Create initial document with all sections enabled
+            const initialVisibility = {
+                about: true,
+                projects: true,
+                blogs: true,
+                resumes: true,
+            };
+            const newDoc = await createSectionVisibility(initialVisibility);
+            return newDoc as Models.Document & SectionVisibility;
+        }
+
+        return data.documents[0] as Models.Document & SectionVisibility;
+    } catch (error) {
+        console.error('Error getting section visibility:', error);
+        return null;
+    }
+};
+
+export const createSectionVisibility = async (data: SectionVisibility) => {
+    try {
+        const documentData: Record<string, unknown> = {
+            about: data.about,
+            projects: data.projects,
+            blogs: data.blogs,
+            resumes: data.resumes,
+        };
+
+        return await databases.createDocument(DATABASE_ID, SECTION_VISIBILITY_COLLECTION_ID, ID.unique(), documentData);
+    } catch (error) {
+        console.error('Error creating section visibility:', error);
+        throw error;
+    }
+};
+
+export const updateSectionVisibility = async (visibilityId: string, data: Partial<SectionVisibility>) => {
+    try {
+        const documentData: Record<string, unknown> = {};
+
+        if (data.about !== undefined) documentData.about = data.about;
+        if (data.projects !== undefined) documentData.projects = data.projects;
+        if (data.blogs !== undefined) documentData.blogs = data.blogs;
+        if (data.resumes !== undefined) documentData.resumes = data.resumes;
+
+        return await databases.updateDocument(
+            DATABASE_ID,
+            SECTION_VISIBILITY_COLLECTION_ID,
+            visibilityId,
+            documentData
+        );
+    } catch (error) {
+        console.error('Error updating section visibility:', error);
+        throw error;
+    }
 };

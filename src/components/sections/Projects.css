@@ -5,7 +5,7 @@ details summary::-webkit-details-marker {
 .projects-css {
     background-color: rgba(235, 235, 235);
     color: black;
-    min-height: 100dvh;
+    min-height: 100vh;
     padding-left: 8rem;
     padding-right: 8rem;
     padding-top: 5rem;

@@ -243,7 +243,7 @@ const DashboardLayout = () => {
                     backgroundColor: 'background.default',
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: '100dvh',
+                    minHeight: '100vh',
                 }}
             >
                 <Toolbar />
