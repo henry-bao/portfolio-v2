@@ -675,12 +675,16 @@ const BlogEditor = () => {
                 setIsDraft(false);
             }
 
-            if (isNewPost) {
-                // Redirect to edit page after creation
-                setTimeout(() => {
-                    navigate(`/admin/blogs/edit/${result.$id}`);
-                }, 1500);
+            // Reset cover image state to match database state
+            setCoverImage(null);
+            if (result.coverImageId) {
+                setCoverImagePreview(getContentImagePreviewUrl(result.coverImageId));
             } else {
+                setCoverImagePreview(null);
+            }
+
+            if (!isNewPost) {
+                // Redirect to edit page after creation
                 setPost(result as Models.Document & BlogPost);
             }
         } catch (error) {
@@ -703,7 +707,6 @@ const BlogEditor = () => {
         isNewPost,
         postId,
         removeDraftFromStorage,
-        navigate,
     ]);
 
     // Handle text cursor position tracking - we need to use onMouseUp, onKeyUp, etc.

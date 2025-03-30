@@ -167,16 +167,17 @@ const Overview = () => {
                         ) : (
                             <Box
                                 sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                                    display: 'flex',
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    justifyContent: 'space-around',
                                     gap: 2,
                                 }}
                             >
                                 <Paper
                                     sx={{
                                         p: 2,
-
                                         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                        flex: 1,
                                     }}
                                 >
                                     <FormControlLabel
@@ -199,15 +200,15 @@ const Overview = () => {
                                                 </Typography>
                                             </Box>
                                         }
-                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                        sx={{ m: 0, justifyContent: 'space-between' }}
                                     />
                                 </Paper>
 
                                 <Paper
                                     sx={{
                                         p: 2,
-
                                         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                        flex: 1,
                                     }}
                                 >
                                     <FormControlLabel
@@ -230,15 +231,15 @@ const Overview = () => {
                                                 </Typography>
                                             </Box>
                                         }
-                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                        sx={{ m: 0, justifyContent: 'space-between' }}
                                     />
                                 </Paper>
 
                                 <Paper
                                     sx={{
                                         p: 2,
-
                                         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                        flex: 1,
                                     }}
                                 >
                                     <FormControlLabel
@@ -261,38 +262,7 @@ const Overview = () => {
                                                 </Typography>
                                             </Box>
                                         }
-                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
-                                    />
-                                </Paper>
-
-                                <Paper
-                                    sx={{
-                                        p: 2,
-
-                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                    }}
-                                >
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={sectionVisibility?.resumes ?? true}
-                                                onChange={() => handleVisibilityToggle('resumes')}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    justifyContent: 'flex-end',
-                                                }}
-                                            >
-                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
-                                                    Resumes Section
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                                        sx={{ m: 0, justifyContent: 'space-between' }}
                                     />
                                 </Paper>
                             </Box>
@@ -303,18 +273,23 @@ const Overview = () => {
                 {/* Stats Cards Section */}
                 <Box
                     sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            sm: 'repeat(2, 1fr)',
-                            md: 'repeat(4, 1fr)',
-                        },
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        justifyContent: 'space-between',
+                        alignItems: 'stretch',
                         gap: 3,
                     }}
                 >
                     {/* Profile Summary Card */}
-                    <Card>
-                        <CardContent>
+                    <Card sx={{ flex: 1, display: 'flex' }}>
+                        <CardContent
+                            sx={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                            }}
+                        >
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                 <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="h6" sx={{ fontWeight: 500 }}>
@@ -352,8 +327,15 @@ const Overview = () => {
                     </Card>
 
                     {/* Projects Summary Card */}
-                    <Card>
-                        <CardContent>
+                    <Card sx={{ flex: 1, display: 'flex' }}>
+                        <CardContent
+                            sx={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                            }}
+                        >
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                 <CodeIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="h6" sx={{ fontWeight: 500 }}>
@@ -383,8 +365,15 @@ const Overview = () => {
                     </Card>
 
                     {/* Blog Posts Card */}
-                    <Card>
-                        <CardContent>
+                    <Card sx={{ flex: 1, display: 'flex' }}>
+                        <CardContent
+                            sx={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                            }}
+                        >
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                 <ArticleIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="h6" sx={{ fontWeight: 500 }}>
@@ -418,8 +407,15 @@ const Overview = () => {
                     </Card>
 
                     {/* Resumes Card */}
-                    <Card>
-                        <CardContent>
+                    <Card sx={{ flex: 1, display: 'flex' }}>
+                        <CardContent
+                            sx={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                            }}
+                        >
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                 <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="h6" sx={{ fontWeight: 500 }}>
