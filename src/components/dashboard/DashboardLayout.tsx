@@ -82,7 +82,10 @@ const DashboardLayout = () => {
     }, [isTablet]);
 
     const handleMenuItemClick = (path: string) => {
-        if (mobileOpen) setMobileOpen(false);
+        if (mobileOpen) {
+            document.body.classList.toggle('disableScroll', !mobileOpen);
+            setMobileOpen(false);
+        }
         navigate(path);
     };
 
