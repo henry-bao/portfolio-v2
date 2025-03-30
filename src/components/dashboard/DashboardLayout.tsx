@@ -87,6 +87,7 @@ const DashboardLayout = () => {
     };
 
     const handleDrawerToggle = () => {
+        document.body.classList.toggle('disableScroll', !mobileOpen);
         setMobileOpen(!mobileOpen);
     };
 

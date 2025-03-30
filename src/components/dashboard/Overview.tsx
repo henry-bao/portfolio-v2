@@ -315,7 +315,7 @@ const Overview = () => {
                                         startIcon={<EditIcon />}
                                         onClick={() => navigate('/admin/profile')}
                                     >
-                                        Edit Profile
+                                        Edit
                                     </Button>
                                 </>
                             ) : (
@@ -357,7 +357,7 @@ const Overview = () => {
                                         startIcon={<AddIcon />}
                                         onClick={() => navigate('/admin/projects')}
                                     >
-                                        Manage Projects
+                                        Manage
                                     </Button>
                                 </>
                             )}
@@ -399,7 +399,7 @@ const Overview = () => {
                                         startIcon={<AddIcon />}
                                         onClick={() => navigate('/admin/blogs')}
                                     >
-                                        Manage Blogs
+                                        Manage
                                     </Button>
                                 </>
                             )}
@@ -437,7 +437,7 @@ const Overview = () => {
                                         startIcon={<AddIcon />}
                                         onClick={() => navigate('/admin/resumes')}
                                     >
-                                        Manage Resumes
+                                        Manage
                                     </Button>
                                 </>
                             )}
