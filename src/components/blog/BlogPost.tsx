@@ -171,7 +171,7 @@ const BlogPost = () => {
                         )}
 
                         <div className="blog-post-views">
-                            <span>{isPreview ? 'Preview' : `${post.viewCount || 0} views`}</span>
+                            <p>{isPreview ? 'Preview' : `${post.viewCount || 0} views`}</p>
                         </div>
                     </div>
 
