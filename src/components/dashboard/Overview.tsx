@@ -191,15 +191,11 @@ const Overview = () => {
                                             <Box
                                                 sx={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'end',
+                                                    justifyContent: 'flex-end',
                                                 }}
                                             >
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
                                                     About Section
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Personal information and bio
                                                 </Typography>
                                             </Box>
                                         }
@@ -226,15 +222,11 @@ const Overview = () => {
                                             <Box
                                                 sx={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'end',
+                                                    justifyContent: 'flex-end',
                                                 }}
                                             >
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
                                                     Projects Section
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Your portfolio projects
                                                 </Typography>
                                             </Box>
                                         }
@@ -261,15 +253,11 @@ const Overview = () => {
                                             <Box
                                                 sx={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'end',
+                                                    justifyContent: 'flex-end',
                                                 }}
                                             >
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
                                                     Blogs Section
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Your blog posts and articles
                                                 </Typography>
                                             </Box>
                                         }
@@ -296,15 +284,11 @@ const Overview = () => {
                                             <Box
                                                 sx={{
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'end',
+                                                    justifyContent: 'flex-end',
                                                 }}
                                             >
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
+                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
                                                     Resumes Section
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Your resume versions
                                                 </Typography>
                                             </Box>
                                         }
