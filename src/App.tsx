@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-
-import { Analytics } from '@vercel/analytics/react';
 import { Models } from 'appwrite';
+
 import { AuthProvider } from './context/AuthContext';
 import { getSectionVisibility, SectionVisibility } from './services/appwrite';
 import Portfolio from './Portfolio';
@@ -71,7 +70,6 @@ function App() {
                     </Routes>
                 </AuthProvider>
             </Router>
-            <Analytics />
         </>
     );
 }
