@@ -188,7 +188,13 @@ const Overview = () => {
                                             />
                                         }
                                         label={
-                                            <Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'end',
+                                                }}
+                                            >
                                                 <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
                                                     About Section
                                                 </Typography>
@@ -217,7 +223,13 @@ const Overview = () => {
                                             />
                                         }
                                         label={
-                                            <Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'end',
+                                                }}
+                                            >
                                                 <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
                                                     Projects Section
                                                 </Typography>
@@ -246,7 +258,13 @@ const Overview = () => {
                                             />
                                         }
                                         label={
-                                            <Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'end',
+                                                }}
+                                            >
                                                 <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
                                                     Blogs Section
                                                 </Typography>
@@ -275,7 +293,13 @@ const Overview = () => {
                                             />
                                         }
                                         label={
-                                            <Box>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'end',
+                                                }}
+                                            >
                                                 <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
                                                     Resumes Section
                                                 </Typography>
@@ -442,7 +466,7 @@ const Overview = () => {
                 </Box>
 
                 {/* Quick Actions Section */}
-                <Paper>
+                <Paper sx={{ p: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <VisibilityIcon sx={{ mr: 1, color: 'primary.main' }} />
                         <Typography variant="h6" sx={{ fontWeight: 500 }}>
