@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Models } from 'appwrite';
-import { getProfileData, getSectionVisibility, SectionVisibility } from './services/appwrite';
+import { getProfileData, SectionVisibility } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
 
 import Footer from './components/layout/Footer';
@@ -12,19 +12,20 @@ import Blog from './components/sections/Blog';
 
 import './Portfolio.css';
 
-function Portfolio() {
+interface PortfolioProps {
+    sectionVisibility: (Models.Document & SectionVisibility) | null;
+}
+
+function Portfolio({ sectionVisibility }: PortfolioProps) {
     const [resumeUrl, setResumeUrl] = useState<string | null>(null);
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
     const [profile, setProfile] = useState<Models.Document | null>(null);
-    const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [profileData, visibilityData] = await Promise.all([getProfileData(), getSectionVisibility()]);
-
+                const profileData = await getProfileData();
                 setProfile(profileData);
-                setSectionVisibility(visibilityData);
 
                 if (profileData?.profileImageId) {
                     setProfileImageUrl(getFilePreviewUrl(profileData.profileImageId));
@@ -43,7 +44,7 @@ function Portfolio() {
 
     return (
         <>
-            <Navbar />
+            <Navbar sectionVisibility={sectionVisibility} />
             <main>
                 <Landing />
                 {(!sectionVisibility || sectionVisibility.about) && (

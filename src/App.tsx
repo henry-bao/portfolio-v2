@@ -1,7 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react';
+import { useEffect, useState } from 'react';
 
+import { Analytics } from '@vercel/analytics/react';
+import { Models } from 'appwrite';
 import { AuthProvider } from './context/AuthContext';
+import { getSectionVisibility, SectionVisibility } from './services/appwrite';
 import Portfolio from './Portfolio';
 import ProtectedRoute from './components/dashboard/ProtectedRoute';
 import Login from './components/dashboard/Login';
@@ -19,15 +22,31 @@ import NotFound from './components/NotFound';
 import ResumeRedirect from './components/ResumeRedirect';
 
 function App() {
+    const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
+
+    useEffect(() => {
+        const fetchSectionVisibility = async () => {
+            try {
+                const visibility = await getSectionVisibility();
+                setSectionVisibility(visibility);
+            } catch (error) {
+                console.error('Error fetching section visibility:', error);
+            }
+        };
+        fetchSectionVisibility();
+    }, []);
+
     return (
         <>
             <Router>
                 <AuthProvider>
                     <Routes>
                         {/* Public Portfolio Routes */}
-                        <Route path="/" element={<Portfolio />} />
-                        <Route path="/blogs" element={<BlogList />} />
-                        <Route path="/blogs/:slug" element={<BlogPost />} />
+                        <Route path="/" element={<Portfolio sectionVisibility={sectionVisibility} />} />
+
+                        {/* Blog routes - always available to prevent redirecting to NotFound */}
+                        <Route path="/blogs" element={<BlogList sectionVisibility={sectionVisibility} />} />
+                        <Route path="/blogs/:slug" element={<BlogPost sectionVisibility={sectionVisibility} />} />
 
                         <Route path="/admin/login" element={<Login />} />
 

@@ -2,34 +2,63 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { CircularProgress } from '@mui/material';
-import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
+import { getBlogPosts, BlogPost, getContentImagePreviewUrl, SectionVisibility } from '../../services/appwrite';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
+import NotFound from '../NotFound';
 import './BlogList.css';
 
-const BlogList = () => {
+interface BlogListProps {
+    sectionVisibility: (Models.Document & SectionVisibility) | null;
+}
+
+const BlogList = ({ sectionVisibility }: BlogListProps) => {
     const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const resumeUrl = null; // Fixed to avoid unused state variable
 
     useEffect(() => {
-        const fetchBlogPosts = async () => {
+        const fetchData = async () => {
             try {
-                // Only fetch published blog posts for the public view
-                const posts = await getBlogPosts(true);
-                setBlogPosts(posts);
+                // Only fetch blog posts if section visibility has loaded and blogs are enabled
+                if (sectionVisibility?.blogs) {
+                    // Only fetch published blog posts for the public view
+                    const posts = await getBlogPosts(true);
+                    setBlogPosts(posts);
+                }
             } catch (error) {
-                console.error('Error fetching blog posts:', error);
+                console.error('Error fetching data:', error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchBlogPosts();
-    }, []);
+        // Only fetch data when sectionVisibility is available (not null)
+        if (sectionVisibility !== null) {
+            fetchData();
+        }
+    }, [sectionVisibility]);
+
+    // Show loading state until sectionVisibility is loaded and component data is ready
+    if (isLoading) {
+        return (
+            <div className="blog-page-wrapper">
+                <BlogNav />
+                <div className="blog-loading-container">
+                    <CircularProgress />
+                </div>
+                <Footer resumeUrl={resumeUrl} />
+            </div>
+        );
+    }
+
+    // If blogs are disabled, show the NotFound page
+    if (!sectionVisibility?.blogs) {
+        return <NotFound />;
+    }
 
     return (
-        <>
+        <div className="blog-page-wrapper">
             <BlogNav />
             <div className="blog-list-container">
                 <header className="blog-list-header">
@@ -37,12 +66,7 @@ const BlogList = () => {
                     <p>Thoughts, insights, and updates</p>
                 </header>
 
-                {isLoading ? (
-                    <div className="blog-list-loading-spinner">
-                        <p>Loading...</p>
-                        <CircularProgress />
-                    </div>
-                ) : blogPosts.length === 0 ? (
+                {blogPosts.length === 0 ? (
                     <div className="no-posts-message">
                         <p>No blog posts available yet. Check back soon!</p>
                     </div>
@@ -97,7 +121,7 @@ const BlogList = () => {
                 )}
             </div>
             <Footer resumeUrl={resumeUrl} />
-        </>
+        </div>
     );
 };
 

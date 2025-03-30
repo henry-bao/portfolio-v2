@@ -8,6 +8,7 @@ import {
     BlogPost as BlogPostType,
     incrementBlogPostViewCount,
     getContentImagePreviewUrl,
+    SectionVisibility,
 } from '../../services/appwrite';
 import { LinearProgress, Alert } from '@mui/material';
 import Footer from '../layout/Footer';
@@ -20,7 +21,11 @@ interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
     isPreview: boolean;
 }
 
-const BlogPost = () => {
+interface BlogPostProps {
+    sectionVisibility: (Models.Document & SectionVisibility) | null;
+}
+
+const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -31,38 +36,45 @@ const BlogPost = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchBlogPost = async () => {
+        const fetchData = async () => {
             setIsLoading(true);
 
-            // Check if this is a preview from session storage (for drafts)
-            if (slug === 'preview') {
-                try {
-                    const previewData = sessionStorage.getItem('preview_blog_post');
-                    if (!previewData) {
-                        setError('Preview data not found');
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    const previewPost = JSON.parse(previewData) as PreviewBlogPost;
-                    setPost(previewPost);
-                    setIsLoading(false);
-                    return;
-                } catch (err) {
-                    console.error('Error loading preview data:', err);
-                    setError('Failed to load preview');
+            try {
+                // If blogs are disabled and not in preview mode, don't fetch blog post
+                if (!sectionVisibility?.blogs && !isPreview) {
+                    setError('Blogs section is disabled');
                     setIsLoading(false);
                     return;
                 }
-            }
 
-            // Otherwise load from database
-            if (!slug) {
-                setIsLoading(false);
-                return;
-            }
+                // Check if this is a preview from session storage (for drafts)
+                if (slug === 'preview') {
+                    try {
+                        const previewData = sessionStorage.getItem('preview_blog_post');
+                        if (!previewData) {
+                            setError('Preview data not found');
+                            setIsLoading(false);
+                            return;
+                        }
 
-            try {
+                        const previewPost = JSON.parse(previewData) as PreviewBlogPost;
+                        setPost(previewPost);
+                        setIsLoading(false);
+                        return;
+                    } catch (err) {
+                        console.error('Error loading preview data:', err);
+                        setError('Failed to load preview');
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+
+                // Otherwise load from database
+                if (!slug) {
+                    setIsLoading(false);
+                    return;
+                }
+
                 const blogPost = await getBlogPostBySlug(slug);
 
                 // If post not found or not published (and not in preview mode), show not found
@@ -111,20 +123,29 @@ const BlogPost = () => {
             }
         };
 
-        fetchBlogPost();
-    }, [slug, navigate, isPreview]);
+        // Only fetch data when sectionVisibility is loaded
+        if (sectionVisibility !== null) {
+            fetchData();
+        }
+    }, [slug, navigate, isPreview, sectionVisibility]);
 
+    // Continue showing loading state until sectionVisibility is loaded
     if (isLoading) {
         return (
-            <>
-                <BlogNav />
+            <div className="blog-page-wrapper">
+                {!isPreview && <BlogNav />}
                 <div className="blog-post-container">
                     <p className="loading-message">Loading...</p>
                     <LinearProgress />
                 </div>
                 <Footer resumeUrl={null} />
-            </>
+            </div>
         );
+    }
+
+    // If blogs are disabled and not in preview mode, show the NotFound page
+    if (!sectionVisibility?.blogs && !isPreview) {
+        return <NotFound />;
     }
 
     if (error || !post) {
@@ -132,7 +153,7 @@ const BlogPost = () => {
     }
 
     return (
-        <>
+        <div className="blog-page-wrapper">
             {!isPreview && <BlogNav />}
             <div className="blog-post-container" style={isPreview ? { paddingTop: '2rem' } : undefined}>
                 {isPreview && (
@@ -144,7 +165,7 @@ const BlogPost = () => {
                 <div className="blog-post-header">
                     {!isPreview && (
                         <Link to="/blogs" className="back-to-blog">
-                            Back to Blogs
+                            ← Back to blogs
                         </Link>
                     )}
 
@@ -187,7 +208,7 @@ const BlogPost = () => {
                 </div>
             </div>
             <Footer resumeUrl={null} />
-        </>
+        </div>
     );
 };
 
