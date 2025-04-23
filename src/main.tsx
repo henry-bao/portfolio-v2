@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 
 import App from './App';
 import './index.css';
+import MetaPixel from './components/MetaPixel';
 
 // Create a theme instance
 const theme = createTheme({
@@ -52,6 +53,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <Analytics />
+            <MetaPixel />
             <App />
         </ThemeProvider>
     </React.StrictMode>
