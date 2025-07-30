@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Models } from 'appwrite';
 
 import { AuthProvider } from './context/AuthContext';
@@ -19,9 +19,19 @@ import BlogPost from './components/blog/BlogPost';
 import BlogList from './components/blog/BlogList';
 import NotFound from './components/NotFound';
 import ResumeRedirect from './components/ResumeRedirect';
+import PageChangeListener from './components/shared/PageChangeListener';
 
 function App() {
     const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
+
+    const fetchSectionVisibility = useCallback(async () => {
+        try {
+            const visibility = await getSectionVisibility();
+            setSectionVisibility(visibility);
+        } catch (error) {
+            console.error('Error fetching section visibility:', error);
+        }
+    }, []);
 
     useEffect(() => {
         const checkConnectivity = async () => {
@@ -32,22 +42,16 @@ function App() {
                 console.error('Error connecting to Appwrite:', error);
             }
         };
-        const fetchSectionVisibility = async () => {
-            try {
-                const visibility = await getSectionVisibility();
-                setSectionVisibility(visibility);
-            } catch (error) {
-                console.error('Error fetching section visibility:', error);
-            }
-        };
+
         checkConnectivity();
         fetchSectionVisibility();
-    }, []);
+    }, [fetchSectionVisibility]);
 
     return (
         <>
             <Router>
                 <AuthProvider>
+                    <PageChangeListener onPageChange={fetchSectionVisibility} />
                     <Routes>
                         {/* Public Portfolio Routes */}
                         <Route path="/" element={<Portfolio sectionVisibility={sectionVisibility} />} />
