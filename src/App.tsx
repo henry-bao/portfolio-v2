@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Models } from 'appwrite';
 
 import { AuthProvider } from './context/AuthContext';
-import { getSectionVisibility, SectionVisibility } from './services/appwrite';
+import { getSectionVisibility, SectionVisibility, sendPing } from './services/appwrite';
 import Portfolio from './Portfolio';
 import ProtectedRoute from './components/dashboard/ProtectedRoute';
 import Login from './components/dashboard/Login';
@@ -24,6 +24,14 @@ function App() {
     const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
 
     useEffect(() => {
+        const checkConnectivity = async () => {
+            try {
+                await sendPing();
+                console.log('Connected to Appwrite successfully');
+            } catch (error) {
+                console.error('Error connecting to Appwrite:', error);
+            }
+        };
         const fetchSectionVisibility = async () => {
             try {
                 const visibility = await getSectionVisibility();
@@ -32,6 +40,7 @@ function App() {
                 console.error('Error fetching section visibility:', error);
             }
         };
+        checkConnectivity();
         fetchSectionVisibility();
     }, []);
 

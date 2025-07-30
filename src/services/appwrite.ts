@@ -75,6 +75,15 @@ export interface SectionVisibility {
     resumes: boolean;
 }
 
+export const sendPing = async () => {
+    try {
+        await client.ping();
+    } catch (error) {
+        console.error('Error pinging Appwrite:', error);
+        throw error;
+    }
+};
+
 // Authentication functions
 export const createAccount = async (email: string, password: string, name: string) => {
     try {
