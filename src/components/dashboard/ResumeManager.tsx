@@ -62,7 +62,7 @@ const ResumeManager = () => {
     // Edit resume state
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [resumeToEdit, setResumeToEdit] = useState<(Models.Document & ResumeVersion) | null>(null);
-    const [editFileName, setEditFileName] = useState('');
+    // const [editFileName, setEditFileName] = useState('');
     const [editDescription, setEditDescription] = useState('');
     const [isEditing, setIsEditing] = useState(false);
 
@@ -158,7 +158,7 @@ const ResumeManager = () => {
 
     const handleEditClick = (resume: Models.Document & ResumeVersion) => {
         setResumeToEdit(resume);
-        setEditFileName(resume.fileName);
+        // setEditFileName(resume.fileName);
         setEditDescription(resume.description || '');
         setEditDialogOpen(true);
     };
@@ -166,7 +166,7 @@ const ResumeManager = () => {
     const handleEditCancel = () => {
         setEditDialogOpen(false);
         setResumeToEdit(null);
-        setEditFileName('');
+        // setEditFileName('');
         setEditDescription('');
     };
 
@@ -179,13 +179,13 @@ const ResumeManager = () => {
 
         try {
             await updateResumeVersion(resumeToEdit.$id, {
-                fileName: editFileName,
+                // fileName: editFileName,
                 description: editDescription,
             });
             setSuccess('Resume updated successfully');
             setEditDialogOpen(false);
             setResumeToEdit(null);
-            setEditFileName('');
+            // setEditFileName('');
             setEditDescription('');
             await fetchResumeVersions();
         } catch (error) {
@@ -445,8 +445,9 @@ const ResumeManager = () => {
                 <DialogTitle>Edit Resume Details</DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ mb: 2 }}>
-                        Edit the file name and description for this resume version.
+                        Edit the file description for this resume version.
                     </DialogContentText>
+                    {/*
                     <TextField
                         fullWidth
                         label="File Name"
@@ -455,6 +456,7 @@ const ResumeManager = () => {
                         sx={{ mb: 2 }}
                         required
                     />
+                    */}
                     <TextField
                         fullWidth
                         label="Description (optional)"
@@ -473,7 +475,7 @@ const ResumeManager = () => {
                     <Button
                         onClick={handleEditConfirm}
                         color="primary"
-                        disabled={isEditing || !editFileName.trim()}
+                        // disabled={isEditing || !editFileName.trim()}
                         startIcon={isEditing ? <CircularProgress size={20} /> : <SaveIcon />}
                     >
                         {isEditing ? 'Saving...' : 'Save'}
