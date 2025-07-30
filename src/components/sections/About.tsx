@@ -18,13 +18,13 @@ const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
     return {
         name: doc.name || 'Henry Bao',
         pronouns: doc.pronouns || ['He', 'Him'],
-        education: doc.education || ['MSIS @ Cornell', 'INFO @ UW'],
+        education: doc.education || ['MS @ Cornell', 'BS @ UW'],
         languages: doc.languages || ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
         resumeFileId: doc.resumeFileId,
         profileImageId: doc.profileImageId,
-        linkedin: doc.linkedin || 'https://www.linkedin.com/in/henglibao/',
+        linkedin: doc.linkedin || 'https://www.linkedin.com/in/henglibao',
         github: doc.github || 'https://github.com/henry-bao',
-        email: doc.email || 'henry@bao.nyc',
+        email: doc.email || 'henry@bao.dev',
     };
 };
 
@@ -40,11 +40,11 @@ const About = ({ profile, resumeUrl, profileImageUrl }: AboutProps) => {
         : {
               name: 'Henry Bao',
               pronouns: ['He', 'Him'],
-              education: ['MSIS @ Cornell', 'INFO @ UW'],
+              education: ['MS @ Cornell', 'BS @ UW'],
               languages: ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
-              linkedin: 'https://www.linkedin.com/in/henglibao/',
+              linkedin: 'https://www.linkedin.com/in/henglibao',
               github: 'https://github.com/henry-bao',
-              email: 'henry@bao.nyc',
+              email: 'henry@bao.dev',
           };
 
     return (
@@ -56,7 +56,7 @@ const About = ({ profile, resumeUrl, profileImageUrl }: AboutProps) => {
                         <img
                             className="my-pic"
                             src={profileImageUrl || '/img/henry_800x800.png'}
-                            alt="A picture of me in black and white"
+                            alt="A picture of me (Henry Bao) in black and white"
                         />
                     </div>
                     <ul className="about-list">
