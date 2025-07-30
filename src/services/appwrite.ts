@@ -3,7 +3,8 @@ import { Client, Account, Storage, Databases, ID, Query, Models } from 'appwrite
 const client = new Client();
 
 const PROJECT_ID = import.meta.env.VITE_APPWRITE_MAIN_PROJECT_ID;
-client.setEndpoint('https://cloud.appwrite.io/v1').setProject(PROJECT_ID);
+const ENDPOINT = import.meta.env.VITE_APPWRITE_MAIN_ENDPOINT || 'https://cloud.appwrite.io/v1';
+client.setEndpoint(ENDPOINT).setProject(PROJECT_ID);
 
 // Initialize Appwrite services
 export const account = new Account(client);
@@ -11,7 +12,7 @@ export const storage = new Storage(client);
 export const databases = new Databases(client);
 
 // Appwrite IDs
-export const DATABASE_ID = import.meta.env.VITE_APPWRITE_MAIN_DATABASE_ID;
+export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DB_ID;
 
 export const STORAGE_FILE_BUCKET_ID = import.meta.env.VITE_APPWRITE_STORAGE_FILE_BUCKET_ID;
 export const STORAGE_BLOGS_BUCKET_ID = import.meta.env.VITE_APPWRITE_STORAGE_BLOGS_BUCKET_ID;
