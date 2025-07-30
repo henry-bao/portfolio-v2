@@ -117,7 +117,10 @@ const DashboardLayout = () => {
         <>
             <Toolbar
                 sx={{
-                    justifyContent: { xs: 'space-between', sm: isCollapsed ? 'center' : 'space-between' },
+                    justifyContent: {
+                        xs: 'space-between',
+                        sm: isCollapsed ? 'center' : 'space-between',
+                    },
                     minHeight: 64,
                     px: { xs: 2, sm: isCollapsed ? 0 : 2 },
                 }}
@@ -129,7 +132,10 @@ const DashboardLayout = () => {
                 )}
                 <IconButton
                     onClick={handleDrawerCollapse}
-                    sx={{ mr: isCollapsed ? 0 : -1, display: { xs: 'none', sm: 'inline-flex' } }}
+                    sx={{
+                        mr: isCollapsed ? 0 : -1,
+                        display: { xs: 'none', sm: 'inline-flex' },
+                    }}
                 >
                     {isCollapsed ? <RightIcon /> : <LeftIcon />}
                 </IconButton>

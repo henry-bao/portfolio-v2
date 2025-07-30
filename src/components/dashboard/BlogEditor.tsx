@@ -63,7 +63,7 @@ import {
     getContentImages,
     updateContentImage,
     getContentImagePreviewUrl,
-    CONTENT_IMAGES_BUCKET_ID,
+    STORAGE_BLOGS_BUCKET_ID,
     ALLOWED_IMAGE_TYPES,
 } from '../../services/appwrite';
 import './markdown-preview.css';
@@ -140,7 +140,10 @@ const BlogEditor = () => {
     const textFieldRef = useRef<HTMLTextAreaElement | null>(null);
 
     // For editor cursor position tracking
-    const [cursorPosition, setCursorPosition] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
+    const [cursorPosition, setCursorPosition] = useState<{
+        start: number;
+        end: number;
+    }>({ start: 0, end: 0 });
 
     // For image library
     const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
@@ -958,7 +961,7 @@ const BlogEditor = () => {
 
         try {
             // Use deleteFile with the content images bucket
-            await deleteFile(targetImageId, CONTENT_IMAGES_BUCKET_ID);
+            await deleteFile(targetImageId, STORAGE_BLOGS_BUCKET_ID);
             await loadContentImages(); // Refresh the list
             setSuccess('Image deleted successfully');
         } catch (error) {
@@ -1451,7 +1454,12 @@ const BlogEditor = () => {
                         ) : (
                             <Paper
                                 variant="outlined"
-                                sx={{ p: 2, minHeight: '300px', maxHeight: '600px', overflow: 'auto' }}
+                                sx={{
+                                    p: 2,
+                                    minHeight: '300px',
+                                    maxHeight: '600px',
+                                    overflow: 'auto',
+                                }}
                             >
                                 {content ? (
                                     <div className="markdown-preview">
@@ -1505,7 +1513,10 @@ const BlogEditor = () => {
                                         <Typography
                                             variant="caption"
                                             display="block"
-                                            sx={{ mt: 1, color: 'text.secondary' }}
+                                            sx={{
+                                                mt: 1,
+                                                color: 'text.secondary',
+                                            }}
                                         >
                                             Allowed formats: JPG, PNG, GIF, WebP, SVG
                                         </Typography>
@@ -1530,7 +1541,13 @@ const BlogEditor = () => {
                         <DialogTitle>Media Library</DialogTitle>
                         <DialogContent>
                             {loadingImages ? (
-                                <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        my: 4,
+                                    }}
+                                >
                                     <CircularProgress />
                                 </Box>
                             ) : contentImages.length === 0 ? (
@@ -1566,9 +1583,18 @@ const BlogEditor = () => {
                                                         component="img"
                                                         image={getContentImagePreviewUrl(image.$id)}
                                                         alt={image.name}
-                                                        sx={{ height: 140, objectFit: 'cover' }}
+                                                        sx={{
+                                                            height: 140,
+                                                            objectFit: 'cover',
+                                                        }}
                                                     />
-                                                    <CardContent sx={{ flexGrow: 1, pb: 1, pt: 1 }}>
+                                                    <CardContent
+                                                        sx={{
+                                                            flexGrow: 1,
+                                                            pb: 1,
+                                                            pt: 1,
+                                                        }}
+                                                    >
                                                         <Typography variant="body2" noWrap>
                                                             {image.name}
                                                         </Typography>
@@ -1576,7 +1602,12 @@ const BlogEditor = () => {
                                                             {new Date(image.$createdAt).toLocaleDateString()}
                                                         </Typography>
                                                     </CardContent>
-                                                    <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                                                    <CardActions
+                                                        sx={{
+                                                            justifyContent: 'space-between',
+                                                            pt: 0,
+                                                        }}
+                                                    >
                                                         <Button
                                                             size="small"
                                                             onClick={(e) => {
@@ -1698,7 +1729,10 @@ const BlogEditor = () => {
                                         <Typography
                                             variant="caption"
                                             display="block"
-                                            sx={{ mt: 1, color: 'text.secondary' }}
+                                            sx={{
+                                                mt: 1,
+                                                color: 'text.secondary',
+                                            }}
                                         >
                                             Allowed formats: JPG, PNG, GIF, WebP, SVG
                                         </Typography>
@@ -1743,7 +1777,12 @@ const BlogEditor = () => {
                                 </Button>
                             </Box>
                             {isDraft && lastSaved && (
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                    }}
+                                >
                                     <Typography variant="caption" color="text.secondary">
                                         {lastSaved}
                                     </Typography>

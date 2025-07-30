@@ -361,7 +361,13 @@ const BlogManager = () => {
                             {post.title}
                         </Typography>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                mb: 1,
+                            }}
+                        >
                             <Typography variant="body2" color="text.secondary">
                                 {post.isDraft && post.lastSaved
                                     ? `Last edited: ${new Date(post.lastSaved).toLocaleString()}`
@@ -394,7 +400,14 @@ const BlogManager = () => {
                             </Typography>
                         )}
 
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                mb: 1,
+                            }}
+                        >
                             {post.tags &&
                                 post.tags.map((tag, index) => (
                                     <Chip
@@ -589,7 +602,13 @@ const BlogManager = () => {
                     mb: 3,
                 }}
             >
-                <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+                    }}
+                >
                     Blogs
                 </Typography>
                 <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleNewPost}>

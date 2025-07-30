@@ -1,4 +1,4 @@
-import { storage, BUCKET_ID } from './appwrite';
+import { storage, STORAGE_FILE_BUCKET_ID } from './appwrite';
 
 /**
  * Proxy function to get file URL from Appwrite
@@ -9,7 +9,7 @@ import { storage, BUCKET_ID } from './appwrite';
  */
 export const getFileUrl = (fileId: string): string => {
     try {
-        const fileUrl = storage.getFileView(BUCKET_ID, fileId);
+        const fileUrl = storage.getFileView(STORAGE_FILE_BUCKET_ID, fileId);
         return fileUrl.toString();
     } catch (error) {
         console.error('Error getting file URL:', error);
@@ -27,7 +27,7 @@ export const getFileUrl = (fileId: string): string => {
  */
 export const getFilePreviewUrl = (fileId: string, width?: number, height?: number): string => {
     try {
-        const previewUrl = storage.getFilePreview(BUCKET_ID, fileId, width, height);
+        const previewUrl = storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId, width, height);
         return previewUrl.toString();
     } catch (error) {
         console.error('Error getting file preview URL:', error);
@@ -43,7 +43,7 @@ export const getFilePreviewUrl = (fileId: string, width?: number, height?: numbe
  */
 export const getFileDownloadUrl = (fileId: string): string => {
     try {
-        const downloadUrl = storage.getFileDownload(BUCKET_ID, fileId);
+        const downloadUrl = storage.getFileDownload(STORAGE_FILE_BUCKET_ID, fileId);
         return downloadUrl.toString();
     } catch (error) {
         console.error('Error getting file download URL:', error);

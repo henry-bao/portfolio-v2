@@ -1,25 +1,26 @@
 import { Client, Account, Storage, Databases, ID, Query, Models } from 'appwrite';
 
-// Initialize Appwrite client
 const client = new Client();
 
-// Set Appwrite endpoint and project ID
-// These values should be stored in environment variables in a production app
-client.setEndpoint('https://cloud.appwrite.io/v1').setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+const PROJECT_ID = import.meta.env.VITE_APPWRITE_MAIN_PROJECT_ID;
+client.setEndpoint('https://cloud.appwrite.io/v1').setProject(PROJECT_ID);
 
 // Initialize Appwrite services
 export const account = new Account(client);
 export const storage = new Storage(client);
 export const databases = new Databases(client);
 
-// Bucket and database IDs
-export const BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
-export const CONTENT_IMAGES_BUCKET_ID = import.meta.env.VITE_APPWRITE_CONTENT_IMAGES_BUCKET_ID;
-export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-export const PROFILE_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROFILE_COLLECTION_ID;
-export const PROJECTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROJECTS_COLLECTION_ID;
-export const BLOG_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BLOG_COLLECTION_ID;
-export const SECTION_VISIBILITY_COLLECTION_ID = import.meta.env.VITE_APPWRITE_SECTION_VISIBILITY_COLLECTION_ID;
+// Appwrite IDs
+export const DATABASE_ID = import.meta.env.VITE_APPWRITE_MAIN_DATABASE_ID;
+
+export const STORAGE_FILE_BUCKET_ID = import.meta.env.VITE_APPWRITE_STORAGE_FILE_BUCKET_ID;
+export const STORAGE_BLOGS_BUCKET_ID = import.meta.env.VITE_APPWRITE_STORAGE_BLOGS_BUCKET_ID;
+
+export const COLLECTION_PROFILE_ID = import.meta.env.VITE_APPWRITE_DB_PROFILE_COLLECTION_ID;
+export const COLLECTION_PROJECTS_ID = import.meta.env.VITE_APPWRITE_DB_PROJECTS_COLLECTION_ID;
+export const COLLECTION_BLOG_ID = import.meta.env.VITE_APPWRITE_DB_BLOG_COLLECTION_ID;
+export const COLLECTION_SECTION_VISIBILITY_ID = import.meta.env.VITE_APPWRITE_DB_SECTION_VISIBILITY_COLLECTION_ID;
+export const COLLECTION_RESUME_ID = import.meta.env.VITE_APPWRITE_DB_RESUME_COLLECTION_ID;
 
 // Allowed file type configurations
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
@@ -99,9 +100,9 @@ export const login = async (email: string, password: string) => {
 
 export const getCurrentUser = async () => {
     try {
-        return await account.get();
+        const user = await account.get();
+        return user;
     } catch (error) {
-        console.error('Error getting current user:', error);
         return null;
     }
 };
@@ -131,7 +132,7 @@ export const uploadFile = async (file: File, options?: { allowedTypes?: string[]
             throw new Error(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
         }
 
-        const result = await storage.createFile(BUCKET_ID, ID.unique(), file);
+        const result = await storage.createFile(STORAGE_FILE_BUCKET_ID, ID.unique(), file);
         return result;
     } catch (error) {
         console.error('Error uploading file:', error);
@@ -140,10 +141,10 @@ export const uploadFile = async (file: File, options?: { allowedTypes?: string[]
 };
 
 export const getFilePreview = (fileId: string) => {
-    return storage.getFilePreview(BUCKET_ID, fileId);
+    return storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId);
 };
 
-export const deleteFile = async (fileId: string, bucketId = BUCKET_ID) => {
+export const deleteFile = async (fileId: string, bucketId = STORAGE_FILE_BUCKET_ID) => {
     try {
         await storage.deleteFile(bucketId, fileId);
         return true;
@@ -156,7 +157,7 @@ export const deleteFile = async (fileId: string, bucketId = BUCKET_ID) => {
 // Database functions for profile data
 export const getProfileData = async (): Promise<(Models.Document & ProfileData) | null> => {
     try {
-        const data = await databases.listDocuments(DATABASE_ID, PROFILE_COLLECTION_ID, [Query.limit(1)]);
+        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_PROFILE_ID, [Query.limit(1)]);
 
         if (data.documents.length === 0) {
             return null;
@@ -185,7 +186,7 @@ export const createProfileData = async (data: ProfileData) => {
         if (data.profileImageId) documentData.profileImageId = data.profileImageId;
         if (data.resumeFileId) documentData.resumeFileId = data.resumeFileId;
 
-        return await databases.createDocument(DATABASE_ID, PROFILE_COLLECTION_ID, ID.unique(), documentData);
+        return await databases.createDocument(DATABASE_ID, COLLECTION_PROFILE_ID, ID.unique(), documentData);
     } catch (error) {
         console.error('Error creating profile data:', error);
         throw error;
@@ -208,7 +209,7 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
         if (data.profileImageId !== undefined) documentData.profileImageId = data.profileImageId;
         if (data.resumeFileId !== undefined) documentData.resumeFileId = data.resumeFileId;
 
-        return await databases.updateDocument(DATABASE_ID, PROFILE_COLLECTION_ID, profileId, documentData);
+        return await databases.updateDocument(DATABASE_ID, COLLECTION_PROFILE_ID, profileId, documentData);
     } catch (error) {
         console.error('Error updating profile data:', error);
         throw error;
@@ -219,7 +220,7 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
 export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> => {
     try {
         // Query with sorting by order field
-        const data = await databases.listDocuments(DATABASE_ID, PROJECTS_COLLECTION_ID, [
+        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_PROJECTS_ID, [
             Query.orderAsc('order'), // Sort by order ascending
         ]);
 
@@ -232,7 +233,7 @@ export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> 
 
 export const getProject = async (projectId: string): Promise<Models.Document & ProjectData> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, PROJECTS_COLLECTION_ID, projectId)) as Models.Document &
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId)) as Models.Document &
             ProjectData;
     } catch (error) {
         console.error('Error getting project:', error);
@@ -242,7 +243,7 @@ export const getProject = async (projectId: string): Promise<Models.Document & P
 
 export const createProject = async (data: ProjectData) => {
     try {
-        return await databases.createDocument(DATABASE_ID, PROJECTS_COLLECTION_ID, ID.unique(), data);
+        return await databases.createDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, ID.unique(), data);
     } catch (error) {
         console.error('Error creating project:', error);
         throw error;
@@ -251,7 +252,7 @@ export const createProject = async (data: ProjectData) => {
 
 export const updateProject = async (projectId: string, data: Partial<ProjectData>) => {
     try {
-        return await databases.updateDocument(DATABASE_ID, PROJECTS_COLLECTION_ID, projectId, data);
+        return await databases.updateDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId, data);
     } catch (error) {
         console.error('Error updating project:', error);
         throw error;
@@ -260,7 +261,7 @@ export const updateProject = async (projectId: string, data: Partial<ProjectData
 
 export const deleteProject = async (projectId: string) => {
     try {
-        await databases.deleteDocument(DATABASE_ID, PROJECTS_COLLECTION_ID, projectId);
+        await databases.deleteDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId);
         return true;
     } catch (error) {
         console.error('Error deleting project:', error);
@@ -278,7 +279,7 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
             queries.push(Query.equal('published', true));
         }
 
-        const data = await databases.listDocuments(DATABASE_ID, BLOG_COLLECTION_ID, queries);
+        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, queries);
         return data.documents as (Models.Document & BlogPost)[];
     } catch (error) {
         console.error('Error getting blog posts:', error);
@@ -288,7 +289,7 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
 
 export const getBlogPost = async (postId: string): Promise<Models.Document & BlogPost> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId)) as Models.Document & BlogPost;
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as Models.Document & BlogPost;
     } catch (error) {
         console.error('Error getting blog post:', error);
         throw error;
@@ -297,7 +298,7 @@ export const getBlogPost = async (postId: string): Promise<Models.Document & Blo
 
 export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document & BlogPost) | null> => {
     try {
-        const data = await databases.listDocuments(DATABASE_ID, BLOG_COLLECTION_ID, [Query.equal('slug', slug)]);
+        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, [Query.equal('slug', slug)]);
 
         if (data.documents.length === 0) {
             return null;
@@ -326,7 +327,7 @@ export const createBlogPost = async (data: BlogPost) => {
         if (data.coverImageId) documentData.coverImageId = data.coverImageId;
         if (data.tags) documentData.tags = data.tags;
 
-        return await databases.createDocument(DATABASE_ID, BLOG_COLLECTION_ID, ID.unique(), documentData);
+        return await databases.createDocument(DATABASE_ID, COLLECTION_BLOG_ID, ID.unique(), documentData);
     } catch (error) {
         console.error('Error creating blog post:', error);
         throw error;
@@ -347,7 +348,7 @@ export const updateBlogPost = async (postId: string, data: Partial<BlogPost>) =>
         if (data.tags !== undefined) documentData.tags = data.tags;
         if (data.viewCount !== undefined) documentData.viewCount = data.viewCount;
 
-        return await databases.updateDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId, documentData);
+        return await databases.updateDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId, documentData);
     } catch (error) {
         console.error('Error updating blog post:', error);
         throw error;
@@ -356,7 +357,7 @@ export const updateBlogPost = async (postId: string, data: Partial<BlogPost>) =>
 
 export const deleteBlogPost = async (postId: string) => {
     try {
-        await databases.deleteDocument(DATABASE_ID, BLOG_COLLECTION_ID, postId);
+        await databases.deleteDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId);
         return true;
     } catch (error) {
         console.error('Error deleting blog post:', error);
@@ -386,7 +387,7 @@ export const incrementBlogPostViewCount = async (postId: string) => {
 // Functions for managing content images
 export const getContentImages = async (limit = 50): Promise<Models.File[]> => {
     try {
-        const images = await storage.listFiles(CONTENT_IMAGES_BUCKET_ID, [
+        const images = await storage.listFiles(STORAGE_BLOGS_BUCKET_ID, [
             Query.limit(limit),
             Query.orderDesc('$createdAt'),
         ]);
@@ -405,10 +406,10 @@ export const updateContentImage = async (fileId: string, file: File): Promise<Mo
         }
 
         // Delete the old file
-        await storage.deleteFile(CONTENT_IMAGES_BUCKET_ID, fileId);
+        await storage.deleteFile(STORAGE_BLOGS_BUCKET_ID, fileId);
 
         // Upload the new file with the same ID
-        const result = await storage.createFile(CONTENT_IMAGES_BUCKET_ID, fileId, file);
+        const result = await storage.createFile(STORAGE_BLOGS_BUCKET_ID, fileId, file);
         return result;
     } catch (error) {
         console.error('Error updating content image:', error);
@@ -424,9 +425,9 @@ export const uploadContentImage = async (file: File): Promise<{ fileId: string; 
             throw new Error(`Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`);
         }
 
-        const result = await storage.createFile(CONTENT_IMAGES_BUCKET_ID, ID.unique(), file);
+        const result = await storage.createFile(STORAGE_BLOGS_BUCKET_ID, ID.unique(), file);
         const fileId = result.$id;
-        const url = storage.getFileView(CONTENT_IMAGES_BUCKET_ID, fileId);
+        const url = storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
         return { fileId, url };
     } catch (error) {
         console.error('Error uploading content image:', error);
@@ -436,12 +437,12 @@ export const uploadContentImage = async (file: File): Promise<{ fileId: string; 
 
 // Utility function to get content image preview URL
 export const getContentImagePreviewUrl = (fileId: string): string => {
-    return storage.getFileView(CONTENT_IMAGES_BUCKET_ID, fileId);
+    return storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
 };
 
 export const getSectionVisibility = async (): Promise<(Models.Document & SectionVisibility) | null> => {
     try {
-        const data = await databases.listDocuments(DATABASE_ID, SECTION_VISIBILITY_COLLECTION_ID, [Query.limit(1)]);
+        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_SECTION_VISIBILITY_ID, [Query.limit(1)]);
 
         if (data.documents.length === 0) {
             // Create initial document with all sections enabled
@@ -471,7 +472,7 @@ export const createSectionVisibility = async (data: SectionVisibility) => {
             resumes: data.resumes,
         };
 
-        return await databases.createDocument(DATABASE_ID, SECTION_VISIBILITY_COLLECTION_ID, ID.unique(), documentData);
+        return await databases.createDocument(DATABASE_ID, COLLECTION_SECTION_VISIBILITY_ID, ID.unique(), documentData);
     } catch (error) {
         console.error('Error creating section visibility:', error);
         throw error;
@@ -489,7 +490,7 @@ export const updateSectionVisibility = async (visibilityId: string, data: Partia
 
         return await databases.updateDocument(
             DATABASE_ID,
-            SECTION_VISIBILITY_COLLECTION_ID,
+            COLLECTION_SECTION_VISIBILITY_ID,
             visibilityId,
             documentData
         );
