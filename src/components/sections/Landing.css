@@ -13,7 +13,7 @@
 .hello-container {
     display: inline-block;
     padding-top: 35vh;
-    font-size: 2.5rem;
+    font-size: 3rem;
     user-select: none;
 }
 
@@ -140,12 +140,26 @@
 @media (max-width: 768px) {
     .hello-container {
         padding-top: 32vh;
-        font-size: 1.1rem;
+        font-size: 1.6rem;
     }
     .landing-css {
         padding-left: 1.5em;
         padding-right: 1.5em;
     }
+}
+
+@media (max-width: 510px) {
+    .hello-container {
+        font-size: 1.4rem;
+    }
+
+}
+
+@media (max-width: 450px) {
+    .hello-container {
+        font-size: 1rem;
+    }
+
 }
 
 @media (max-width: 350px) {
