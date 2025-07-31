@@ -112,7 +112,7 @@ export const getCurrentUser = async () => {
     try {
         const user = await account.get();
         return user;
-    } catch (error) {
+    } catch {
         return null;
     }
 };
