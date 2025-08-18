@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Models } from 'appwrite';
-import { getProfileData, SectionVisibility } from './services/appwrite';
+import { getProfileData, SectionVisibility, ProfileData } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
 
 import Footer from './components/layout/Footer';
@@ -19,7 +19,7 @@ interface PortfolioProps {
 function Portfolio({ sectionVisibility }: PortfolioProps) {
     const [resumeUrl, setResumeUrl] = useState<string | null>(null);
     const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-    const [profile, setProfile] = useState<Models.Document | null>(null);
+    const [profile, setProfile] = useState<(Models.Document & ProfileData) | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {

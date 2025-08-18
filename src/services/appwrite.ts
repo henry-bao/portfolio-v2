@@ -31,6 +31,11 @@ export const ALLOWED_DOCUMENT_TYPES = [
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 
+// Utility: build a document by omitting only undefined values
+const omitUndefined = <T extends object>(data: Partial<T>): Record<string, unknown> => {
+    return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+};
+
 // Define interfaces for our data
 export interface ProfileData {
     name: string;
@@ -173,53 +178,41 @@ export const getProfileData = async (): Promise<(Models.Document & ProfileData) 
             return null;
         }
 
-        return data.documents[0] as Models.Document & ProfileData;
+        return data.documents[0] as unknown as Models.Document & ProfileData;
     } catch (error) {
         console.error('Error getting profile data:', error);
         return null;
     }
 };
 
-export const createProfileData = async (data: ProfileData) => {
+export const createProfileData = async (data: ProfileData): Promise<Models.Document & ProfileData> => {
     try {
-        // Create a document with the correct structure based on your Appwrite collection schema
-        // You need to match the field names with what's defined in your Appwrite collection
-        const documentData: Record<string, unknown> = {};
-
-        if (data.name) documentData.name = data.name;
-        if (data.email) documentData.email = data.email;
-        if (data.pronouns) documentData.pronouns = data.pronouns;
-        if (data.education) documentData.education = data.education;
-        if (data.languages) documentData.languages = data.languages;
-        if (data.linkedin) documentData.linkedin = data.linkedin;
-        if (data.github) documentData.github = data.github;
-        if (data.profileImageId) documentData.profileImageId = data.profileImageId;
-        if (data.resumeFileId) documentData.resumeFileId = data.resumeFileId;
-
-        return await databases.createDocument(DATABASE_ID, COLLECTION_PROFILE_ID, ID.unique(), documentData);
+        // Only include explicitly provided fields
+        const documentData = omitUndefined<ProfileData>(data);
+        return (await databases.createDocument(
+            DATABASE_ID,
+            COLLECTION_PROFILE_ID,
+            ID.unique(),
+            documentData
+        )) as unknown as Models.Document & ProfileData;
     } catch (error) {
         console.error('Error creating profile data:', error);
         throw error;
     }
 };
 
-export const updateProfileData = async (profileId: string, data: Partial<ProfileData>) => {
+export const updateProfileData = async (
+    profileId: string,
+    data: Partial<ProfileData>
+): Promise<Models.Document & ProfileData> => {
     try {
-        // Create a document with the correct structure based on your Appwrite collection schema
-        const documentData: Record<string, unknown> = {};
-
-        // Map your ProfileData fields to the Appwrite collection fields
-        if (data.name !== undefined) documentData.name = data.name;
-        if (data.email !== undefined) documentData.email = data.email;
-        if (data.pronouns !== undefined) documentData.pronouns = data.pronouns;
-        if (data.education !== undefined) documentData.education = data.education;
-        if (data.languages !== undefined) documentData.languages = data.languages;
-        if (data.linkedin !== undefined) documentData.linkedin = data.linkedin;
-        if (data.github !== undefined) documentData.github = data.github;
-        if (data.profileImageId !== undefined) documentData.profileImageId = data.profileImageId;
-        if (data.resumeFileId !== undefined) documentData.resumeFileId = data.resumeFileId;
-
-        return await databases.updateDocument(DATABASE_ID, COLLECTION_PROFILE_ID, profileId, documentData);
+        const documentData = omitUndefined<ProfileData>(data);
+        return (await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTION_PROFILE_ID,
+            profileId,
+            documentData
+        )) as unknown as Models.Document & ProfileData;
     } catch (error) {
         console.error('Error updating profile data:', error);
         throw error;
@@ -234,7 +227,7 @@ export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> 
             Query.orderAsc('order'), // Sort by order ascending
         ]);
 
-        return data.documents as (Models.Document & ProjectData)[];
+        return data.documents as unknown as (Models.Document & ProjectData)[];
     } catch (error) {
         console.error('Error getting projects:', error);
         return [];
@@ -243,26 +236,39 @@ export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> 
 
 export const getProject = async (projectId: string): Promise<Models.Document & ProjectData> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId)) as Models.Document &
-            ProjectData;
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId)) as unknown as
+            Models.Document & ProjectData;
     } catch (error) {
         console.error('Error getting project:', error);
         throw error;
     }
 };
 
-export const createProject = async (data: ProjectData) => {
+export const createProject = async (data: ProjectData): Promise<Models.Document & ProjectData> => {
     try {
-        return await databases.createDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, ID.unique(), data);
+        return (await databases.createDocument(
+            DATABASE_ID,
+            COLLECTION_PROJECTS_ID,
+            ID.unique(),
+            data
+        )) as unknown as Models.Document & ProjectData;
     } catch (error) {
         console.error('Error creating project:', error);
         throw error;
     }
 };
 
-export const updateProject = async (projectId: string, data: Partial<ProjectData>) => {
+export const updateProject = async (
+    projectId: string,
+    data: Partial<ProjectData>
+): Promise<Models.Document & ProjectData> => {
     try {
-        return await databases.updateDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId, data);
+        return (await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTION_PROJECTS_ID,
+            projectId,
+            data
+        )) as unknown as Models.Document & ProjectData;
     } catch (error) {
         console.error('Error updating project:', error);
         throw error;
@@ -290,7 +296,7 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
         }
 
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, queries);
-        return data.documents as (Models.Document & BlogPost)[];
+        return data.documents as unknown as (Models.Document & BlogPost)[];
     } catch (error) {
         console.error('Error getting blog posts:', error);
         return [];
@@ -299,7 +305,8 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
 
 export const getBlogPost = async (postId: string): Promise<Models.Document & BlogPost> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as Models.Document & BlogPost;
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as unknown as
+            Models.Document & BlogPost;
     } catch (error) {
         console.error('Error getting blog post:', error);
         throw error;
@@ -314,14 +321,14 @@ export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document 
             return null;
         }
 
-        return data.documents[0] as Models.Document & BlogPost;
+        return data.documents[0] as unknown as Models.Document & BlogPost;
     } catch (error) {
         console.error('Error getting blog post by slug:', error);
         return null;
     }
 };
 
-export const createBlogPost = async (data: BlogPost) => {
+export const createBlogPost = async (data: BlogPost): Promise<Models.Document & BlogPost> => {
     try {
         // Create a document with the correct structure
         const documentData: Record<string, unknown> = {
@@ -337,28 +344,30 @@ export const createBlogPost = async (data: BlogPost) => {
         if (data.coverImageId) documentData.coverImageId = data.coverImageId;
         if (data.tags) documentData.tags = data.tags;
 
-        return await databases.createDocument(DATABASE_ID, COLLECTION_BLOG_ID, ID.unique(), documentData);
+        return (await databases.createDocument(
+            DATABASE_ID,
+            COLLECTION_BLOG_ID,
+            ID.unique(),
+            documentData
+        )) as unknown as Models.Document & BlogPost;
     } catch (error) {
         console.error('Error creating blog post:', error);
         throw error;
     }
 };
 
-export const updateBlogPost = async (postId: string, data: Partial<BlogPost>) => {
+export const updateBlogPost = async (
+    postId: string,
+    data: Partial<BlogPost>
+): Promise<Models.Document & BlogPost> => {
     try {
-        const documentData: Record<string, unknown> = {};
-
-        if (data.title !== undefined) documentData.title = data.title;
-        if (data.content !== undefined) documentData.content = data.content;
-        if (data.summary !== undefined) documentData.summary = data.summary;
-        if (data.slug !== undefined) documentData.slug = data.slug;
-        if (data.publishedDate !== undefined) documentData.publishedDate = data.publishedDate;
-        if (data.published !== undefined) documentData.published = data.published;
-        if (data.coverImageId !== undefined) documentData.coverImageId = data.coverImageId;
-        if (data.tags !== undefined) documentData.tags = data.tags;
-        if (data.viewCount !== undefined) documentData.viewCount = data.viewCount;
-
-        return await databases.updateDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId, documentData);
+        const documentData = omitUndefined<BlogPost>(data);
+        return (await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTION_BLOG_ID,
+            postId,
+            documentData
+        )) as unknown as Models.Document & BlogPost;
     } catch (error) {
         console.error('Error updating blog post:', error);
         throw error;
@@ -415,10 +424,7 @@ export const updateContentImage = async (fileId: string, file: File): Promise<Mo
             throw new Error(`Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`);
         }
 
-        // Delete the old file
-        await storage.deleteFile(STORAGE_BLOGS_BUCKET_ID, fileId);
-
-        // Upload the new file with the same ID
+        // Replace content by creating with same ID (Appwrite overwrites if IDs match)
         const result = await storage.createFile(STORAGE_BLOGS_BUCKET_ID, fileId, file);
         return result;
     } catch (error) {
@@ -463,10 +469,10 @@ export const getSectionVisibility = async (): Promise<(Models.Document & Section
                 resumes: true,
             };
             const newDoc = await createSectionVisibility(initialVisibility);
-            return newDoc as Models.Document & SectionVisibility;
+            return newDoc as unknown as Models.Document & SectionVisibility;
         }
 
-        return data.documents[0] as Models.Document & SectionVisibility;
+        return data.documents[0] as unknown as Models.Document & SectionVisibility;
     } catch (error) {
         console.error('Error getting section visibility:', error);
         return null;
@@ -491,19 +497,8 @@ export const createSectionVisibility = async (data: SectionVisibility) => {
 
 export const updateSectionVisibility = async (visibilityId: string, data: Partial<SectionVisibility>) => {
     try {
-        const documentData: Record<string, unknown> = {};
-
-        if (data.about !== undefined) documentData.about = data.about;
-        if (data.projects !== undefined) documentData.projects = data.projects;
-        if (data.blogs !== undefined) documentData.blogs = data.blogs;
-        if (data.resumes !== undefined) documentData.resumes = data.resumes;
-
-        return await databases.updateDocument(
-            DATABASE_ID,
-            COLLECTION_SECTION_VISIBILITY_ID,
-            visibilityId,
-            documentData
-        );
+        const documentData = omitUndefined<SectionVisibility>(data);
+        return await databases.updateDocument(DATABASE_ID, COLLECTION_SECTION_VISIBILITY_ID, visibilityId, documentData);
     } catch (error) {
         console.error('Error updating section visibility:', error);
         throw error;

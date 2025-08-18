@@ -1,4 +1,5 @@
 import { Models } from 'appwrite';
+import type { ProfileData } from '../../services/appwrite';
 import './About.css';
 
 interface DisplayData {
@@ -14,7 +15,7 @@ interface DisplayData {
 }
 
 // Helper function to map Appwrite document to our display format
-const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
+const mapDocumentToDisplayData = (doc: Models.Document & ProfileData): DisplayData => {
     return {
         name: doc.name || 'Henry Bao',
         pronouns: doc.pronouns || ['He', 'Him'],
@@ -29,7 +30,7 @@ const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
 };
 
 type AboutProps = {
-    profile: Models.Document | null;
+    profile: (Models.Document & ProfileData) | null;
     resumeUrl: string | null;
     profileImageUrl: string | null;
 };

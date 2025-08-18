@@ -819,7 +819,7 @@ const BlogEditor = () => {
 
         // If multiple lines, use code block. Otherwise use inline code
         if (selectedText && selectedText.includes('\n')) {
-            insertTextAtCursor(`\`\`\`\n${selectedText}\n\`\`\``);
+            insertTextAtCursor('```\n' + selectedText + '\n```');
         } else {
             const replacement = selectedText ? `\`${selectedText}\`` : '`code`';
             insertTextAtCursor(replacement);

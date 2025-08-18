@@ -14,14 +14,8 @@ import {
     Skeleton,
 } from '@mui/material';
 import { Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
-import {
-    getProfileData,
-    updateProfileData,
-    createProfileData,
-    uploadFile,
-    deleteFile,
-    ProfileData,
-} from '../../services/appwrite';
+import { getProfileData, updateProfileData, createProfileData, uploadFile, deleteFile } from '../../services/appwrite';
+import type { ProfileData } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
@@ -47,7 +41,7 @@ import {
 import { SxProps, Theme } from '@mui/material/styles';
 
 // Helper function to map Appwrite document to ProfileData
-const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
+const mapDocumentToProfileData = (doc: Models.Document & ProfileData): ProfileData => {
     return {
         name: doc.name || '',
         email: doc.email || '',
@@ -137,7 +131,7 @@ const StyledDragOverlay = ({ children }: { children: React.ReactNode }) => {
 };
 
 const ProfileEditor = () => {
-    const [profile, setProfile] = useState<Models.Document | null>(null);
+    const [profile, setProfile] = useState<(Models.Document & ProfileData) | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -27,7 +27,6 @@ interface BlogPostProps {
 
 const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
     const { slug } = useParams<{ slug: string }>();
-    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const isPreview = searchParams.get('preview') === 'true' || slug === 'preview';
 
@@ -112,8 +111,8 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
                     // Add a small delay to ensure the page is actually viewed
                     // This helps avoid counting accidental or bounce views
-                    const timer = setTimeout(handleViewCount, 10000);
-                    return () => clearTimeout(timer);
+                    const timer = window.setTimeout(handleViewCount, 10000);
+                    return () => window.clearTimeout(timer);
                 }
             } catch (err) {
                 console.error('Error fetching blog post:', err);
@@ -124,10 +123,20 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
         };
 
         // Only fetch data when sectionVisibility is loaded
+        let cleanup: (() => void) | undefined;
         if (sectionVisibility !== null) {
-            fetchData();
+            // fetchData may return a cleanup for the timer; capture and run on unmount/dep change
+            const maybePromise = fetchData();
+            if (maybePromise && typeof (maybePromise as unknown as Promise<() => void>).then === 'function') {
+                (maybePromise as unknown as Promise<() => void>).then((fn) => {
+                    cleanup = fn;
+                });
+            }
         }
-    }, [slug, navigate, isPreview, sectionVisibility]);
+        return () => {
+            if (cleanup) cleanup();
+        };
+    }, [slug, isPreview, sectionVisibility]);
 
     // Continue showing loading state until sectionVisibility is loaded
     if (isLoading) {
