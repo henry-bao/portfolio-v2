@@ -14,12 +14,12 @@ const ResumeRedirect = () => {
                     const fileUrl = getFileUrl(activeResume.fileId);
                     window.location.href = fileUrl;
                 } else {
-                    // If no active resume, redirect to 404
-                    navigate('/404');
+                    // If no active resume, redirect to 404 (handled by catch-all route)
+                    navigate('/404', { replace: true });
                 }
             } catch (error) {
                 console.error('Error fetching active resume:', error);
-                navigate('/404');
+                navigate('/404', { replace: true });
             }
         };
 

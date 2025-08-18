@@ -103,7 +103,7 @@ const About = ({ profile, resumeUrl, profileImageUrl }: AboutProps) => {
                             <a
                                 href={resumeUrl || '/file/Resume.pdf'}
                                 target="_blank"
-                                rel="noopener"
+                                rel="noopener noreferrer"
                                 className="about-click"
                             >
                                 {' download()'}
@@ -111,13 +111,13 @@ const About = ({ profile, resumeUrl, profileImageUrl }: AboutProps) => {
                         </li>
                         <li>
                             linkedin <span className="r-arrow-color">&lt;-</span>
-                            <a href={displayData.linkedin} target="_blank" rel="noopener" className="about-click">
+                            <a href={displayData.linkedin} target="_blank" rel="noopener noreferrer" className="about-click">
                                 {' redirect()'}
                             </a>
                         </li>
                         <li>
                             github <span className="r-arrow-color">&lt;-</span>
-                            <a href={displayData.github} target="_blank" rel="noopener" className="about-click">
+                            <a href={displayData.github} target="_blank" rel="noopener noreferrer" className="about-click">
                                 {' redirect()'}
                             </a>
                         </li>

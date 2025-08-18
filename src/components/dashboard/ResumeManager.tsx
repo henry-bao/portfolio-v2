@@ -333,6 +333,7 @@ const ResumeManager = () => {
                                                     color="primary"
                                                     href={getFileUrl(resume.fileId)}
                                                     target="_blank"
+                                                    rel="noopener noreferrer"
                                                     size={isMobile ? 'small' : 'medium'}
                                                     title="View resume"
                                                 >
