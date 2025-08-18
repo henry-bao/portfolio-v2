@@ -39,6 +39,7 @@ import {
     Preview as PreviewIcon,
 } from '@mui/icons-material';
 import { getBlogPosts, deleteBlogPost, updateBlogPost } from '../../services/appwrite';
+import { logger } from '../../utils/logger';
 
 // Interface for drafts stored in localStorage
 interface DraftBlogPost {
@@ -165,7 +166,7 @@ const BlogManager = () => {
 
                 setAllPosts(combinedPosts);
             } catch (error) {
-                console.error('Error fetching blog posts:', error);
+                logger.error('Error fetching blog posts:', error);
                 showSnackbar('Failed to load blog posts', 'error');
             } finally {
                 setIsLoading(false);
@@ -203,7 +204,7 @@ const BlogManager = () => {
             // Remove from UI
             setAllPosts((prev) => prev.filter((post) => post.$id !== selectedPost.$id));
         } catch (error) {
-            console.error('Error deleting blog post:', error);
+            logger.error('Error deleting blog post:', error);
             showSnackbar('Failed to delete blog post', 'error');
         } finally {
             setDeleteDialogOpen(false);
@@ -244,7 +245,7 @@ const BlogManager = () => {
                 'success'
             );
         } catch (error) {
-            console.error('Error updating blog post:', error);
+            logger.error('Error updating blog post:', error);
             showSnackbar('Failed to update blog post', 'error');
         }
     };

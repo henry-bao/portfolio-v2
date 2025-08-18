@@ -1,5 +1,6 @@
 import { databases, storage, DATABASE_ID, STORAGE_FILE_BUCKET_ID, COLLECTION_RESUME_ID } from './appwrite';
 import { ID, Query, Models } from 'appwrite';
+import { logger } from '../utils/logger';
 
 export interface ResumeVersion {
     fileId: string;
@@ -16,9 +17,9 @@ export const getResumeVersions = async (): Promise<(Models.Document & ResumeVers
             Query.orderDesc('uploadDate'), // Sort by upload date, newest first
         ]);
 
-        return data.documents as (Models.Document & ResumeVersion)[];
+        return data.documents as unknown as (Models.Document & ResumeVersion)[];
     } catch (error) {
-        console.error('Error getting resume versions:', error);
+        logger.error('Error getting resume versions:', error);
         return [];
     }
 };
@@ -35,9 +36,9 @@ export const getActiveResumeVersion = async (): Promise<(Models.Document & Resum
             return null;
         }
 
-        return data.documents[0] as Models.Document & ResumeVersion;
+        return data.documents[0] as unknown as Models.Document & ResumeVersion;
     } catch (error) {
-        console.error('Error getting active resume version:', error);
+        logger.error('Error getting active resume version:', error);
         return null;
     }
 };
@@ -78,9 +79,9 @@ export const addResumeVersion = async (
             }
         }
 
-        return result as Models.Document & ResumeVersion;
+        return result as unknown as Models.Document & ResumeVersion;
     } catch (error) {
-        console.error('Error adding resume version:', error);
+        logger.error('Error adding resume version:', error);
         throw error;
     }
 };
@@ -100,7 +101,7 @@ export const setResumeAsActive = async (resumeId: string): Promise<void> => {
         // Then set the selected resume as active
         await databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId, { isActive: true });
     } catch (error) {
-        console.error('Error setting resume as active:', error);
+        logger.error('Error setting resume as active:', error);
         throw error;
     }
 };
@@ -114,9 +115,9 @@ export const updateResumeVersion = async (
         // Update the document
         const result = await databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId, updates);
 
-        return result as Models.Document & ResumeVersion;
+        return result as unknown as Models.Document & ResumeVersion;
     } catch (error) {
-        console.error('Error updating resume version:', error);
+        logger.error('Error updating resume version:', error);
         throw error;
     }
 };
@@ -129,7 +130,7 @@ export const deleteResumeVersion = async (resumeId: string, fileId: string): Pro
             DATABASE_ID,
             COLLECTION_RESUME_ID,
             resumeId
-        )) as Models.Document & ResumeVersion;
+        )) as unknown as Models.Document & ResumeVersion;
 
         // Delete the document
         await databases.deleteDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId);
@@ -145,7 +146,7 @@ export const deleteResumeVersion = async (resumeId: string, fileId: string): Pro
             }
         }
     } catch (error) {
-        console.error('Error deleting resume version:', error);
+        logger.error('Error deleting resume version:', error);
         throw error;
     }
 };

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getActiveResumeVersion } from '../services/resumeService';
 import { getFileUrl } from '../services/fileProxy';
+import { logger } from '../utils/logger';
 
 const ResumeRedirect = () => {
     const navigate = useNavigate();
@@ -18,7 +19,7 @@ const ResumeRedirect = () => {
                     navigate('/404');
                 }
             } catch (error) {
-                console.error('Error fetching active resume:', error);
+                logger.error('Error fetching active resume:', error);
                 navigate('/404');
             }
         };

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Models } from 'appwrite';
 
 import { AuthProvider } from './context/AuthContext';
+import { logger } from './utils/logger';
 import { getSectionVisibility, SectionVisibility, sendPing } from './services/appwrite';
 import Portfolio from './Portfolio';
 import ProtectedRoute from './components/dashboard/ProtectedRoute';
@@ -29,7 +30,7 @@ function App() {
             const visibility = await getSectionVisibility();
             setSectionVisibility(visibility);
         } catch (error) {
-            console.error('Error fetching section visibility:', error);
+            logger.error('Error fetching section visibility:', error);
         }
     }, []);
 
@@ -37,9 +38,9 @@ function App() {
         const checkConnectivity = async () => {
             try {
                 await sendPing();
-                console.log('Connected to Appwrite successfully');
+                logger.info('Connected to Appwrite successfully');
             } catch (error) {
-                console.error('Error connecting to Appwrite:', error);
+                logger.error('Error connecting to Appwrite:', error);
             }
         };
 

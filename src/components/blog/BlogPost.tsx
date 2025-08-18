@@ -15,6 +15,7 @@ import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
 import './BlogPost.css';
+import { logger } from '../../utils/logger';
 
 // Interface for preview blog post
 interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
@@ -62,7 +63,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
                         setIsLoading(false);
                         return;
                     } catch (err) {
-                        console.error('Error loading preview data:', err);
+                        logger.error('Error loading preview data:', err);
                         setError('Failed to load preview');
                         setIsLoading(false);
                         return;
@@ -116,7 +117,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
                     return () => clearTimeout(timer);
                 }
             } catch (err) {
-                console.error('Error fetching blog post:', err);
+                logger.error('Error fetching blog post:', err);
                 setError('Failed to load blog post');
             } finally {
                 setIsLoading(false);

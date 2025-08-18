@@ -45,19 +45,20 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SxProps, Theme } from '@mui/material/styles';
+import { logger } from '../../utils/logger';
 
 // Helper function to map Appwrite document to ProfileData
 const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
     return {
-        name: doc.name || '',
-        email: doc.email || '',
-        pronouns: doc.pronouns || [],
-        education: doc.education || [],
-        languages: doc.languages || [],
-        linkedin: doc.linkedin || '',
-        github: doc.github || '',
-        profileImageId: doc.profileImageId || undefined,
-        resumeFileId: doc.resumeFileId || undefined,
+        name: (doc as any).name || '',
+        email: (doc as any).email || '',
+        pronouns: (doc as any).pronouns || [],
+        education: (doc as any).education || [],
+        languages: (doc as any).languages || [],
+        linkedin: (doc as any).linkedin || '',
+        github: (doc as any).github || '',
+        profileImageId: (doc as any).profileImageId || undefined,
+        resumeFileId: (doc as any).resumeFileId || undefined,
     };
 };
 
@@ -223,11 +224,11 @@ const ProfileEditor = () => {
                             setResumeFileName('Resume.pdf'); // Default name, could be stored in metadata
                         }
                     } catch (error) {
-                        console.error('Error fetching active resume:', error);
+                        logger.error('Error fetching active resume:', error);
                     }
                 }
             } catch (error) {
-                console.error('Error fetching profile:', error);
+                logger.error('Error fetching profile:', error);
                 setError('Failed to load profile data');
             } finally {
                 setLoading(false);
@@ -414,8 +415,8 @@ const ProfileEditor = () => {
 
         try {
             // Get current values from profile document
-            const currentProfileImageId = profile?.profileImageId;
-            const currentResumeFileId = profile?.resumeFileId;
+            const currentProfileImageId = (profile as any)?.profileImageId;
+            const currentResumeFileId = (profile as any)?.resumeFileId;
 
             let profileImageId = currentProfileImageId;
             let resumeFileId = currentResumeFileId;
@@ -441,7 +442,7 @@ const ProfileEditor = () => {
                     // Use the file ID from the resume version
                     resumeFileId = resumeVersion.fileId;
                 } catch (error) {
-                    console.error('Error adding resume to versioning system:', error);
+                    logger.error('Error adding resume to versioning system:', error);
                     // Fallback to old method if versioning fails
                     if (currentResumeFileId) {
                         await deleteFile(currentResumeFileId);
@@ -457,7 +458,7 @@ const ProfileEditor = () => {
                         resumeFileId = activeResume.fileId;
                     }
                 } catch (error) {
-                    console.error('Error getting active resume:', error);
+                    logger.error('Error getting active resume:', error);
                 }
             }
 
@@ -486,7 +487,7 @@ const ProfileEditor = () => {
             setProfile(updatedProfile);
             setSuccess('Profile updated successfully');
         } catch (error) {
-            console.error('Error saving profile:', error);
+            logger.error('Error saving profile:', error);
             setError('Failed to save profile data: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
             setIsSaving(false);

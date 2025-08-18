@@ -25,6 +25,7 @@ import {
 import { getProject, createProject, updateProject, uploadFile, deleteFile, ProjectData } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
+import { logger } from '../../utils/logger';
 
 const ProjectEditor = () => {
     const { projectId } = useParams();
@@ -175,10 +176,10 @@ const ProjectEditor = () => {
                     navigate(`/admin/projects/edit/${result.$id}`);
                 }, 1500);
             } else {
-                setProject(result as Models.Document & ProjectData);
+                setProject(result as unknown as Models.Document & ProjectData);
             }
         } catch (error) {
-            console.error('Error saving project:', error);
+            logger.error('Error saving project:', error);
             setError(`Failed to ${isNewProject ? 'create' : 'update'} project`);
         } finally {
             setIsSaving(false);

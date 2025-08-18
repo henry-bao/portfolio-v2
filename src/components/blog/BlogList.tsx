@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { CircularProgress } from '@mui/material';
 import { getBlogPosts, BlogPost, getContentImagePreviewUrl, SectionVisibility } from '../../services/appwrite';
+import { logger } from '../../utils/logger';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
@@ -27,7 +28,7 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
                     setBlogPosts(posts);
                 }
             } catch (error) {
-                console.error('Error fetching data:', error);
+                logger.error('Error fetching data:', error);
             } finally {
                 setIsLoading(false);
             }

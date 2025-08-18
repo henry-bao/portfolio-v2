@@ -67,6 +67,7 @@ import {
     ALLOWED_IMAGE_TYPES,
 } from '../../services/appwrite';
 import './markdown-preview.css';
+import { logger } from '../../utils/logger';
 
 // Type for draft blog post
 interface DraftBlogPost {
@@ -207,7 +208,7 @@ const BlogEditor = () => {
                 if (specificDraft) {
                     // Store the draft ID in stateRef FIRST, before any autosave can happen
                     stateRef.current.draftId = specificDraft.id;
-                    console.log('Loaded draft ID from URL param:', specificDraft.id);
+                    logger.debug('Loaded draft ID from URL param:', specificDraft.id);
 
                     // Populate form with draft data
                     setTitle(specificDraft.title);
@@ -249,7 +250,7 @@ const BlogEditor = () => {
                 if (existingDraft) {
                     // Store the draft ID in stateRef FIRST, before any autosave can happen
                     stateRef.current.draftId = existingDraft.id;
-                    console.log('Loaded existing draft ID:', existingDraft.id);
+                    logger.debug('Loaded existing draft ID:', existingDraft.id);
 
                     // Use draft data
                     setTitle(existingDraft.title);
@@ -298,7 +299,7 @@ const BlogEditor = () => {
                     }
                 }
             } catch (error) {
-                console.error('Error fetching blog post:', error);
+                logger.error('Error fetching blog post:', error);
                 setError('Failed to load blog post data');
             } finally {
                 setIsLoading(false);
@@ -332,7 +333,7 @@ const BlogEditor = () => {
             const drafts = getDraftsFromStorage();
 
             // CRITICAL FIX: Log the current draftId for debugging
-            console.log('Current draftId in stateRef:', stateRef.current.draftId);
+            logger.debug('Current draftId in stateRef:', stateRef.current.draftId);
 
             // First determine the correct ID to use for this draft
             let draftId: string;
@@ -343,22 +344,22 @@ const BlogEditor = () => {
             // 3. Generate a new ID if neither exists (for brand new drafts)
             if (stateRef.current.draftId) {
                 draftId = stateRef.current.draftId;
-                console.log('Using existing draftId from stateRef:', draftId);
+                logger.debug('Using existing draftId from stateRef:', draftId);
             } else if (draft.id) {
                 draftId = draft.id;
-                console.log('Using draft.id:', draftId);
+                logger.debug('Using draft.id:', draftId);
             } else {
                 draftId = `new-${Date.now()}`;
-                console.log('Generated new draftId:', draftId);
+                logger.debug('Generated new draftId:', draftId);
             }
 
             // Save the draftId to stateRef for later use
             stateRef.current.draftId = draftId;
-            console.log('Updated draftId in stateRef:', stateRef.current.draftId);
+            logger.debug('Updated draftId in stateRef:', stateRef.current.draftId);
 
             // Find if this draft already exists in localStorage
             const draftIndex = drafts.findIndex((d) => d.id === draftId);
-            console.log('Draft exists in storage?', draftIndex >= 0 ? 'Yes' : 'No');
+            logger.debug('Draft exists in storage?', draftIndex >= 0 ? 'Yes' : 'No');
 
             // Create a draft object with the consistent ID
             const draftToSave = {
@@ -381,7 +382,7 @@ const BlogEditor = () => {
             const state = stateRef.current;
 
             // For debugging
-            console.log('AutoSave trigger - current draftId:', state.draftId);
+            logger.debug('AutoSave trigger - current draftId:', state.draftId);
 
             // Check if we should save as draft
             const shouldSaveDraft = isNewPost || (post && hasUnsavedChanges()) || stateRef.current.draftId;
@@ -403,7 +404,7 @@ const BlogEditor = () => {
                 };
 
                 const savedDraftId = saveDraftToStorage(draft);
-                console.log('Draft saved with ID:', savedDraftId);
+                logger.debug('Draft saved with ID:', savedDraftId);
 
                 setLastSaved(`Draft saved: ${new Date().toLocaleString()}`);
                 setIsDraft(true);
@@ -458,7 +459,7 @@ const BlogEditor = () => {
 
         // We need to know which ID to use - either the draftId stored in stateRef or the postId
         const currentDraftId = stateRef.current.draftId || postId;
-        console.log('Removing draft with ID:', currentDraftId);
+        logger.debug('Removing draft with ID:', currentDraftId);
 
         // Filter out only the current draft
         const filteredDrafts = drafts.filter((d) => d.id !== currentDraftId);
@@ -481,7 +482,7 @@ const BlogEditor = () => {
                 setCoverImage(file);
                 setCoverImagePreview(URL.createObjectURL(file));
             } catch (error) {
-                console.error('Error processing cover image:', error);
+                logger.error('Error processing cover image:', error);
                 setError('Failed to process image');
             }
         }
@@ -688,10 +689,10 @@ const BlogEditor = () => {
 
             if (!isNewPost) {
                 // Redirect to edit page after creation
-                setPost(result as Models.Document & BlogPost);
+                setPost(result as unknown as Models.Document & BlogPost);
             }
         } catch (error) {
-            console.error('Error saving blog post:', error);
+            logger.error('Error saving blog post:', error);
             setError(`Failed to ${isNewPost ? 'create' : 'update'} blog post`);
         } finally {
             setIsSaving(false);
@@ -882,13 +883,13 @@ const BlogEditor = () => {
             insertTextAtCursor(markdownImage);
 
             // Store the fileId if needed for future reference
-            console.log('Content image uploaded with ID:', fileId);
+            logger.debug('Content image uploaded with ID:', fileId);
 
             // Close dialog
             setIsImageDialogOpen(false);
             setSuccess('Image uploaded successfully');
         } catch (error) {
-            console.error('Error uploading content image:', error);
+            logger.error('Error uploading content image:', error);
             // Display a more helpful error message
             if (error instanceof Error) {
                 setError(error.message);
@@ -913,7 +914,7 @@ const BlogEditor = () => {
             const images = await getContentImages();
             setContentImages(images);
         } catch (error) {
-            console.error('Error loading images:', error);
+            logger.error('Error loading images:', error);
             setError('Failed to load media library');
         } finally {
             setLoadingImages(false);
@@ -965,7 +966,7 @@ const BlogEditor = () => {
             await loadContentImages(); // Refresh the list
             setSuccess('Image deleted successfully');
         } catch (error) {
-            console.error('Error deleting image:', error);
+            logger.error('Error deleting image:', error);
             setError('Failed to delete image');
         } finally {
             handleImageMenuClose();
@@ -1002,7 +1003,7 @@ const BlogEditor = () => {
             setSuccess('Image updated successfully');
             handleCloseEditImage();
         } catch (error) {
-            console.error('Error updating image:', error);
+            logger.error('Error updating image:', error);
             // Display a more helpful error message
             if (error instanceof Error) {
                 setError(error.message);

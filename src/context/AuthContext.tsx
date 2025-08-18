@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Models } from 'appwrite';
 import { getCurrentUser, logout } from '../services/appwrite';
+import { logger } from '../utils/logger';
 
 interface AuthContextType {
     user: Models.User<Models.Preferences> | null;
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const currentUser = await getCurrentUser();
             setUser(currentUser);
         } catch (error) {
-            console.error('Error checking auth status:', error);
+            logger.error('Error checking auth status:', error);
             setUser(null);
         } finally {
             setIsLoading(false);
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await logout();
             setUser(null);
         } catch (error) {
-            console.error('Error logging out:', error);
+            logger.error('Error logging out:', error);
         }
     };
 
