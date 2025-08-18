@@ -2,9 +2,14 @@ import { Client, Account, Storage, Databases, ID, Query, Models } from 'appwrite
 
 const client = new Client();
 
-const PROJECT_ID = import.meta.env.VITE_APPWRITE_MAIN_PROJECT_ID;
-const ENDPOINT = import.meta.env.VITE_APPWRITE_MAIN_ENDPOINT || 'https://cloud.appwrite.io/v1';
-client.setEndpoint(ENDPOINT).setProject(PROJECT_ID);
+const PROJECT_ID = import.meta.env.VITE_APPWRITE_MAIN_PROJECT_ID as string | undefined;
+const ENDPOINT = (import.meta.env.VITE_APPWRITE_MAIN_ENDPOINT as string | undefined) || 'https://cloud.appwrite.io/v1';
+client.setEndpoint(ENDPOINT);
+if (PROJECT_ID) {
+    client.setProject(PROJECT_ID);
+} else {
+    console.warn('VITE_APPWRITE_MAIN_PROJECT_ID is not set. Appwrite client will not be fully initialized.');
+}
 
 // Initialize Appwrite services
 export const account = new Account(client);
@@ -77,7 +82,8 @@ export interface SectionVisibility {
 
 export const sendPing = async () => {
     try {
-        await client.ping();
+        const response = await fetch(`${ENDPOINT}/health`);
+        if (!response.ok) throw new Error(`Health check failed: ${response.status}`);
     } catch (error) {
         console.error('Error pinging Appwrite:', error);
         throw error;
@@ -150,8 +156,8 @@ export const uploadFile = async (file: File, options?: { allowedTypes?: string[]
     }
 };
 
-export const getFilePreview = (fileId: string) => {
-    return storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId);
+export const getFilePreview = (fileId: string): string => {
+    return storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId).toString();
 };
 
 export const deleteFile = async (fileId: string, bucketId = STORAGE_FILE_BUCKET_ID) => {
@@ -437,7 +443,7 @@ export const uploadContentImage = async (file: File): Promise<{ fileId: string; 
 
         const result = await storage.createFile(STORAGE_BLOGS_BUCKET_ID, ID.unique(), file);
         const fileId = result.$id;
-        const url = storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
+        const url = storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId).toString();
         return { fileId, url };
     } catch (error) {
         console.error('Error uploading content image:', error);
@@ -447,7 +453,7 @@ export const uploadContentImage = async (file: File): Promise<{ fileId: string; 
 
 // Utility function to get content image preview URL
 export const getContentImagePreviewUrl = (fileId: string): string => {
-    return storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
+    return storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId).toString();
 };
 
 export const getSectionVisibility = async (): Promise<(Models.Document & SectionVisibility) | null> => {

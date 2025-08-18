@@ -41,7 +41,7 @@ const ProjectCard = ({
                     <strong>{date}</strong>
                     {link_url && (
                         <p>
-                            <a href={link_url} target="_blank" rel="noopener" className="details-href">
+                            <a href={link_url} target="_blank" rel="noopener noreferrer" className="details-href">
                                 {link_text}
                             </a>
                         </p>

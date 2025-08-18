@@ -36,6 +36,8 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        let viewCountTimer: ReturnType<typeof setTimeout> | undefined;
+
         const fetchData = async () => {
             setIsLoading(true);
 
@@ -112,8 +114,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
                     // Add a small delay to ensure the page is actually viewed
                     // This helps avoid counting accidental or bounce views
-                    const timer = setTimeout(handleViewCount, 10000);
-                    return () => clearTimeout(timer);
+                    viewCountTimer = setTimeout(handleViewCount, 10000);
                 }
             } catch (err) {
                 console.error('Error fetching blog post:', err);
@@ -127,6 +128,10 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
         if (sectionVisibility !== null) {
             fetchData();
         }
+
+        return () => {
+            if (viewCountTimer) clearTimeout(viewCountTimer);
+        };
     }, [slug, navigate, isPreview, sectionVisibility]);
 
     // Continue showing loading state until sectionVisibility is loaded

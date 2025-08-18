@@ -9,7 +9,7 @@ const Footer = ({ resumeUrl }: FooterProps) => {
     return (
         <footer className="footer">
             <p>
-                <a href={resumeUrl || '/file/Resume.pdf'} target="_blank" rel="noopener">
+                <a href={resumeUrl || '/file/Resume.pdf'} target="_blank" rel="noopener noreferrer">
                     Henry Bao
                 </a>{' '}
                 | <a href="#">Portfolio</a>
