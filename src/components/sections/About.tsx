@@ -1,4 +1,4 @@
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 import './About.css';
 
 interface DisplayData {
@@ -14,7 +14,7 @@ interface DisplayData {
 }
 
 // Helper function to map Appwrite document to our display format
-const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
+const mapDocumentToDisplayData = (doc: Models.Document & Record<string, any>): DisplayData => {
     return {
         name: doc.name || 'Henry Bao',
         pronouns: doc.pronouns || ['He', 'Him'],
@@ -57,6 +57,8 @@ const About = ({ profile, resumeUrl, profileImageUrl }: AboutProps) => {
                             className="my-pic"
                             src={profileImageUrl || '/img/henry_800x800.png'}
                             alt="A picture of me (Henry Bao) in black and white"
+                            loading="lazy"
+                            decoding="async"
                         />
                     </div>
                     <ul className="about-list">

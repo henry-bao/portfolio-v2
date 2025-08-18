@@ -1,9 +1,14 @@
+import { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { CircularProgress, Box } from '@mui/material';
 
 const ProtectedRoute = () => {
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, checkAuthStatus } = useAuth();
+
+    useEffect(() => {
+        checkAuthStatus();
+    }, []);
 
     if (isLoading) {
         return (

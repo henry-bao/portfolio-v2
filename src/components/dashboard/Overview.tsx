@@ -14,19 +14,11 @@ import {
     useTheme,
     alpha,
 } from '@mui/material';
-import {
-    getProfileData,
-    getProjects,
-    ProfileData,
-    ProjectData,
-    getSectionVisibility,
-    updateSectionVisibility,
-    SectionVisibility,
-} from '../../services/appwrite';
-import { Models } from 'appwrite';
+import { getProfileData, getProjects, getSectionVisibility, updateSectionVisibility, getBlogPosts } from '../../services/appwrite';
+import type { ProfileData, ProjectData, SectionVisibility, BlogPost } from '../../services/appwrite';
+import type { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
-import { getBlogPosts, BlogPost } from '../../services/appwrite';
 import {
     Visibility as VisibilityIcon,
     Person as PersonIcon,

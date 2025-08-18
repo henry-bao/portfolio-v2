@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Models } from 'appwrite';
-import { getCurrentUser, logout } from '../services/appwrite';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import type { Models } from 'appwrite';
 
 interface AuthContextType {
     user: Models.User<Models.Preferences> | null;
@@ -19,6 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkAuthStatus = async () => {
         setIsLoading(true);
         try {
+            const { getCurrentUser } = await import('../services/appwrite');
             const currentUser = await getCurrentUser();
             setUser(currentUser);
         } catch (error) {
@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const handleLogout = async () => {
         try {
+            const { logout } = await import('../services/appwrite');
             await logout();
             setUser(null);
         } catch (error) {
@@ -38,9 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    useEffect(() => {
-        checkAuthStatus();
-    }, []);
+    // Avoid checking auth on initial app load to keep public bundle lean.
 
     const value = {
         user,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Models } from 'appwrite';
-import { getProfileData, SectionVisibility } from './services/appwrite';
+import type { Models } from 'appwrite';
+import type { SectionVisibility } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
 
 import Footer from './components/layout/Footer';
@@ -24,6 +24,7 @@ function Portfolio({ sectionVisibility }: PortfolioProps) {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                const { getProfileData } = await import('./services/appwrite');
                 const profileData = await getProfileData();
                 setProfile(profileData);
 

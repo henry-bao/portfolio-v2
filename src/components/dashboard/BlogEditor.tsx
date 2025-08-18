@@ -49,7 +49,7 @@ import {
     MoreVert as MoreVertIcon,
     PhotoLibrary as PhotoLibraryIcon,
 } from '@mui/icons-material';
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -688,7 +688,7 @@ const BlogEditor = () => {
 
             if (!isNewPost) {
                 // Redirect to edit page after creation
-                setPost(result as Models.Document & BlogPost);
+                setPost(result as unknown as Models.Document & BlogPost);
             }
         } catch (error) {
             console.error('Error saving blog post:', error);

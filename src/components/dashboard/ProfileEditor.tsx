@@ -23,7 +23,7 @@ import {
     ProfileData,
 } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 import {
     DndContext,
@@ -47,7 +47,7 @@ import {
 import { SxProps, Theme } from '@mui/material/styles';
 
 // Helper function to map Appwrite document to ProfileData
-const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
+const mapDocumentToProfileData = (doc: Models.Document & Record<string, any>): ProfileData => {
     return {
         name: doc.name || '',
         email: doc.email || '',
@@ -414,8 +414,8 @@ const ProfileEditor = () => {
 
         try {
             // Get current values from profile document
-            const currentProfileImageId = profile?.profileImageId;
-            const currentResumeFileId = profile?.resumeFileId;
+            const currentProfileImageId = (profile as (Models.Document & Record<string, any>) | null)?.profileImageId;
+            const currentResumeFileId = (profile as (Models.Document & Record<string, any>) | null)?.resumeFileId;
 
             let profileImageId = currentProfileImageId;
             let resumeFileId = currentResumeFileId;

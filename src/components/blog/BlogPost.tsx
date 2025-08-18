@@ -1,16 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {
-    getBlogPostBySlug,
-    BlogPost as BlogPostType,
-    incrementBlogPostViewCount,
-    getContentImagePreviewUrl,
-    SectionVisibility,
-} from '../../services/appwrite';
-import { LinearProgress, Alert } from '@mui/material';
+import type { BlogPost as BlogPostType, SectionVisibility } from '../../services/appwrite';
+import { getContentImagePreviewUrl } from '../../services/appwrite';
+// Replace heavy MUI components with lightweight equivalents on public page
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
@@ -75,6 +70,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
                     return;
                 }
 
+                const { getBlogPostBySlug } = await import('../../services/appwrite');
                 const blogPost = await getBlogPostBySlug(slug);
 
                 // If post not found or not published (and not in preview mode), show not found
@@ -106,7 +102,9 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
                             localStorage.setItem('henry-blog-viewed-posts', JSON.stringify(viewedPosts));
 
                             // Increment the view count in the database
-                            incrementBlogPostViewCount(blogPost.$id);
+                            import('../../services/appwrite').then(({ incrementBlogPostViewCount }) => {
+                                incrementBlogPostViewCount(blogPost.$id);
+                            });
                         }
                     };
 
@@ -136,7 +134,10 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
                 {!isPreview && <BlogNav />}
                 <div className="blog-post-container">
                     <p className="loading-message">Loading...</p>
-                    <LinearProgress />
+                    <div style={{ height: 4, width: '100%', background: 'linear-gradient(90deg, #2f7295, #c0738b)', animation: 'progress 1.2s linear infinite' }} />
+                    <style>
+                        {`@keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%);} }`}
+                    </style>
                 </div>
                 <Footer resumeUrl={null} />
             </div>
@@ -157,9 +158,9 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
             {!isPreview && <BlogNav />}
             <div className="blog-post-container" style={isPreview ? { paddingTop: '2rem' } : undefined}>
                 {isPreview && (
-                    <Alert severity="info" sx={{ mb: 3 }}>
+                    <div style={{ padding: '12px 16px', background: '#143a4d', color: '#bfe4f6', borderRadius: 6, marginBottom: 16 }}>
                         This is a preview of your blog post. It is not yet published.
-                    </Alert>
+                    </div>
                 )}
 
                 <div className="blog-post-header">
@@ -198,7 +199,12 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
                     {post.coverImageId && (
                         <div className="blog-post-cover">
-                            <img src={getContentImagePreviewUrl(post.coverImageId)} alt={post.title} />
+                            <img
+                                src={getContentImagePreviewUrl(post.coverImageId)}
+                                alt={post.title}
+                                loading="lazy"
+                                decoding="async"
+                            />
                         </div>
                     )}
                 </div>

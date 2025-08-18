@@ -1,31 +1,36 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState, useCallback } from 'react';
-import { Models } from 'appwrite';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import type { Models } from 'appwrite';
 
 import { AuthProvider } from './context/AuthContext';
-import { getSectionVisibility, SectionVisibility, sendPing } from './services/appwrite';
+import type { SectionVisibility } from './services/appwrite';
 import Portfolio from './Portfolio';
-import ProtectedRoute from './components/dashboard/ProtectedRoute';
-import Login from './components/dashboard/Login';
-import DashboardLayout from './components/dashboard/DashboardLayout';
-import Overview from './components/dashboard/Overview';
-import ProfileEditor from './components/dashboard/ProfileEditor';
-import ProjectsManager from './components/dashboard/ProjectsManager';
-import ProjectEditor from './components/dashboard/ProjectEditor';
-import ResumeManager from './components/dashboard/ResumeManager';
-import BlogManager from './components/dashboard/BlogManager';
-import BlogEditor from './components/dashboard/BlogEditor';
-import BlogPost from './components/blog/BlogPost';
-import BlogList from './components/blog/BlogList';
 import NotFound from './components/NotFound';
 import ResumeRedirect from './components/ResumeRedirect';
 import PageChangeListener from './components/shared/PageChangeListener';
+
+// Lazy-load all admin and blog routes to keep the public landing bundle lean
+const BlogList = lazy(() => import('./components/blog/BlogList'));
+const BlogPost = lazy(() => import('./components/blog/BlogPost'));
+
+const Login = lazy(() => import('./components/dashboard/Login'));
+const ProtectedRoute = lazy(() => import('./components/dashboard/ProtectedRoute'));
+const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout'));
+const AdminThemeProvider = lazy(() => import('./components/dashboard/AdminThemeProvider'));
+const Overview = lazy(() => import('./components/dashboard/Overview'));
+const ProfileEditor = lazy(() => import('./components/dashboard/ProfileEditor'));
+const ProjectsManager = lazy(() => import('./components/dashboard/ProjectsManager'));
+const ProjectEditor = lazy(() => import('./components/dashboard/ProjectEditor'));
+const ResumeManager = lazy(() => import('./components/dashboard/ResumeManager'));
+const BlogManager = lazy(() => import('./components/dashboard/BlogManager'));
+const BlogEditor = lazy(() => import('./components/dashboard/BlogEditor'));
 
 function App() {
     const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
 
     const fetchSectionVisibility = useCallback(async () => {
         try {
+            const { getSectionVisibility } = await import('./services/appwrite');
             const visibility = await getSectionVisibility();
             setSectionVisibility(visibility);
         } catch (error) {
@@ -36,6 +41,7 @@ function App() {
     useEffect(() => {
         const checkConnectivity = async () => {
             try {
+                const { sendPing } = await import('./services/appwrite');
                 await sendPing();
                 console.log('Connected to Appwrite successfully');
             } catch (error) {
@@ -52,35 +58,36 @@ function App() {
             <Router>
                 <AuthProvider>
                     <PageChangeListener onPageChange={fetchSectionVisibility} />
-                    <Routes>
-                        {/* Public Portfolio Routes */}
-                        <Route path="/" element={<Portfolio sectionVisibility={sectionVisibility} />} />
+                    <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+                        <Routes>
+                            {/* Public Portfolio Routes */}
+                            <Route path="/" element={<Portfolio sectionVisibility={sectionVisibility} />} />
 
-                        {/* Blog routes - always available to prevent redirecting to NotFound */}
-                        <Route path="/blogs" element={<BlogList sectionVisibility={sectionVisibility} />} />
-                        <Route path="/blogs/:slug" element={<BlogPost sectionVisibility={sectionVisibility} />} />
+                            {/* Blog routes - lazy loaded */}
+                            <Route path="/blogs" element={<BlogList sectionVisibility={sectionVisibility} />} />
+                            <Route path="/blogs/:slug" element={<BlogPost sectionVisibility={sectionVisibility} />} />
 
-                        <Route path="/admin/login" element={<Login />} />
-
-                        <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
-
-                        <Route path="/admin" element={<ProtectedRoute />}>
-                            <Route element={<DashboardLayout />}>
-                                <Route path="overview" element={<Overview />} />
-                                <Route path="profile" element={<ProfileEditor />} />
-                                <Route path="projects" element={<ProjectsManager />} />
-                                <Route path="projects/new" element={<ProjectEditor />} />
-                                <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
-                                <Route path="resumes" element={<ResumeManager />} />
-                                <Route path="blogs" element={<BlogManager />} />
-                                <Route path="blogs/new" element={<BlogEditor />} />
-                                <Route path="blogs/edit/:postId" element={<BlogEditor />} />
+                            {/* Admin routes - lazy loaded */}
+                            <Route path="/admin/login" element={<Login />} />
+                            <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
+                            <Route path="/admin" element={<ProtectedRoute />}>
+                                <Route element={<AdminThemeProvider><DashboardLayout /></AdminThemeProvider>}>
+                                    <Route path="overview" element={<Overview />} />
+                                    <Route path="profile" element={<ProfileEditor />} />
+                                    <Route path="projects" element={<ProjectsManager />} />
+                                    <Route path="projects/new" element={<ProjectEditor />} />
+                                    <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
+                                    <Route path="resumes" element={<ResumeManager />} />
+                                    <Route path="blogs" element={<BlogManager />} />
+                                    <Route path="blogs/new" element={<BlogEditor />} />
+                                    <Route path="blogs/edit/:postId" element={<BlogEditor />} />
+                                </Route>
                             </Route>
-                        </Route>
-                        <Route path="/resume-redirect" element={<ResumeRedirect />} />
-                        {/* 404 Not Found Route */}
-                        <Route path="*" element={<NotFound />} />
-                    </Routes>
+                            <Route path="/resume-redirect" element={<ResumeRedirect />} />
+                            {/* 404 Not Found Route */}
+                            <Route path="*" element={<NotFound />} />
+                        </Routes>
+                    </Suspense>
                 </AuthProvider>
             </Router>
         </>

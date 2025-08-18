@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useTheme, useMediaQuery } from '@mui/material';
-import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
 import './ProjectCard.css';
 
 interface ProjectCardProps {
@@ -26,8 +24,7 @@ const ProjectCard = ({
     isOpen = false,
 }: ProjectCardProps) => {
     const [isExpanded, setIsExpanded] = useState(isOpen);
-    const theme = useTheme();
-    const isTablet = useMediaQuery(theme.breakpoints.down(992));
+    const isTablet = typeof window !== 'undefined' && window.matchMedia('(max-width: 992px)').matches;
 
     const renderContent = () => {
         const content = (
@@ -87,11 +84,9 @@ const ProjectCard = ({
                 }}
             >
                 {title}
-                {isExpanded ? (
-                    <ArrowDropDown style={{ fontSize: '3rem' }} />
-                ) : (
-                    <ArrowDropUp style={{ fontSize: '3rem' }} />
-                )}
+                <span aria-hidden="true" style={{ fontSize: '2rem', lineHeight: 1 }}>
+                    {isExpanded ? '▾' : '▴'}
+                </span>
             </summary>
             {renderContent()}
         </details>

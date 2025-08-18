@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ProjectCard from './ProjectCard';
 import { getProjects } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
-import { CircularProgress } from '@mui/material';
+// Lightweight loading indicator to avoid pulling in MUI on public pages
 
 import './Projects.css';
 
@@ -69,7 +69,10 @@ const Projects = () => {
             {isLoading ? (
                 <div className="loading-container">
                     <p>Loading projects...</p>
-                    <CircularProgress />
+                    <div style={{ width: 32, height: 32, border: '3px solid #444', borderTopColor: '#2f7295', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <style>
+                        {`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
+                    </style>
                 </div>
             ) : error ? (
                 <div className="error-container">

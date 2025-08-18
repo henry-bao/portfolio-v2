@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link as ScrollLink } from 'react-scroll';
 import { Link as RouterLink } from 'react-router-dom';
+import type { SectionVisibility } from '../../services/appwrite';
+import type { Models } from 'appwrite';
 import { useAuth } from '../../context/AuthContext';
-import { SectionVisibility } from '../../services/appwrite';
-import { Models } from 'appwrite';
 import './Navbar.css';
 
 type NavbarProps = {

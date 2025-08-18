@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 import { getProject, createProject, updateProject, uploadFile, deleteFile, ProjectData } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 
 const ProjectEditor = () => {
     const { projectId } = useParams();
@@ -175,7 +175,7 @@ const ProjectEditor = () => {
                     navigate(`/admin/projects/edit/${result.$id}`);
                 }, 1500);
             } else {
-                setProject(result as Models.Document & ProjectData);
+                setProject(result as unknown as Models.Document & ProjectData);
             }
         } catch (error) {
             console.error('Error saving project:', error);

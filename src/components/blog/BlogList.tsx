@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Models } from 'appwrite';
-import { CircularProgress } from '@mui/material';
-import { getBlogPosts, BlogPost, getContentImagePreviewUrl, SectionVisibility } from '../../services/appwrite';
+import type { Models } from 'appwrite';
+import type { BlogPost, SectionVisibility } from '../../services/appwrite';
+import { getContentImagePreviewUrl } from '../../services/appwrite';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
@@ -23,6 +23,7 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
                 // Only fetch blog posts if section visibility has loaded and blogs are enabled
                 if (sectionVisibility?.blogs) {
                     // Only fetch published blog posts for the public view
+                    const { getBlogPosts } = await import('../../services/appwrite');
                     const posts = await getBlogPosts(true);
                     setBlogPosts(posts);
                 }
@@ -45,7 +46,10 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
             <div className="blog-page-wrapper">
                 <BlogNav />
                 <div className="blog-loading-container">
-                    <CircularProgress />
+                    <div style={{ width: 32, height: 32, border: '3px solid #444', borderTopColor: '#2f7295', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                    <style>
+                        {`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
+                    </style>
                 </div>
                 <Footer resumeUrl={resumeUrl} />
             </div>
@@ -81,6 +85,7 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
                                                 src={getContentImagePreviewUrl(post.coverImageId)}
                                                 alt={post.title}
                                                 loading="lazy"
+                                                decoding="async"
                                             />
                                         </div>
                                     )}

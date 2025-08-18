@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Models } from 'appwrite';
-import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
+import type { Models } from 'appwrite';
+import type { BlogPost } from '../../services/appwrite';
+import { getContentImagePreviewUrl } from '../../services/appwrite';
 import './Blog.css';
 
 const Blog = () => {
@@ -13,6 +14,7 @@ const Blog = () => {
             try {
                 // Only fetch published blog posts for the public view
                 // Limit to 3 most recent posts for the section preview
+                const { getBlogPosts } = await import('../../services/appwrite');
                 const posts = await getBlogPosts(true);
                 setBlogPosts(posts.slice(0, 3));
             } catch (error) {
@@ -54,6 +56,7 @@ const Blog = () => {
                                                     src={getContentImagePreviewUrl(post.coverImageId)}
                                                     alt={post.title}
                                                     loading="lazy"
+                                                    decoding="async"
                                                 />
                                             </div>
                                         )}
