@@ -688,7 +688,7 @@ const BlogEditor = () => {
 
             if (!isNewPost) {
                 // Redirect to edit page after creation
-                setPost(result as Models.Document & BlogPost);
+                setPost(result as unknown as Models.Document & BlogPost);
             }
         } catch (error) {
             console.error('Error saving blog post:', error);

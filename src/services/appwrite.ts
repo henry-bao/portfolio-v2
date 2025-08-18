@@ -1,4 +1,8 @@
 import { Client, Account, Storage, Databases, ID, Query, Models } from 'appwrite';
+import { validateEnvironmentVariables } from '../utils/validateEnv';
+
+// Validate environment variables on module load
+validateEnvironmentVariables();
 
 const client = new Client();
 
@@ -173,7 +177,7 @@ export const getProfileData = async (): Promise<(Models.Document & ProfileData) 
             return null;
         }
 
-        return data.documents[0] as Models.Document & ProfileData;
+        return data.documents[0] as unknown as Models.Document & ProfileData;
     } catch (error) {
         console.error('Error getting profile data:', error);
         return null;
@@ -234,7 +238,7 @@ export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> 
             Query.orderAsc('order'), // Sort by order ascending
         ]);
 
-        return data.documents as (Models.Document & ProjectData)[];
+        return data.documents as unknown as (Models.Document & ProjectData)[];
     } catch (error) {
         console.error('Error getting projects:', error);
         return [];
@@ -290,7 +294,7 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
         }
 
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, queries);
-        return data.documents as (Models.Document & BlogPost)[];
+        return data.documents as unknown as (Models.Document & BlogPost)[];
     } catch (error) {
         console.error('Error getting blog posts:', error);
         return [];
@@ -299,7 +303,7 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
 
 export const getBlogPost = async (postId: string): Promise<Models.Document & BlogPost> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as Models.Document & BlogPost;
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as unknown as Models.Document & BlogPost;
     } catch (error) {
         console.error('Error getting blog post:', error);
         throw error;
@@ -314,7 +318,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document 
             return null;
         }
 
-        return data.documents[0] as Models.Document & BlogPost;
+        return data.documents[0] as unknown as Models.Document & BlogPost;
     } catch (error) {
         console.error('Error getting blog post by slug:', error);
         return null;
@@ -463,10 +467,10 @@ export const getSectionVisibility = async (): Promise<(Models.Document & Section
                 resumes: true,
             };
             const newDoc = await createSectionVisibility(initialVisibility);
-            return newDoc as Models.Document & SectionVisibility;
+            return newDoc as unknown as Models.Document & SectionVisibility;
         }
 
-        return data.documents[0] as Models.Document & SectionVisibility;
+        return data.documents[0] as unknown as Models.Document & SectionVisibility;
     } catch (error) {
         console.error('Error getting section visibility:', error);
         return null;

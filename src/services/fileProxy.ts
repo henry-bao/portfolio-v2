@@ -8,11 +8,18 @@ import { storage, STORAGE_FILE_BUCKET_ID } from './appwrite';
  * @returns The URL of the file
  */
 export const getFileUrl = (fileId: string): string => {
+    if (!fileId) {
+        console.warn('getFileUrl: No fileId provided');
+        return '';
+    }
+    
     try {
         const fileUrl = storage.getFileView(STORAGE_FILE_BUCKET_ID, fileId);
         return fileUrl.toString();
     } catch (error) {
         console.error('Error getting file URL:', error);
+        // Return a placeholder or fallback URL instead of empty string
+        // This prevents broken links in the UI
         return '';
     }
 };
@@ -26,11 +33,17 @@ export const getFileUrl = (fileId: string): string => {
  * @returns The URL of the file preview
  */
 export const getFilePreviewUrl = (fileId: string, width?: number, height?: number): string => {
+    if (!fileId) {
+        console.warn('getFilePreviewUrl: No fileId provided');
+        return '';
+    }
+    
     try {
         const previewUrl = storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId, width, height);
         return previewUrl.toString();
     } catch (error) {
         console.error('Error getting file preview URL:', error);
+        // Return empty string for preview URLs as they're typically optional
         return '';
     }
 };
@@ -42,6 +55,11 @@ export const getFilePreviewUrl = (fileId: string, width?: number, height?: numbe
  * @returns The URL to download the file
  */
 export const getFileDownloadUrl = (fileId: string): string => {
+    if (!fileId) {
+        console.warn('getFileDownloadUrl: No fileId provided');
+        return '';
+    }
+    
     try {
         const downloadUrl = storage.getFileDownload(STORAGE_FILE_BUCKET_ID, fileId);
         return downloadUrl.toString();

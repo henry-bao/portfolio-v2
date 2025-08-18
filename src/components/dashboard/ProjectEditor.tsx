@@ -175,7 +175,7 @@ const ProjectEditor = () => {
                     navigate(`/admin/projects/edit/${result.$id}`);
                 }, 1500);
             } else {
-                setProject(result as Models.Document & ProjectData);
+                setProject(result as unknown as Models.Document & ProjectData);
             }
         } catch (error) {
             console.error('Error saving project:', error);

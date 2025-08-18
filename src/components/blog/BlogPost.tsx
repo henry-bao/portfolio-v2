@@ -87,14 +87,23 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
                 setPost(blogPost);
 
                 // Only increment view count if not in preview mode
+                let timer: NodeJS.Timeout | undefined;
+                
                 if (!isPreview) {
                     // Improved view counting logic
                     const handleViewCount = () => {
                         // Skip counting in development mode
                         if (import.meta.env.DEV) return;
 
-                        // Get viewed posts from localStorage
-                        const viewedPosts = JSON.parse(localStorage.getItem('henry-blog-viewed-posts') || '{}');
+                        // Get viewed posts from localStorage with error handling
+                        let viewedPosts: Record<string, number> = {};
+                        try {
+                            const stored = localStorage.getItem('henry-blog-viewed-posts');
+                            viewedPosts = stored ? JSON.parse(stored) : {};
+                        } catch (error) {
+                            console.warn('Failed to parse viewed posts from localStorage:', error);
+                            viewedPosts = {};
+                        }
                         const lastViewedTime = viewedPosts[blogPost.$id] || 0;
                         const currentTime = Date.now();
 
@@ -112,9 +121,15 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
                     // Add a small delay to ensure the page is actually viewed
                     // This helps avoid counting accidental or bounce views
-                    const timer = setTimeout(handleViewCount, 10000);
-                    return () => clearTimeout(timer);
+                    timer = setTimeout(handleViewCount, 10000);
                 }
+                
+                // Always return cleanup function
+                return () => {
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+                };
             } catch (err) {
                 console.error('Error fetching blog post:', err);
                 setError('Failed to load blog post');

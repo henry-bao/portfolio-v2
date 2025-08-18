@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import { Models } from 'appwrite';
 import { getCurrentUser, logout } from '../services/appwrite';
 
-interface AuthContextType {
+export interface AuthContextType {
     user: Models.User<Models.Preferences> | null;
     isLoading: boolean;
     isAuthenticated: boolean;
@@ -10,7 +10,7 @@ interface AuthContextType {
     checkAuthStatus: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
@@ -51,12 +51,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = (): AuthContextType => {
-    const context = useContext(AuthContext);
-    if (context === null) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 };

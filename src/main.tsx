@@ -47,7 +47,13 @@ const theme = createTheme({
     },
 });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+    throw new Error('Failed to find root element. Make sure there is an element with id="root" in your HTML.');
+}
+
+ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
         <ThemeProvider theme={theme}>
             <CssBaseline />

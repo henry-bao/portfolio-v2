@@ -31,7 +31,7 @@ import {
     Description as ResumeIcon,
     Book as BlogIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 64;
