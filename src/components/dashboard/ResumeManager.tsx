@@ -44,6 +44,7 @@ import {
     updateResumeVersion,
     ResumeVersion,
 } from '../../services/resumeService';
+import { logger } from '../../utils/logger';
 
 const ResumeManager = () => {
     const [resumeVersions, setResumeVersions] = useState<(Models.Document & ResumeVersion)[]>([]);
@@ -81,7 +82,7 @@ const ResumeManager = () => {
             const versions = await getResumeVersions();
             setResumeVersions(versions);
         } catch (error) {
-            console.error('Error fetching resume versions:', error);
+            logger.error('Error fetching resume versions:', error);
             setError('Failed to load resume versions');
         } finally {
             setIsLoading(false);
@@ -121,7 +122,7 @@ const ResumeManager = () => {
             setDescription('');
             await fetchResumeVersions();
         } catch (error) {
-            console.error('Error uploading resume:', error);
+            logger.error('Error uploading resume:', error);
             setError('Failed to upload resume');
         } finally {
             setIsUploading(false);
@@ -149,7 +150,7 @@ const ResumeManager = () => {
             setResumeToDelete(null);
             await fetchResumeVersions();
         } catch (error) {
-            console.error('Error deleting resume:', error);
+            logger.error('Error deleting resume:', error);
             setError('Failed to delete resume');
         } finally {
             setIsDeleting(false);
@@ -189,7 +190,7 @@ const ResumeManager = () => {
             setEditDescription('');
             await fetchResumeVersions();
         } catch (error) {
-            console.error('Error updating resume:', error);
+            logger.error('Error updating resume:', error);
             setError('Failed to update resume');
         } finally {
             setIsEditing(false);
@@ -206,7 +207,7 @@ const ResumeManager = () => {
             setSuccess('Resume set as active successfully');
             await fetchResumeVersions();
         } catch (error) {
-            console.error('Error setting resume as active:', error);
+            logger.error('Error setting resume as active:', error);
             setError('Failed to set resume as active');
         } finally {
             setIsSettingActive(false);

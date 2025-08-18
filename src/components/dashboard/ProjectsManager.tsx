@@ -55,6 +55,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { logger } from '../../utils/logger';
 
 // Sortable Table Row component
 interface SortableTableRowProps {
@@ -309,7 +310,7 @@ const ProjectsManager = () => {
             }
             setProjectImages(imageUrls);
         } catch (error) {
-            console.error('Error fetching projects:', error);
+            logger.error('Error fetching projects:', error);
             setError('Failed to load projects');
         } finally {
             setIsLoading(false);
@@ -340,7 +341,7 @@ const ProjectsManager = () => {
 
             await Promise.all(updatePromises);
         } catch (error) {
-            console.error('Error updating project order:', error);
+            logger.error('Error updating project order:', error);
             setError('Failed to update project order');
             // Revert to original order by refetching
             fetchProjects();
@@ -368,7 +369,7 @@ const ProjectsManager = () => {
             setDeleteDialogOpen(false);
             setProjectToDelete(null);
         } catch (error) {
-            console.error('Error deleting project:', error);
+            logger.error('Error deleting project:', error);
             setError('Failed to delete project');
         } finally {
             setIsDeleting(false);

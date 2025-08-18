@@ -3,6 +3,7 @@ import ProjectCard from './ProjectCard';
 import { getProjects } from '../../services/appwrite';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { CircularProgress } from '@mui/material';
+import { logger } from '../../utils/logger';
 
 import './Projects.css';
 
@@ -49,7 +50,7 @@ const Projects = () => {
                 setProjects(mappedProjects);
                 setError(null);
             } catch (err) {
-                console.error('Error fetching projects:', err);
+                logger.error('Error fetching projects:', err);
                 setError('Failed to load projects');
 
                 // Fallback to empty array if there's an error

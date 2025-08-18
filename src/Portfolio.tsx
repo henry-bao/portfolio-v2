@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Models } from 'appwrite';
 import { getProfileData, SectionVisibility } from './services/appwrite';
 import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
+import { logger } from './utils/logger';
 
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
@@ -35,7 +36,7 @@ function Portfolio({ sectionVisibility }: PortfolioProps) {
                     setResumeUrl(getFileUrl(profileData.resumeFileId));
                 }
             } catch (error) {
-                console.error('Error fetching data:', error);
+                logger.error('Error fetching data:', error);
             }
         };
 

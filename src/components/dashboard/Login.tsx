@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Paper, Container, Alert, CircularProgress, Divider } from '@mui/material';
 import { login } from '../../services/appwrite';
 import { useAuth } from '../../context/AuthContext';
+import { logger } from '../../utils/logger';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -32,7 +33,7 @@ const Login = () => {
             }
             navigate('/admin/overview');
         } catch (err) {
-            console.error('Login error:', err);
+            logger.error('Login error:', err);
             setError(`Login failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
         } finally {
             setIsLoading(false);

@@ -27,6 +27,7 @@ import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
 import { getBlogPosts, BlogPost } from '../../services/appwrite';
+import { logger } from '../../utils/logger';
 import {
     Visibility as VisibilityIcon,
     Person as PersonIcon,
@@ -61,7 +62,7 @@ const Overview = () => {
                 const profile = await getProfileData();
                 setProfileData(profile);
             } catch (error) {
-                console.error('Error fetching profile data:', error);
+                logger.error('Error fetching profile data:', error);
             } finally {
                 setLoading((prev) => ({ ...prev, profile: false }));
             }
@@ -72,7 +73,7 @@ const Overview = () => {
                 const projectsList = await getProjects();
                 setProjects(projectsList);
             } catch (error) {
-                console.error('Error fetching projects:', error);
+                logger.error('Error fetching projects:', error);
             } finally {
                 setLoading((prev) => ({ ...prev, projects: false }));
             }
@@ -83,7 +84,7 @@ const Overview = () => {
                 const resumeList = await getResumeVersions();
                 setResumes(resumeList);
             } catch (error) {
-                console.error('Error fetching resumes:', error);
+                logger.error('Error fetching resumes:', error);
             } finally {
                 setLoading((prev) => ({ ...prev, resumes: false }));
             }
@@ -94,7 +95,7 @@ const Overview = () => {
                 const blogs = await getBlogPosts(false);
                 setBlogPosts(blogs);
             } catch (error) {
-                console.error('Error fetching blog posts:', error);
+                logger.error('Error fetching blog posts:', error);
             } finally {
                 setLoading((prev) => ({ ...prev, blogs: false }));
             }
@@ -105,7 +106,7 @@ const Overview = () => {
                 const visibility = await getSectionVisibility();
                 setSectionVisibility(visibility);
             } catch (error) {
-                console.error('Error fetching section visibility:', error);
+                logger.error('Error fetching section visibility:', error);
             } finally {
                 setLoading((prev) => ({ ...prev, visibility: false }));
             }
@@ -129,7 +130,7 @@ const Overview = () => {
             await updateSectionVisibility(sectionVisibility.$id, { [section]: newVisibility[section] });
             setSectionVisibility(newVisibility);
         } catch (error) {
-            console.error('Error updating section visibility:', error);
+            logger.error('Error updating section visibility:', error);
         }
     };
 

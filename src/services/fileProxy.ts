@@ -1,4 +1,5 @@
 import { storage, STORAGE_FILE_BUCKET_ID } from './appwrite';
+import { logger } from '../utils/logger';
 
 /**
  * Proxy function to get file URL from Appwrite
@@ -12,7 +13,7 @@ export const getFileUrl = (fileId: string): string => {
         const fileUrl = storage.getFileView(STORAGE_FILE_BUCKET_ID, fileId);
         return fileUrl.toString();
     } catch (error) {
-        console.error('Error getting file URL:', error);
+        logger.error('Error getting file URL:', error);
         return '';
     }
 };
@@ -30,7 +31,7 @@ export const getFilePreviewUrl = (fileId: string, width?: number, height?: numbe
         const previewUrl = storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId, width, height);
         return previewUrl.toString();
     } catch (error) {
-        console.error('Error getting file preview URL:', error);
+        logger.error('Error getting file preview URL:', error);
         return '';
     }
 };
@@ -46,7 +47,7 @@ export const getFileDownloadUrl = (fileId: string): string => {
         const downloadUrl = storage.getFileDownload(STORAGE_FILE_BUCKET_ID, fileId);
         return downloadUrl.toString();
     } catch (error) {
-        console.error('Error getting file download URL:', error);
+        logger.error('Error getting file download URL:', error);
         return '';
     }
 };

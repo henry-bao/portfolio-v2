@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
+import { logger } from '../../utils/logger';
 import './Blog.css';
 
 const Blog = () => {
@@ -16,7 +17,7 @@ const Blog = () => {
                 const posts = await getBlogPosts(true);
                 setBlogPosts(posts.slice(0, 3));
             } catch (error) {
-                console.error('Error fetching blog posts:', error);
+                logger.error('Error fetching blog posts:', error);
             } finally {
                 setIsLoading(false);
             }

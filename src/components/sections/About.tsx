@@ -16,15 +16,15 @@ interface DisplayData {
 // Helper function to map Appwrite document to our display format
 const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
     return {
-        name: doc.name || 'Henry Bao',
-        pronouns: doc.pronouns || ['He', 'Him'],
-        education: doc.education || ['MS @ Cornell', 'BS @ UW'],
-        languages: doc.languages || ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
-        resumeFileId: doc.resumeFileId,
-        profileImageId: doc.profileImageId,
-        linkedin: doc.linkedin || 'https://www.linkedin.com/in/henglibao',
-        github: doc.github || 'https://github.com/henry-bao',
-        email: doc.email || 'henry@bao.dev',
+        name: (doc as any).name || 'Henry Bao',
+        pronouns: (doc as any).pronouns || ['He', 'Him'],
+        education: (doc as any).education || ['MS @ Cornell', 'BS @ UW'],
+        languages: (doc as any).languages || ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
+        resumeFileId: (doc as any).resumeFileId,
+        profileImageId: (doc as any).profileImageId,
+        linkedin: (doc as any).linkedin || 'https://www.linkedin.com/in/henglibao',
+        github: (doc as any).github || 'https://github.com/henry-bao',
+        email: (doc as any).email || 'henry@bao.dev',
     };
 };
 

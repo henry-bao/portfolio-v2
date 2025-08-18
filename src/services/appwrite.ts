@@ -1,4 +1,5 @@
 import { Client, Account, Storage, Databases, ID, Query, Models } from 'appwrite';
+import { logger } from '../utils/logger';
 
 const client = new Client();
 
@@ -79,7 +80,7 @@ export const sendPing = async () => {
     try {
         await client.ping();
     } catch (error) {
-        console.error('Error pinging Appwrite:', error);
+        logger.error('Error pinging Appwrite:', error);
         throw error;
     }
 };
@@ -94,7 +95,7 @@ export const createAccount = async (email: string, password: string, name: strin
         }
         return newAccount;
     } catch (error) {
-        console.error('Error creating account:', error);
+        logger.error('Error creating account:', error);
         throw error;
     }
 };
@@ -103,7 +104,7 @@ export const login = async (email: string, password: string) => {
     try {
         return await account.createEmailPasswordSession(email, password);
     } catch (error) {
-        console.error('Error logging in:', error);
+        logger.error('Error logging in:', error);
         throw error;
     }
 };
@@ -121,7 +122,7 @@ export const logout = async () => {
     try {
         return await account.deleteSession('current');
     } catch (error) {
-        console.error('Error logging out:', error);
+        logger.error('Error logging out:', error);
         throw error;
     }
 };
@@ -145,7 +146,7 @@ export const uploadFile = async (file: File, options?: { allowedTypes?: string[]
         const result = await storage.createFile(STORAGE_FILE_BUCKET_ID, ID.unique(), file);
         return result;
     } catch (error) {
-        console.error('Error uploading file:', error);
+        logger.error('Error uploading file:', error);
         throw error;
     }
 };
@@ -159,7 +160,7 @@ export const deleteFile = async (fileId: string, bucketId = STORAGE_FILE_BUCKET_
         await storage.deleteFile(bucketId, fileId);
         return true;
     } catch (error) {
-        console.error('Error deleting file:', error);
+        logger.error('Error deleting file:', error);
         throw error;
     }
 };
@@ -173,9 +174,9 @@ export const getProfileData = async (): Promise<(Models.Document & ProfileData) 
             return null;
         }
 
-        return data.documents[0] as Models.Document & ProfileData;
+        return data.documents[0] as unknown as Models.Document & ProfileData;
     } catch (error) {
-        console.error('Error getting profile data:', error);
+        logger.error('Error getting profile data:', error);
         return null;
     }
 };
@@ -198,7 +199,7 @@ export const createProfileData = async (data: ProfileData) => {
 
         return await databases.createDocument(DATABASE_ID, COLLECTION_PROFILE_ID, ID.unique(), documentData);
     } catch (error) {
-        console.error('Error creating profile data:', error);
+        logger.error('Error creating profile data:', error);
         throw error;
     }
 };
@@ -221,7 +222,7 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
 
         return await databases.updateDocument(DATABASE_ID, COLLECTION_PROFILE_ID, profileId, documentData);
     } catch (error) {
-        console.error('Error updating profile data:', error);
+        logger.error('Error updating profile data:', error);
         throw error;
     }
 };
@@ -234,9 +235,9 @@ export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> 
             Query.orderAsc('order'), // Sort by order ascending
         ]);
 
-        return data.documents as (Models.Document & ProjectData)[];
+        return data.documents as unknown as (Models.Document & ProjectData)[];
     } catch (error) {
-        console.error('Error getting projects:', error);
+        logger.error('Error getting projects:', error);
         return [];
     }
 };
@@ -246,7 +247,7 @@ export const getProject = async (projectId: string): Promise<Models.Document & P
         return (await databases.getDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId)) as Models.Document &
             ProjectData;
     } catch (error) {
-        console.error('Error getting project:', error);
+        logger.error('Error getting project:', error);
         throw error;
     }
 };
@@ -255,7 +256,7 @@ export const createProject = async (data: ProjectData) => {
     try {
         return await databases.createDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, ID.unique(), data);
     } catch (error) {
-        console.error('Error creating project:', error);
+        logger.error('Error creating project:', error);
         throw error;
     }
 };
@@ -264,7 +265,7 @@ export const updateProject = async (projectId: string, data: Partial<ProjectData
     try {
         return await databases.updateDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId, data);
     } catch (error) {
-        console.error('Error updating project:', error);
+        logger.error('Error updating project:', error);
         throw error;
     }
 };
@@ -274,7 +275,7 @@ export const deleteProject = async (projectId: string) => {
         await databases.deleteDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId);
         return true;
     } catch (error) {
-        console.error('Error deleting project:', error);
+        logger.error('Error deleting project:', error);
         throw error;
     }
 };
@@ -290,18 +291,22 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
         }
 
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, queries);
-        return data.documents as (Models.Document & BlogPost)[];
+        return data.documents as unknown as (Models.Document & BlogPost)[];
     } catch (error) {
-        console.error('Error getting blog posts:', error);
+        logger.error('Error getting blog posts:', error);
         return [];
     }
 };
 
 export const getBlogPost = async (postId: string): Promise<Models.Document & BlogPost> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as Models.Document & BlogPost;
+        return (await databases.getDocument(
+            DATABASE_ID,
+            COLLECTION_BLOG_ID,
+            postId
+        )) as unknown as Models.Document & BlogPost;
     } catch (error) {
-        console.error('Error getting blog post:', error);
+        logger.error('Error getting blog post:', error);
         throw error;
     }
 };
@@ -314,9 +319,9 @@ export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document 
             return null;
         }
 
-        return data.documents[0] as Models.Document & BlogPost;
+        return data.documents[0] as unknown as Models.Document & BlogPost;
     } catch (error) {
-        console.error('Error getting blog post by slug:', error);
+        logger.error('Error getting blog post by slug:', error);
         return null;
     }
 };
@@ -339,7 +344,7 @@ export const createBlogPost = async (data: BlogPost) => {
 
         return await databases.createDocument(DATABASE_ID, COLLECTION_BLOG_ID, ID.unique(), documentData);
     } catch (error) {
-        console.error('Error creating blog post:', error);
+        logger.error('Error creating blog post:', error);
         throw error;
     }
 };
@@ -360,7 +365,7 @@ export const updateBlogPost = async (postId: string, data: Partial<BlogPost>) =>
 
         return await databases.updateDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId, documentData);
     } catch (error) {
-        console.error('Error updating blog post:', error);
+        logger.error('Error updating blog post:', error);
         throw error;
     }
 };
@@ -370,7 +375,7 @@ export const deleteBlogPost = async (postId: string) => {
         await databases.deleteDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId);
         return true;
     } catch (error) {
-        console.error('Error deleting blog post:', error);
+        logger.error('Error deleting blog post:', error);
         throw error;
     }
 };
@@ -387,7 +392,7 @@ export const incrementBlogPostViewCount = async (postId: string) => {
         // Update the post with the new view count
         return await updateBlogPost(postId, { viewCount: newViewCount });
     } catch (error) {
-        console.error('Error incrementing blog post view count:', error);
+        logger.error('Error incrementing blog post view count:', error);
         // Don't throw error to avoid breaking the user experience
         // Just silently fail
         return null;
@@ -403,7 +408,7 @@ export const getContentImages = async (limit = 50): Promise<Models.File[]> => {
         ]);
         return images.files;
     } catch (error) {
-        console.error('Error getting content images:', error);
+        logger.error('Error getting content images:', error);
         return [];
     }
 };
@@ -422,7 +427,7 @@ export const updateContentImage = async (fileId: string, file: File): Promise<Mo
         const result = await storage.createFile(STORAGE_BLOGS_BUCKET_ID, fileId, file);
         return result;
     } catch (error) {
-        console.error('Error updating content image:', error);
+        logger.error('Error updating content image:', error);
         throw error;
     }
 };
@@ -440,7 +445,7 @@ export const uploadContentImage = async (file: File): Promise<{ fileId: string; 
         const url = storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
         return { fileId, url };
     } catch (error) {
-        console.error('Error uploading content image:', error);
+        logger.error('Error uploading content image:', error);
         throw error;
     }
 };
@@ -463,12 +468,12 @@ export const getSectionVisibility = async (): Promise<(Models.Document & Section
                 resumes: true,
             };
             const newDoc = await createSectionVisibility(initialVisibility);
-            return newDoc as Models.Document & SectionVisibility;
+            return newDoc as unknown as Models.Document & SectionVisibility;
         }
 
-        return data.documents[0] as Models.Document & SectionVisibility;
+        return data.documents[0] as unknown as Models.Document & SectionVisibility;
     } catch (error) {
-        console.error('Error getting section visibility:', error);
+        logger.error('Error getting section visibility:', error);
         return null;
     }
 };
@@ -484,7 +489,7 @@ export const createSectionVisibility = async (data: SectionVisibility) => {
 
         return await databases.createDocument(DATABASE_ID, COLLECTION_SECTION_VISIBILITY_ID, ID.unique(), documentData);
     } catch (error) {
-        console.error('Error creating section visibility:', error);
+        logger.error('Error creating section visibility:', error);
         throw error;
     }
 };
@@ -505,7 +510,7 @@ export const updateSectionVisibility = async (visibilityId: string, data: Partia
             documentData
         );
     } catch (error) {
-        console.error('Error updating section visibility:', error);
+        logger.error('Error updating section visibility:', error);
         throw error;
     }
 };
