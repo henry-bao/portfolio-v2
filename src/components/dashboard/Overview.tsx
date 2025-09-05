@@ -23,6 +23,7 @@ import {
     updateSectionVisibility,
     SectionVisibility,
 } from '../../services/appwrite';
+import type { SectionVisibilityDocument } from '../../types';
 import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
@@ -45,7 +46,7 @@ const Overview = () => {
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
     const [resumes, setResumes] = useState<(Models.Document & ResumeVersion)[]>([]);
     const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
-    const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
+    const [sectionVisibility, setSectionVisibility] = useState<SectionVisibilityDocument | null>(null);
     const [loading, setLoading] = useState({
         profile: true,
         projects: true,

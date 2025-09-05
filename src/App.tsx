@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
-import { Models } from 'appwrite';
 
 import { AuthProvider } from './context/AuthContext';
-import { getSectionVisibility, SectionVisibility, sendPing } from './services/appwrite';
+import { getSectionVisibility, sendPing } from './services/appwrite';
+import type { SectionVisibilityDocument } from './types';
 import Portfolio from './Portfolio';
 import ProtectedRoute from './components/dashboard/ProtectedRoute';
 import Login from './components/dashboard/Login';
@@ -22,7 +22,7 @@ import ResumeRedirect from './components/ResumeRedirect';
 import PageChangeListener from './components/shared/PageChangeListener';
 
 function App() {
-    const [sectionVisibility, setSectionVisibility] = useState<(Models.Document & SectionVisibility) | null>(null);
+    const [sectionVisibility, setSectionVisibility] = useState<SectionVisibilityDocument | null>(null);
 
     const fetchSectionVisibility = useCallback(async () => {
         try {

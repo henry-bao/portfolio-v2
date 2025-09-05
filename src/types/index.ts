@@ -22,6 +22,7 @@ export interface ProjectData {
     link_url?: string;
     link_text?: string;
     isOpen?: boolean;
+    order?: number;
 }
 
 export interface BlogPost {
@@ -33,12 +34,14 @@ export interface BlogPost {
     published: boolean;
     tags?: string[];
     coverImageId?: string;
+    viewCount?: number;
 }
 
 export interface SectionVisibility {
     about: boolean;
     projects: boolean;
     blogs: boolean;
+    resumes: boolean;
 }
 
 // Combined types with Appwrite document properties

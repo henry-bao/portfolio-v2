@@ -66,6 +66,7 @@ import {
     STORAGE_BLOGS_BUCKET_ID,
     ALLOWED_IMAGE_TYPES,
 } from '../../services/appwrite';
+import type { BlogPostDocument } from '../../types';
 import './markdown-preview.css';
 
 // Type for draft blog post
@@ -91,7 +92,7 @@ const BlogEditor = () => {
     const navigate = useNavigate();
     const isNewPost = !postId;
 
-    const [post, setPost] = useState<(Models.Document & BlogPost) | null>(null);
+    const [post, setPost] = useState<BlogPostDocument | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
@@ -688,7 +689,7 @@ const BlogEditor = () => {
 
             if (!isNewPost) {
                 // Redirect to edit page after creation
-                setPost(result as Models.Document & BlogPost);
+                setPost(result as unknown as BlogPostDocument);
             }
         } catch (error) {
             console.error('Error saving blog post:', error);

@@ -1,4 +1,5 @@
 import { Client, Account, Storage, Databases, ID, Query, Models } from 'appwrite';
+import type { ProfileDocument, ProjectDocument, BlogPostDocument, SectionVisibilityDocument } from '../types';
 
 const client = new Client();
 
@@ -165,7 +166,7 @@ export const deleteFile = async (fileId: string, bucketId = STORAGE_FILE_BUCKET_
 };
 
 // Database functions for profile data
-export const getProfileData = async (): Promise<(Models.Document & ProfileData) | null> => {
+export const getProfileData = async (): Promise<ProfileDocument | null> => {
     try {
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_PROFILE_ID, [Query.limit(1)]);
 
@@ -173,7 +174,7 @@ export const getProfileData = async (): Promise<(Models.Document & ProfileData) 
             return null;
         }
 
-        return data.documents[0] as Models.Document & ProfileData;
+        return data.documents[0] as unknown as ProfileDocument;
     } catch (error) {
         console.error('Error getting profile data:', error);
         return null;
@@ -227,24 +228,23 @@ export const updateProfileData = async (profileId: string, data: Partial<Profile
 };
 
 // Database functions for projects
-export const getProjects = async (): Promise<(Models.Document & ProjectData)[]> => {
+export const getProjects = async (): Promise<ProjectDocument[]> => {
     try {
         // Query with sorting by order field
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_PROJECTS_ID, [
             Query.orderAsc('order'), // Sort by order ascending
         ]);
 
-        return data.documents as (Models.Document & ProjectData)[];
+        return data.documents as unknown as ProjectDocument[];
     } catch (error) {
         console.error('Error getting projects:', error);
         return [];
     }
 };
 
-export const getProject = async (projectId: string): Promise<Models.Document & ProjectData> => {
+export const getProject = async (projectId: string): Promise<ProjectDocument> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId)) as Models.Document &
-            ProjectData;
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_PROJECTS_ID, projectId)) as unknown as ProjectDocument;
     } catch (error) {
         console.error('Error getting project:', error);
         throw error;
@@ -280,7 +280,7 @@ export const deleteProject = async (projectId: string) => {
 };
 
 // Database functions for blog posts
-export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Document & BlogPost)[]> => {
+export const getBlogPosts = async (publishedOnly = false): Promise<BlogPostDocument[]> => {
     try {
         const queries = [Query.orderDesc('publishedDate')];
 
@@ -290,23 +290,23 @@ export const getBlogPosts = async (publishedOnly = false): Promise<(Models.Docum
         }
 
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, queries);
-        return data.documents as (Models.Document & BlogPost)[];
+        return data.documents as unknown as BlogPostDocument[];
     } catch (error) {
         console.error('Error getting blog posts:', error);
         return [];
     }
 };
 
-export const getBlogPost = async (postId: string): Promise<Models.Document & BlogPost> => {
+export const getBlogPost = async (postId: string): Promise<BlogPostDocument> => {
     try {
-        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as Models.Document & BlogPost;
+        return (await databases.getDocument(DATABASE_ID, COLLECTION_BLOG_ID, postId)) as unknown as BlogPostDocument;
     } catch (error) {
         console.error('Error getting blog post:', error);
         throw error;
     }
 };
 
-export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document & BlogPost) | null> => {
+export const getBlogPostBySlug = async (slug: string): Promise<BlogPostDocument | null> => {
     try {
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_BLOG_ID, [Query.equal('slug', slug)]);
 
@@ -314,7 +314,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<(Models.Document 
             return null;
         }
 
-        return data.documents[0] as Models.Document & BlogPost;
+        return data.documents[0] as unknown as BlogPostDocument;
     } catch (error) {
         console.error('Error getting blog post by slug:', error);
         return null;
@@ -450,7 +450,7 @@ export const getContentImagePreviewUrl = (fileId: string): string => {
     return storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
 };
 
-export const getSectionVisibility = async (): Promise<(Models.Document & SectionVisibility) | null> => {
+export const getSectionVisibility = async (): Promise<SectionVisibilityDocument | null> => {
     try {
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_SECTION_VISIBILITY_ID, [Query.limit(1)]);
 
@@ -463,10 +463,10 @@ export const getSectionVisibility = async (): Promise<(Models.Document & Section
                 resumes: true,
             };
             const newDoc = await createSectionVisibility(initialVisibility);
-            return newDoc as Models.Document & SectionVisibility;
+            return newDoc as unknown as SectionVisibilityDocument;
         }
 
-        return data.documents[0] as Models.Document & SectionVisibility;
+        return data.documents[0] as unknown as SectionVisibilityDocument;
     } catch (error) {
         console.error('Error getting section visibility:', error);
         return null;

@@ -22,8 +22,8 @@ import {
     deleteFile,
     ProfileData,
 } from '../../services/appwrite';
+import type { ProfileDocument } from '../../types';
 import { getFilePreviewUrl } from '../../services/fileProxy';
-import { Models } from 'appwrite';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 import {
     DndContext,
@@ -47,7 +47,7 @@ import {
 import { SxProps, Theme } from '@mui/material/styles';
 
 // Helper function to map Appwrite document to ProfileData
-const mapDocumentToProfileData = (doc: Models.Document): ProfileData => {
+const mapDocumentToProfileData = (doc: ProfileDocument): ProfileData => {
     return {
         name: doc.name || '',
         email: doc.email || '',
@@ -137,7 +137,7 @@ const StyledDragOverlay = ({ children }: { children: React.ReactNode }) => {
 };
 
 const ProfileEditor = () => {
-    const [profile, setProfile] = useState<Models.Document | null>(null);
+    const [profile, setProfile] = useState<ProfileDocument | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
@@ -483,7 +483,7 @@ const ProfileEditor = () => {
                 updatedProfile = await createProfileData(profileData);
             }
 
-            setProfile(updatedProfile);
+            setProfile(updatedProfile as unknown as ProfileDocument);
             setSuccess('Profile updated successfully');
         } catch (error) {
             console.error('Error saving profile:', error);

@@ -23,6 +23,7 @@ import {
     ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { getProject, createProject, updateProject, uploadFile, deleteFile, ProjectData } from '../../services/appwrite';
+import type { ProjectDocument } from '../../types';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
 
@@ -175,7 +176,7 @@ const ProjectEditor = () => {
                     navigate(`/admin/projects/edit/${result.$id}`);
                 }, 1500);
             } else {
-                setProject(result as Models.Document & ProjectData);
+                setProject(result as unknown as ProjectDocument);
             }
         } catch (error) {
             console.error('Error saving project:', error);
