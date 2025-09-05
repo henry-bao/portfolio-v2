@@ -1,4 +1,7 @@
-import { Models } from 'appwrite';
+import { useMemo } from 'react';
+import { useProfileData } from '../../hooks/useAppwriteData';
+import { getFilePreviewUrl } from '../../services/fileProxy';
+import type { ProfileDocument } from '../../types';
 import './About.css';
 
 interface DisplayData {
@@ -13,8 +16,8 @@ interface DisplayData {
     email: string;
 }
 
-// Helper function to map Appwrite document to our display format
-const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
+// Helper function to map profile document to our display format
+const mapDocumentToDisplayData = (doc: ProfileDocument): DisplayData => {
     return {
         name: doc.name || 'Henry Bao',
         pronouns: doc.pronouns || ['He', 'Him'],
@@ -28,24 +31,31 @@ const mapDocumentToDisplayData = (doc: Models.Document): DisplayData => {
     };
 };
 
-type AboutProps = {
-    profile: Models.Document | null;
-    resumeUrl: string | null;
-    profileImageUrl: string | null;
-};
-const About = ({ profile, resumeUrl, profileImageUrl }: AboutProps) => {
-    // Map document to display data or use fallbacks
-    const displayData: DisplayData = profile
-        ? mapDocumentToDisplayData(profile)
-        : {
-              name: 'Henry Bao',
-              pronouns: ['He', 'Him'],
-              education: ['MS @ Cornell', 'BS @ UW'],
-              languages: ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
-              linkedin: 'https://www.linkedin.com/in/henglibao',
-              github: 'https://github.com/henry-bao',
-              email: 'henry@bao.dev',
-          };
+const About = () => {
+    const { data: profile } = useProfileData();
+
+    const { displayData, resumeUrl, profileImageUrl } = useMemo(() => {
+        const data: DisplayData = profile
+            ? mapDocumentToDisplayData(profile)
+            : {
+                  name: 'Henry Bao',
+                  pronouns: ['He', 'Him'],
+                  education: ['MS @ Cornell', 'BS @ UW'],
+                  languages: ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
+                  linkedin: 'https://www.linkedin.com/in/henglibao',
+                  github: 'https://github.com/henry-bao',
+                  email: 'henry@bao.dev',
+              };
+
+        const resume = profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : '/file/Resume.pdf';
+        const profileImage = profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : '/img/henry_800x800.png';
+
+        return {
+            displayData: data,
+            resumeUrl: resume,
+            profileImageUrl: profileImage
+        };
+    }, [profile]);
 
     return (
         <section id="about" className="about-css">

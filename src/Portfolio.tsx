@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import { Models } from 'appwrite';
-import { getProfileData, SectionVisibility } from './services/appwrite';
-import { getFileUrl, getFilePreviewUrl } from './services/fileProxy';
+import { SectionVisibility } from './services/appwrite';
+import { useProfileData } from './hooks/useAppwriteData';
+import { getFileUrl } from './services/fileProxy';
 
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
@@ -17,39 +17,16 @@ interface PortfolioProps {
 }
 
 function Portfolio({ sectionVisibility }: PortfolioProps) {
-    const [resumeUrl, setResumeUrl] = useState<string | null>(null);
-    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-    const [profile, setProfile] = useState<Models.Document | null>(null);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const profileData = await getProfileData();
-                setProfile(profileData);
-
-                if (profileData?.profileImageId) {
-                    setProfileImageUrl(getFilePreviewUrl(profileData.profileImageId));
-                }
-
-                if (profileData?.resumeFileId) {
-                    setResumeUrl(getFileUrl(profileData.resumeFileId));
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const { data: profile } = useProfileData();
+    
+    const resumeUrl = profile?.resumeFileId ? getFileUrl(profile.resumeFileId) : null;
 
     return (
         <>
             <Navbar sectionVisibility={sectionVisibility} />
             <main>
                 <Landing />
-                {(!sectionVisibility || sectionVisibility.about) && (
-                    <About profile={profile} resumeUrl={resumeUrl} profileImageUrl={profileImageUrl} />
-                )}
+                {(!sectionVisibility || sectionVisibility.about) && <About />}
                 {(!sectionVisibility || sectionVisibility.projects) && <Projects />}
                 {(!sectionVisibility || sectionVisibility.blogs) && <Blog />}
             </main>
