@@ -1,6 +1,7 @@
-import { Link } from 'react-scroll';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { routes } from '../../routes/paths';
+import { scrollToSection } from '../../utils/scroll';
 import './Landing.css';
 
 const Landing = () => {
@@ -13,7 +14,7 @@ const Landing = () => {
 
         if (newCount === 5) {
             setClickCount(0);
-            navigate('/admin/login');
+            navigate(routes.admin.login);
         }
     };
 
@@ -29,9 +30,14 @@ const Landing = () => {
                     <span className="close-tag">&lt;/Hello&gt;&nbsp;</span>
                 </div>
             </div>
-            <Link to="about" smooth={true} duration={500} className="scroll-indicator-container">
+            <button
+                type="button"
+                className="scroll-indicator-container"
+                aria-label="Scroll to about section"
+                onClick={() => scrollToSection('about')}
+            >
                 <div className="scroll-indicator"></div>
-            </Link>
+            </button>
         </section>
     );
 };

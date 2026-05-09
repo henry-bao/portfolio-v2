@@ -40,11 +40,16 @@
 }
 
 .scroll-indicator-container {
+    appearance: none;
     animation: 5s fadeIn;
     animation-fill-mode: forwards;
+    background: none;
+    border: 0;
     visibility: hidden;
     cursor: pointer;
     display: block;
+    padding: 0;
+    width: 100%;
 }
 
 .type-animation {

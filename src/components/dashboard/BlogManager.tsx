@@ -39,18 +39,8 @@ import {
     Preview as PreviewIcon,
 } from '@mui/icons-material';
 import { getBlogPosts, deleteBlogPost, updateBlogPost } from '../../services/appwrite';
-
-// Interface for drafts stored in localStorage
-interface DraftBlogPost {
-    id?: string;
-    title: string;
-    content: string;
-    summary: string;
-    slug: string;
-    publishedDate: string;
-    tags: string[];
-    lastSaved: string;
-}
+import { getBlogDrafts, removeBlogDraft } from '../../services/blogDraftStorage';
+import { routes } from '../../routes/paths';
 
 // Combined type for displaying both database posts and drafts
 interface DisplayBlogPost {
@@ -67,8 +57,6 @@ interface DisplayBlogPost {
     hasDraft?: boolean; // Indicates if a published post has a draft version
     lastSaved?: string;
 }
-
-const DRAFTS_STORAGE_KEY = 'blog_drafts';
 
 const BlogManager = () => {
     const navigate = useNavigate();
@@ -94,9 +82,7 @@ const BlogManager = () => {
                 // Load posts from database
                 const dbPosts = await getBlogPosts(false); // Get all posts including unpublished
 
-                // Load drafts from localStorage
-                const draftsJson = localStorage.getItem(DRAFTS_STORAGE_KEY);
-                const drafts: DraftBlogPost[] = draftsJson ? JSON.parse(draftsJson) : [];
+                const drafts = getBlogDrafts();
 
                 // Format database posts for display
                 const formattedDbPosts: DisplayBlogPost[] = dbPosts.map((post) => ({
@@ -112,8 +98,8 @@ const BlogManager = () => {
                 }));
 
                 // Format drafts for display
-                const draftPosts: DisplayBlogPost[] = drafts.map((draft) => ({
-                    $id: draft.id || `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                const draftPosts: DisplayBlogPost[] = drafts.map((draft, index) => ({
+                    $id: draft.id || `draft-${index}`,
                     id: draft.id,
                     title: draft.title || 'Untitled Draft',
                     summary: draft.summary || '',
@@ -185,14 +171,7 @@ const BlogManager = () => {
 
         try {
             if (selectedPost.isDraft) {
-                // Delete from localStorage
-                const draftsJson = localStorage.getItem(DRAFTS_STORAGE_KEY);
-                const drafts: DraftBlogPost[] = draftsJson ? JSON.parse(draftsJson) : [];
-                const updatedDrafts = drafts.filter(
-                    (draft) => (draft.id && draft.id !== selectedPost.$id) || (!draft.id && !selectedPost.id)
-                );
-                localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(updatedDrafts));
-
+                removeBlogDraft(selectedPost.id || selectedPost.$id);
                 showSnackbar('Draft deleted successfully', 'success');
             } else {
                 // Delete from database
@@ -252,40 +231,36 @@ const BlogManager = () => {
     const handleNewPost = () => {
         // Instead of clearing drafts, just navigate to new post page
         // We'll handle this in the BlogEditor component
-        navigate('/admin/blogs/new');
+        navigate(routes.admin.blogNew);
     };
 
     const handleEditPost = (post: DisplayBlogPost) => {
         if (post.isDraft && post.id) {
             if (post.id.startsWith('new-')) {
                 // This is a new draft, navigate to new post page with query parameter
-                navigate(`/admin/blogs/new?loadDraft=true&draftId=${post.id}`);
+                navigate(routes.admin.blogNewWithDraft(post.id));
             } else {
                 // This is a draft of an existing post
-                navigate(`/admin/blogs/edit/${post.$id}`);
+                navigate(routes.admin.blogEdit(post.$id));
             }
         } else if (post.hasDraft) {
             // This is a published post with unsaved changes (draft)
             // Navigate to its edit page - the draft will be loaded automatically
-            navigate(`/admin/blogs/edit/${post.$id}`);
+            navigate(routes.admin.blogEdit(post.$id));
         } else {
             // Regular database post without draft
-            navigate(`/admin/blogs/edit/${post.$id}`);
+            navigate(routes.admin.blogEdit(post.$id));
         }
     };
 
     const handleViewPost = (post: DisplayBlogPost) => {
-        window.open(`/blogs/${post.slug}`, '_blank');
+        window.open(routes.blogPostBySlug(post.slug), '_blank');
     };
 
     const handlePreviewPost = (post: DisplayBlogPost) => {
         // For drafts, first set the preview post
         if (post.isDraft) {
-            // Find the draft content in localStorage
-            const draftsJson = localStorage.getItem(DRAFTS_STORAGE_KEY);
-            const drafts: DraftBlogPost[] = draftsJson ? JSON.parse(draftsJson) : [];
-
-            // Find the matching draft
+            const drafts = getBlogDrafts();
             const draftContent = drafts.find((draft) => (post.id && draft.id === post.id) || post.$id === draft.id);
 
             if (draftContent) {
@@ -305,13 +280,13 @@ const BlogManager = () => {
                 );
 
                 // Open in a new tab
-                window.open('/blogs/preview', '_blank');
+                window.open(routes.blogPostBySlug('preview'), '_blank');
             } else {
                 showSnackbar('Could not find draft content to preview', 'error');
             }
         } else {
             // For published posts, just open the existing post
-            window.open(`/blogs/${post.slug}?preview=true`, '_blank');
+            window.open(`${routes.blogPostBySlug(post.slug)}?preview=true`, '_blank');
         }
     };
 

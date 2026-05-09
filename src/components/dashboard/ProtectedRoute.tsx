@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { CircularProgress, Box } from '@mui/material';
+import { routes } from '../../routes/paths';
 
 const ProtectedRoute = () => {
     const { isAuthenticated, isLoading } = useAuth();
@@ -13,7 +14,7 @@ const ProtectedRoute = () => {
         );
     }
 
-    return isAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
+    return isAuthenticated ? <Outlet /> : <Navigate to={routes.admin.login} replace />;
 };
 
 export default ProtectedRoute;

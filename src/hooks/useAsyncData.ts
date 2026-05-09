@@ -11,10 +11,7 @@ export interface AsyncDataActions {
   reset: () => void;
 }
 
-export function useAsyncData<T>(
-  fetchFunction: () => Promise<T>,
-  dependencies: unknown[] = []
-): AsyncDataState<T> & AsyncDataActions {
+export function useAsyncData<T>(fetchFunction: () => Promise<T>): AsyncDataState<T> & AsyncDataActions {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +42,7 @@ export function useAsyncData<T>(
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchData, ...dependencies]);
+  }, [fetchData]);
 
   return {
     data,

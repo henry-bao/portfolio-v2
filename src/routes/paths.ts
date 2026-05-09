@@ -1,0 +1,22 @@
+export const routes = {
+    home: '/',
+    notFound: '/404',
+    blogs: '/blogs',
+    blogPost: '/blogs/:slug',
+    blogPostBySlug: (slug: string) => `/blogs/${slug}`,
+    resumeRedirect: '/resume-redirect',
+    admin: {
+        root: '/admin',
+        login: '/admin/login',
+        overview: '/admin/overview',
+        profile: '/admin/profile',
+        projects: '/admin/projects',
+        projectNew: '/admin/projects/new',
+        projectEdit: (projectId: string) => `/admin/projects/edit/${projectId}`,
+        resumes: '/admin/resumes',
+        blogs: '/admin/blogs',
+        blogNew: '/admin/blogs/new',
+        blogNewWithDraft: (draftId: string) => `/admin/blogs/new?loadDraft=true&draftId=${draftId}`,
+        blogEdit: (postId: string) => `/admin/blogs/edit/${postId}`,
+    },
+} as const;

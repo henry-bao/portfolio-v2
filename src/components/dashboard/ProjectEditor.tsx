@@ -26,6 +26,7 @@ import { getProject, createProject, updateProject, uploadFile, deleteFile, Proje
 import type { ProjectDocument } from '../../types';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
+import { routes } from '../../routes/paths';
 
 const ProjectEditor = () => {
     const { projectId } = useParams();
@@ -173,7 +174,7 @@ const ProjectEditor = () => {
             if (isNewProject) {
                 // Redirect to edit page after creation
                 setTimeout(() => {
-                    navigate(`/admin/projects/edit/${result.$id}`);
+                    navigate(routes.admin.projectEdit(result.$id));
                 }, 1500);
             } else {
                 setProject(result as unknown as ProjectDocument);
@@ -381,7 +382,7 @@ const ProjectEditor = () => {
                         <Box display="flex" justifyContent="flex-end" mt={2}>
                             <Button
                                 variant="outlined"
-                                onClick={() => navigate('/admin/projects')}
+                                onClick={() => navigate(routes.admin.projects)}
                                 sx={{ mr: 2 }}
                                 disabled={isSaving}
                             >

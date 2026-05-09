@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getActiveResumeVersion } from '../services/resumeService';
 import { getFileUrl } from '../services/fileProxy';
+import { routes } from '../routes/paths';
 
 const ResumeRedirect = () => {
     const navigate = useNavigate();
@@ -14,12 +15,11 @@ const ResumeRedirect = () => {
                     const fileUrl = getFileUrl(activeResume.fileId);
                     window.location.href = fileUrl;
                 } else {
-                    // If no active resume, redirect to 404
-                    navigate('/404');
+                    navigate(routes.notFound);
                 }
             } catch (error) {
                 console.error('Error fetching active resume:', error);
-                navigate('/404');
+                navigate(routes.notFound);
             }
         };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
+import { routes } from '../../routes/paths';
 import './Blog.css';
 
 const Blog = () => {
@@ -46,7 +47,7 @@ const Blog = () => {
                     <>
                         <div className="blog-grid">
                             {blogPosts.map((post) => (
-                                <Link to={`/blogs/${post.slug}`} key={post.$id} className="blog-card-link">
+                                <Link to={routes.blogPostBySlug(post.slug)} key={post.$id} className="blog-card-link">
                                     <div className="blog-card">
                                         {post.coverImageId && (
                                             <div className="blog-card-image">
@@ -86,7 +87,7 @@ const Blog = () => {
                             ))}
                         </div>
                         <div className="view-all-container">
-                            <Link to="/blogs" className="view-all-button">
+                            <Link to={routes.blogs} className="view-all-button">
                                 View All Posts
                             </Link>
                         </div>

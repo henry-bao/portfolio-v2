@@ -14,6 +14,7 @@ import { LinearProgress, Alert } from '@mui/material';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
+import { routes } from '../../routes/paths';
 import './BlogPost.css';
 
 // Interface for preview blog post
@@ -164,7 +165,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
                 <div className="blog-post-header">
                     {!isPreview && (
-                        <Link to="/blogs" className="back-to-blog">
+                        <Link to={routes.blogs} className="back-to-blog">
                             ← Back to blogs
                         </Link>
                     )}

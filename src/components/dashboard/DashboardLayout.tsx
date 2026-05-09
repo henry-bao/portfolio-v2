@@ -31,7 +31,8 @@ import {
     Description as ResumeIcon,
     Book as BlogIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
+import { routes } from '../../routes/paths';
 
 const expandedDrawerWidth = 240;
 const collapsedDrawerWidth = 64;
@@ -100,17 +101,17 @@ const DashboardLayout = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/admin/login');
+        navigate(routes.admin.login);
     };
 
     const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
 
     const menuItems = [
-        { text: 'Overview', icon: <DashboardIcon />, path: '/admin/overview' },
-        { text: 'Profile', icon: <PersonIcon />, path: '/admin/profile' },
-        { text: 'Projects', icon: <WorkIcon />, path: '/admin/projects' },
-        { text: 'Blogs', icon: <BlogIcon />, path: '/admin/blogs' },
-        { text: 'Resumes', icon: <ResumeIcon />, path: '/admin/resumes' },
+        { text: 'Overview', icon: <DashboardIcon />, path: routes.admin.overview },
+        { text: 'Profile', icon: <PersonIcon />, path: routes.admin.profile },
+        { text: 'Projects', icon: <WorkIcon />, path: routes.admin.projects },
+        { text: 'Blogs', icon: <BlogIcon />, path: routes.admin.blogs },
+        { text: 'Resumes', icon: <ResumeIcon />, path: routes.admin.resumes },
     ];
 
     const drawerContent = (
@@ -195,7 +196,7 @@ const DashboardLayout = () => {
                     <Button
                         color="inherit"
                         onClick={() => {
-                            navigate('/');
+                            navigate(routes.home);
                         }}
                         startIcon={<Home />}
                     >

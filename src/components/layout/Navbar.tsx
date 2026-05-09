@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link as ScrollLink } from 'react-scroll';
 import { Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { SectionVisibility } from '../../services/appwrite';
 import { Models } from 'appwrite';
+import { routes } from '../../routes/paths';
+import { scrollToSection } from '../../utils/scroll';
 import './Navbar.css';
 
 type NavbarProps = {
@@ -14,7 +15,6 @@ const Navbar = ({ sectionVisibility }: NavbarProps) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const { isAuthenticated } = useAuth();
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -24,12 +24,6 @@ const Navbar = ({ sectionVisibility }: NavbarProps) => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    useEffect(() => {
-        if (sectionVisibility !== null) {
-            setIsLoading(false);
-        }
-    }, [sectionVisibility]);
 
     const toggleMenu = () => {
         setMenuOpen(!menuOpen);
@@ -41,56 +35,63 @@ const Navbar = ({ sectionVisibility }: NavbarProps) => {
         document.body.classList.remove('disableScroll');
     };
 
+    const handleSectionClick = (sectionId: string) => {
+        closeMenu();
+        scrollToSection(sectionId);
+    };
+
     return (
         <nav className={`nav ${isSticky ? 'sticky' : ''}`}>
             <div className="nav-content">
                 <div className="logo">
-                    <ScrollLink to="home" duration={300} onClick={closeMenu}>
+                    <button type="button" className="nav-link-button nav-logo-button" onClick={() => handleSectionClick('home')}>
                         Henry Bao
-                    </ScrollLink>
+                    </button>
                 </div>
                 <ul className={`menu-list ${menuOpen ? 'active' : ''}`}>
-                    {!isLoading && (
-                        <>
-                            <li>
-                                <ScrollLink to="home" duration={300} onClick={closeMenu}>
-                                    Home
-                                </ScrollLink>
-                            </li>
-                            {(!sectionVisibility || sectionVisibility.about) && (
-                                <li>
-                                    <ScrollLink to="about" duration={300} onClick={closeMenu}>
-                                        About Me
-                                    </ScrollLink>
-                                </li>
-                            )}
-                            {(!sectionVisibility || sectionVisibility.projects) && (
-                                <li>
-                                    <ScrollLink to="projects" duration={300} onClick={closeMenu}>
-                                        Projects
-                                    </ScrollLink>
-                                </li>
-                            )}
-                            {(!sectionVisibility || sectionVisibility.blogs) && (
-                                <li>
-                                    <ScrollLink to="blogs" duration={300} onClick={closeMenu}>
-                                        Blogs
-                                    </ScrollLink>
-                                </li>
-                            )}
-                            {isAuthenticated && (
-                                <li>
-                                    <RouterLink to="/admin/overview" onClick={closeMenu} className="nav-admin-button">
-                                        Admin
-                                    </RouterLink>
-                                </li>
-                            )}{' '}
-                        </>
+                    <li>
+                        <button type="button" className="nav-link-button" onClick={() => handleSectionClick('home')}>
+                            Home
+                        </button>
+                    </li>
+                    {(!sectionVisibility || sectionVisibility.about) && (
+                        <li>
+                            <button type="button" className="nav-link-button" onClick={() => handleSectionClick('about')}>
+                                About Me
+                            </button>
+                        </li>
+                    )}
+                    {(!sectionVisibility || sectionVisibility.projects) && (
+                        <li>
+                            <button type="button" className="nav-link-button" onClick={() => handleSectionClick('projects')}>
+                                Projects
+                            </button>
+                        </li>
+                    )}
+                    {(!sectionVisibility || sectionVisibility.blogs) && (
+                        <li>
+                            <button type="button" className="nav-link-button" onClick={() => handleSectionClick('blogs')}>
+                                Blogs
+                            </button>
+                        </li>
+                    )}
+                    {isAuthenticated && (
+                        <li>
+                            <RouterLink to={routes.admin.overview} onClick={closeMenu} className="nav-admin-button">
+                                Admin
+                            </RouterLink>
+                        </li>
                     )}
                 </ul>
-                <div className={`menu-btn ${menuOpen ? 'open' : ''}`} onClick={toggleMenu}>
+                <button
+                    type="button"
+                    className={`menu-btn ${menuOpen ? 'open' : ''}`}
+                    aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                    aria-expanded={menuOpen}
+                    onClick={toggleMenu}
+                >
                     <div className="menu-burger"></div>
-                </div>
+                </button>
             </div>
         </nav>
     );

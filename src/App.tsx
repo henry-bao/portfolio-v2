@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
 
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
 import { getSectionVisibility, sendPing } from './services/appwrite';
 import type { SectionVisibilityDocument } from './types';
 import Portfolio from './Portfolio';
@@ -20,6 +20,7 @@ import BlogList from './components/blog/BlogList';
 import NotFound from './components/NotFound';
 import ResumeRedirect from './components/ResumeRedirect';
 import PageChangeListener from './components/shared/PageChangeListener';
+import { routes } from './routes/paths';
 
 function App() {
     const [sectionVisibility, setSectionVisibility] = useState<SectionVisibilityDocument | null>(null);
@@ -37,7 +38,6 @@ function App() {
         const checkConnectivity = async () => {
             try {
                 await sendPing();
-                console.log('Connected to Appwrite successfully');
             } catch (error) {
                 console.error('Error connecting to Appwrite:', error);
             }
@@ -54,17 +54,17 @@ function App() {
                     <PageChangeListener onPageChange={fetchSectionVisibility} />
                     <Routes>
                         {/* Public Portfolio Routes */}
-                        <Route path="/" element={<Portfolio sectionVisibility={sectionVisibility} />} />
+                        <Route path={routes.home} element={<Portfolio sectionVisibility={sectionVisibility} />} />
 
                         {/* Blog routes - always available to prevent redirecting to NotFound */}
-                        <Route path="/blogs" element={<BlogList sectionVisibility={sectionVisibility} />} />
-                        <Route path="/blogs/:slug" element={<BlogPost sectionVisibility={sectionVisibility} />} />
+                        <Route path={routes.blogs} element={<BlogList sectionVisibility={sectionVisibility} />} />
+                        <Route path={routes.blogPost} element={<BlogPost sectionVisibility={sectionVisibility} />} />
 
-                        <Route path="/admin/login" element={<Login />} />
+                        <Route path={routes.admin.login} element={<Login />} />
 
-                        <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
+                        <Route path={routes.admin.root} element={<Navigate to={routes.admin.overview} replace />} />
 
-                        <Route path="/admin" element={<ProtectedRoute />}>
+                        <Route path={routes.admin.root} element={<ProtectedRoute />}>
                             <Route element={<DashboardLayout />}>
                                 <Route path="overview" element={<Overview />} />
                                 <Route path="profile" element={<ProfileEditor />} />
@@ -77,7 +77,7 @@ function App() {
                                 <Route path="blogs/edit/:postId" element={<BlogEditor />} />
                             </Route>
                         </Route>
-                        <Route path="/resume-redirect" element={<ResumeRedirect />} />
+                        <Route path={routes.resumeRedirect} element={<ResumeRedirect />} />
                         {/* 404 Not Found Route */}
                         <Route path="*" element={<NotFound />} />
                     </Routes>

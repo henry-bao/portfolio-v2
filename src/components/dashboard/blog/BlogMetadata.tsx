@@ -9,7 +9,7 @@ import {
     Typography,
     Divider,
     Chip,
-    Box
+    Box,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 
@@ -48,7 +48,7 @@ export function BlogMetadata({
     onTagInputChange,
     onManualSlugGenerate,
     onTagAdd,
-    onTagRemove
+    onTagRemove,
 }: BlogMetadataProps) {
     return (
         <Grid item xs={12}>
@@ -123,10 +123,7 @@ export function BlogMetadata({
                 <Grid item xs={12}>
                     <FormControlLabel
                         control={
-                            <Switch 
-                                checked={published} 
-                                onChange={(e) => onPublishedChange(e.target.checked)} 
-                            />
+                            <Switch checked={published} onChange={(e) => onPublishedChange(e.target.checked)} />
                         }
                         label="Publish this post"
                     />
@@ -140,7 +137,7 @@ export function BlogMetadata({
                         onChange={(e) => onTagInputChange(e.target.value)}
                         margin="normal"
                         placeholder="Enter tag and press Enter"
-                        onKeyPress={(e) => {
+                        onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
                                 onTagAdd();
@@ -161,16 +158,11 @@ export function BlogMetadata({
                             ),
                         }}
                     />
-                    
+
                     {tags.length > 0 && (
                         <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {tags.map((tag, index) => (
-                                <Chip
-                                    key={index}
-                                    label={tag}
-                                    onDelete={() => onTagRemove(tag)}
-                                    size="small"
-                                />
+                                <Chip key={index} label={tag} onDelete={() => onTagRemove(tag)} size="small" />
                             ))}
                         </Box>
                     )}

@@ -25,6 +25,7 @@ import {
 import type { ProfileDocument } from '../../types';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
+import { routes } from '../../routes/paths';
 import {
     DndContext,
     KeyboardSensor,
@@ -921,7 +922,7 @@ const ProfileEditor = () => {
                                             <Button
                                                 variant="outlined"
                                                 color="primary"
-                                                onClick={() => navigate('/admin/resumes')}
+                                                onClick={() => navigate(routes.admin.resumes)}
                                             >
                                                 Manage Resume Versions
                                             </Button>

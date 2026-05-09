@@ -55,6 +55,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { routes } from '../../routes/paths';
 
 // Sortable Table Row component
 interface SortableTableRowProps {
@@ -533,7 +534,7 @@ const ProjectsManager = () => {
                     variant="contained"
                     color="primary"
                     startIcon={<AddIcon />}
-                    onClick={() => navigate('/admin/projects/new')}
+                    onClick={() => navigate(routes.admin.projectNew)}
                 >
                     Add
                 </Button>

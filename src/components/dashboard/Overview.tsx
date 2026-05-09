@@ -28,6 +28,7 @@ import { Models } from 'appwrite';
 import { useNavigate } from 'react-router-dom';
 import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
 import { getBlogPosts, BlogPost } from '../../services/appwrite';
+import { routes } from '../../routes/paths';
 import {
     Visibility as VisibilityIcon,
     Person as PersonIcon,
@@ -314,7 +315,7 @@ const Overview = () => {
                                     <Button
                                         variant="contained"
                                         startIcon={<EditIcon />}
-                                        onClick={() => navigate('/admin/profile')}
+                                        onClick={() => navigate(routes.admin.profile)}
                                     >
                                         Edit
                                     </Button>
@@ -356,7 +357,7 @@ const Overview = () => {
                                     <Button
                                         variant="contained"
                                         startIcon={<AddIcon />}
-                                        onClick={() => navigate('/admin/projects')}
+                                        onClick={() => navigate(routes.admin.projects)}
                                     >
                                         Manage
                                     </Button>
@@ -398,7 +399,7 @@ const Overview = () => {
                                     <Button
                                         variant="contained"
                                         startIcon={<AddIcon />}
-                                        onClick={() => navigate('/admin/blogs')}
+                                        onClick={() => navigate(routes.admin.blogs)}
                                     >
                                         Manage
                                     </Button>
@@ -436,7 +437,7 @@ const Overview = () => {
                                     <Button
                                         variant="contained"
                                         startIcon={<AddIcon />}
-                                        onClick={() => navigate('/admin/resumes')}
+                                        onClick={() => navigate(routes.admin.resumes)}
                                     >
                                         Manage
                                     </Button>
@@ -463,23 +464,23 @@ const Overview = () => {
                             justifyContent: 'flex-start',
                         }}
                     >
-                        <Button variant="outlined" startIcon={<EditIcon />} onClick={() => navigate('/admin/profile')}>
+                        <Button variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(routes.admin.profile)}>
                             Update Profile
                         </Button>
                         <Button
                             variant="outlined"
                             startIcon={<AddIcon />}
-                            onClick={() => navigate('/admin/projects/new')}
+                            onClick={() => navigate(routes.admin.projectNew)}
                         >
                             Add New Project
                         </Button>
-                        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate('/admin/blogs/new')}>
+                        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate(routes.admin.blogNew)}>
                             Create Blog Post
                         </Button>
                         <Button
                             variant="outlined"
                             startIcon={<LaunchIcon />}
-                            onClick={() => window.open('/', '_blank')}
+                            onClick={() => window.open(routes.home, '_blank')}
                         >
                             View Portfolio
                         </Button>

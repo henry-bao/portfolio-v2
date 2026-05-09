@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
+import { routes } from '../../routes/paths';
 import '../layout/Navbar.css';
 
 const BlogNav = () => {
@@ -31,27 +32,33 @@ const BlogNav = () => {
         <nav className={`nav ${isSticky ? 'sticky' : ''}`}>
             <div className="nav-content">
                 <div className="logo">
-                    <RouterLink to="/" onClick={closeMenu}>
+                    <RouterLink to={routes.home} onClick={closeMenu}>
                         Henry Bao
                     </RouterLink>
                 </div>
                 <ul className={`menu-list ${menuOpen ? 'active' : ''}`}>
                     <li>
-                        <RouterLink to="/" onClick={closeMenu}>
+                        <RouterLink to={routes.home} onClick={closeMenu}>
                             Back to Home
                         </RouterLink>
                     </li>
                     {isAuthenticated && (
                         <li>
-                            <RouterLink to="/admin/overview" onClick={closeMenu} className="nav-admin-button">
+                            <RouterLink to={routes.admin.overview} onClick={closeMenu} className="nav-admin-button">
                                 Admin
                             </RouterLink>
                         </li>
                     )}
                 </ul>
-                <div className={`menu-btn ${menuOpen ? 'open' : ''}`} onClick={toggleMenu}>
+                <button
+                    type="button"
+                    className={`menu-btn ${menuOpen ? 'open' : ''}`}
+                    aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                    aria-expanded={menuOpen}
+                    onClick={toggleMenu}
+                >
                     <div className="menu-burger"></div>
-                </div>
+                </button>
             </div>
         </nav>
     );

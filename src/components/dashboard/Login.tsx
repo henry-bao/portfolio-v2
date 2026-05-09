@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Paper, Container, Alert, CircularProgress, Divider } from '@mui/material';
 import { login } from '../../services/appwrite';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
+import { routes } from '../../routes/paths';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ const Login = () => {
     // Check if user is already logged in
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/admin/overview');
+            navigate(routes.admin.overview);
         }
     }, [isAuthenticated, navigate]);
 
@@ -30,7 +31,7 @@ const Login = () => {
                 await login(email, password);
                 await checkAuthStatus();
             }
-            navigate('/admin/overview');
+            navigate(routes.admin.overview);
         } catch (err) {
             console.error('Login error:', err);
             setError(`Login failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -105,7 +106,7 @@ const Login = () => {
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
                             disabled={isLoading}
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate(routes.home)}
                         >
                             Back to Home Page
                         </Button>
