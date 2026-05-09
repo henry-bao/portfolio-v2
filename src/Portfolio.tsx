@@ -14,23 +14,31 @@ import './Portfolio.css';
 
 interface PortfolioProps {
     sectionVisibility: (Models.Document & SectionVisibility) | null;
+    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
 }
 
-function Portfolio({ sectionVisibility }: PortfolioProps) {
-    const { data: profile } = useProfileData();
-    
+function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProps) {
+    const { data: profile, loading: profileLoading } = useProfileData();
+
     const resumeUrl = profile?.resumeFileId ? getFileUrl(profile.resumeFileId) : null;
+    const isSectionVisible = (section: keyof SectionVisibility) => {
+        if (sectionVisibilityStatus === 'loading') {
+            return false;
+        }
+
+        return sectionVisibility ? sectionVisibility[section] : sectionVisibilityStatus === 'fallback';
+    };
 
     return (
         <>
-            <Navbar sectionVisibility={sectionVisibility} />
+            <Navbar sectionVisibility={sectionVisibility} sectionVisibilityStatus={sectionVisibilityStatus} />
             <main>
                 <Landing />
-                {(!sectionVisibility || sectionVisibility.about) && <About />}
-                {(!sectionVisibility || sectionVisibility.projects) && <Projects />}
-                {(!sectionVisibility || sectionVisibility.blogs) && <Blog />}
+                {isSectionVisible('about') && <About loading={profileLoading} profile={profile} />}
+                {isSectionVisible('projects') && <Projects />}
+                {isSectionVisible('blogs') && <Blog />}
             </main>
-            <Footer resumeUrl={resumeUrl} />
+            <Footer resumeUrl={resumeUrl} isResumeLoading={profileLoading} />
         </>
     );
 }

@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
+import { ImageWithFallback } from '../shared';
 import './ProjectCard.css';
 
 interface ProjectCardProps {
     title: string;
-    logo: string;
+    logoUrl?: string;
     role: string;
     description: string[];
     date: string;
@@ -17,7 +18,7 @@ interface ProjectCardProps {
 
 const ProjectCard = ({
     title,
-    logo,
+    logoUrl,
     role,
     description,
     date,
@@ -32,7 +33,7 @@ const ProjectCard = ({
     const renderContent = () => {
         const content = (
             <>
-                <img src={logo} alt={`${title}'s logo`} />
+                <ImageWithFallback src={logoUrl} fallbackSrc="/img/placeholder.svg" alt={`${title}'s logo`} />
                 <div className="description">
                     <h1>{role}</h1>
                     {description.map((paragraph, index) => (

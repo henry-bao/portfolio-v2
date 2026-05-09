@@ -3,29 +3,31 @@ import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { CircularProgress } from '@mui/material';
 import { getBlogPosts, BlogPost, getContentImagePreviewUrl, SectionVisibility } from '../../services/appwrite';
+import { routes } from '../../routes/paths';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
+import { ImageWithFallback } from '../shared';
 import './BlogList.css';
 
 interface BlogListProps {
     sectionVisibility: (Models.Document & SectionVisibility) | null;
+    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
 }
 
-const BlogList = ({ sectionVisibility }: BlogListProps) => {
+const BlogList = ({ sectionVisibility, sectionVisibilityStatus }: BlogListProps) => {
     const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const resumeUrl = null; // Fixed to avoid unused state variable
+    const canShowBlogs = sectionVisibility ? sectionVisibility.blogs : sectionVisibilityStatus === 'fallback';
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true);
+
             try {
-                // Only fetch blog posts if section visibility has loaded and blogs are enabled
-                if (sectionVisibility?.blogs) {
-                    // Only fetch published blog posts for the public view
-                    const posts = await getBlogPosts(true);
-                    setBlogPosts(posts);
-                }
+                const posts = await getBlogPosts(true);
+                setBlogPosts(posts);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -33,11 +35,15 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
             }
         };
 
-        // Only fetch data when sectionVisibility is available (not null)
-        if (sectionVisibility !== null) {
+        if (canShowBlogs) {
             fetchData();
+            return;
         }
-    }, [sectionVisibility]);
+
+        if (sectionVisibilityStatus !== 'loading') {
+            setIsLoading(false);
+        }
+    }, [canShowBlogs, sectionVisibilityStatus]);
 
     // Show loading state until sectionVisibility is loaded and component data is ready
     if (isLoading) {
@@ -53,7 +59,7 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
     }
 
     // If blogs are disabled, show the NotFound page
-    if (!sectionVisibility?.blogs) {
+    if (!canShowBlogs) {
         return <NotFound />;
     }
 
@@ -73,12 +79,13 @@ const BlogList = ({ sectionVisibility }: BlogListProps) => {
                 ) : (
                     <div className="blog-list-grid">
                         {blogPosts.map((post) => (
-                            <Link to={`/blogs/${post.slug}`} key={post.$id} className="blog-list-card-link">
+                            <Link to={routes.blogPostBySlug(post.slug)} key={post.$id} className="blog-list-card-link">
                                 <article className="blog-list-card">
                                     {post.coverImageId && (
                                         <div className="blog-list-card-image">
-                                            <img
+                                            <ImageWithFallback
                                                 src={getContentImagePreviewUrl(post.coverImageId)}
+                                                fallbackSrc="/img/placeholder.svg"
                                                 alt={post.title}
                                                 loading="lazy"
                                             />

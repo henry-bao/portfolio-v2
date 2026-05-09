@@ -39,6 +39,13 @@
     padding-top: 4em;
 }
 
+.about-loading {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 300px;
+}
+
 .about-list {
     display: flex;
     flex-direction: column;

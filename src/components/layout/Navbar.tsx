@@ -9,9 +9,10 @@ import './Navbar.css';
 
 type NavbarProps = {
     sectionVisibility: (Models.Document & SectionVisibility) | null;
+    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
 };
 
-const Navbar = ({ sectionVisibility }: NavbarProps) => {
+const Navbar = ({ sectionVisibility, sectionVisibilityStatus }: NavbarProps) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const { isAuthenticated } = useAuth();
@@ -39,6 +40,14 @@ const Navbar = ({ sectionVisibility }: NavbarProps) => {
         closeMenu();
         scrollToSection(sectionId);
     };
+    const isSectionVisible = (section: keyof SectionVisibility) => {
+        if (sectionVisibilityStatus === 'loading') {
+            return false;
+        }
+
+        return sectionVisibility ? sectionVisibility[section] : sectionVisibilityStatus === 'fallback';
+    };
+    const isLoadingSectionLinks = sectionVisibilityStatus === 'loading';
 
     return (
         <nav className={`nav ${isSticky ? 'sticky' : ''}`}>
@@ -54,22 +63,35 @@ const Navbar = ({ sectionVisibility }: NavbarProps) => {
                             Home
                         </button>
                     </li>
-                    {(!sectionVisibility || sectionVisibility.about) && (
-                        <li>
+                    {isLoadingSectionLinks && (
+                        <>
+                            <li className="nav-link-skeleton-item" aria-hidden="true">
+                                <span className="nav-link-skeleton" />
+                            </li>
+                            <li className="nav-link-skeleton-item" aria-hidden="true">
+                                <span className="nav-link-skeleton" />
+                            </li>
+                            <li className="nav-link-skeleton-item" aria-hidden="true">
+                                <span className="nav-link-skeleton" />
+                            </li>
+                        </>
+                    )}
+                    {isSectionVisible('about') && (
+                        <li className="nav-link-enter">
                             <button type="button" className="nav-link-button" onClick={() => handleSectionClick('about')}>
                                 About Me
                             </button>
                         </li>
                     )}
-                    {(!sectionVisibility || sectionVisibility.projects) && (
-                        <li>
+                    {isSectionVisible('projects') && (
+                        <li className="nav-link-enter">
                             <button type="button" className="nav-link-button" onClick={() => handleSectionClick('projects')}>
                                 Projects
                             </button>
                         </li>
                     )}
-                    {(!sectionVisibility || sectionVisibility.blogs) && (
-                        <li>
+                    {isSectionVisible('blogs') && (
+                        <li className="nav-link-enter">
                             <button type="button" className="nav-link-button" onClick={() => handleSectionClick('blogs')}>
                                 Blogs
                             </button>

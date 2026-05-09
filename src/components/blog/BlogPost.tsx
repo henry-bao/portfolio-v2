@@ -15,6 +15,7 @@ import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
 import { routes } from '../../routes/paths';
+import { ImageWithFallback } from '../shared';
 import './BlogPost.css';
 
 // Interface for preview blog post
@@ -24,9 +25,10 @@ interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
 
 interface BlogPostProps {
     sectionVisibility: (Models.Document & SectionVisibility) | null;
+    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
 }
 
-const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
+const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps) => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -35,6 +37,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
     const [post, setPost] = useState<(Models.Document & BlogPostType) | PreviewBlogPost | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const canShowBlogs = sectionVisibility ? sectionVisibility.blogs : sectionVisibilityStatus === 'fallback';
 
     useEffect(() => {
         const fetchData = async () => {
@@ -42,7 +45,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
             try {
                 // If blogs are disabled and not in preview mode, don't fetch blog post
-                if (!sectionVisibility?.blogs && !isPreview) {
+                if (!canShowBlogs && !isPreview) {
                     setError('Blogs section is disabled');
                     setIsLoading(false);
                     return;
@@ -124,11 +127,11 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
             }
         };
 
-        // Only fetch data when sectionVisibility is loaded
-        if (sectionVisibility !== null) {
+        // Only fetch data when sectionVisibility is loaded or fallback mode is active
+        if (sectionVisibilityStatus !== 'loading') {
             fetchData();
         }
-    }, [slug, navigate, isPreview, sectionVisibility]);
+    }, [slug, navigate, isPreview, canShowBlogs, sectionVisibilityStatus]);
 
     // Continue showing loading state until sectionVisibility is loaded
     if (isLoading) {
@@ -145,7 +148,7 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
     }
 
     // If blogs are disabled and not in preview mode, show the NotFound page
-    if (!sectionVisibility?.blogs && !isPreview) {
+    if (!canShowBlogs && !isPreview) {
         return <NotFound />;
     }
 
@@ -199,7 +202,11 @@ const BlogPost = ({ sectionVisibility }: BlogPostProps) => {
 
                     {post.coverImageId && (
                         <div className="blog-post-cover">
-                            <img src={getContentImagePreviewUrl(post.coverImageId)} alt={post.title} />
+                            <ImageWithFallback
+                                src={getContentImagePreviewUrl(post.coverImageId)}
+                                fallbackSrc="/img/placeholder.svg"
+                                alt={post.title}
+                            />
                         </div>
                     )}
                 </div>

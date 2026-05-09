@@ -22,15 +22,26 @@ import ResumeRedirect from './components/ResumeRedirect';
 import PageChangeListener from './components/shared/PageChangeListener';
 import { routes } from './routes/paths';
 
+export type SectionVisibilityStatus = 'loading' | 'ready' | 'fallback';
+
 function App() {
     const [sectionVisibility, setSectionVisibility] = useState<SectionVisibilityDocument | null>(null);
+    const [sectionVisibilityStatus, setSectionVisibilityStatus] = useState<SectionVisibilityStatus>('loading');
 
     const fetchSectionVisibility = useCallback(async () => {
         try {
             const visibility = await getSectionVisibility();
-            setSectionVisibility(visibility);
+
+            if (visibility) {
+                setSectionVisibility(visibility);
+                setSectionVisibilityStatus('ready');
+                return;
+            }
+
+            setSectionVisibilityStatus((currentStatus) => (currentStatus === 'ready' ? currentStatus : 'fallback'));
         } catch (error) {
             console.error('Error fetching section visibility:', error);
+            setSectionVisibilityStatus((currentStatus) => (currentStatus === 'ready' ? currentStatus : 'fallback'));
         }
     }, []);
 
@@ -54,11 +65,35 @@ function App() {
                     <PageChangeListener onPageChange={fetchSectionVisibility} />
                     <Routes>
                         {/* Public Portfolio Routes */}
-                        <Route path={routes.home} element={<Portfolio sectionVisibility={sectionVisibility} />} />
+                        <Route
+                            path={routes.home}
+                            element={
+                                <Portfolio
+                                    sectionVisibility={sectionVisibility}
+                                    sectionVisibilityStatus={sectionVisibilityStatus}
+                                />
+                            }
+                        />
 
                         {/* Blog routes - always available to prevent redirecting to NotFound */}
-                        <Route path={routes.blogs} element={<BlogList sectionVisibility={sectionVisibility} />} />
-                        <Route path={routes.blogPost} element={<BlogPost sectionVisibility={sectionVisibility} />} />
+                        <Route
+                            path={routes.blogs}
+                            element={
+                                <BlogList
+                                    sectionVisibility={sectionVisibility}
+                                    sectionVisibilityStatus={sectionVisibilityStatus}
+                                />
+                            }
+                        />
+                        <Route
+                            path={routes.blogPost}
+                            element={
+                                <BlogPost
+                                    sectionVisibility={sectionVisibility}
+                                    sectionVisibilityStatus={sectionVisibilityStatus}
+                                />
+                            }
+                        />
 
                         <Route path={routes.admin.login} element={<Login />} />
 

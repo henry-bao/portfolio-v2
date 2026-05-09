@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { useProfileData } from '../../hooks/useAppwriteData';
+import { Box, CircularProgress } from '@mui/material';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import type { ProfileDocument } from '../../types';
+import { ImageWithFallback } from '../shared';
 import './About.css';
 
 interface DisplayData {
@@ -31,31 +32,50 @@ const mapDocumentToDisplayData = (doc: ProfileDocument): DisplayData => {
     };
 };
 
-const About = () => {
-    const { data: profile } = useProfileData();
+interface AboutProps {
+    loading: boolean;
+    profile: ProfileDocument | null;
+}
 
+const fallbackDisplayData: DisplayData = {
+    name: 'Henry Bao',
+    pronouns: ['He', 'Him'],
+    education: ['MS @ Cornell', 'BS @ UW'],
+    languages: ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
+    linkedin: 'https://www.linkedin.com/in/henglibao',
+    github: 'https://github.com/henry-bao',
+    email: 'henry@bao.dev',
+};
+
+const fallbackProfileImage = '/img/henry_800x800.png';
+const fallbackResumeUrl = '/file/Resume.pdf';
+
+const About = ({ loading, profile }: AboutProps) => {
     const { displayData, resumeUrl, profileImageUrl } = useMemo(() => {
-        const data: DisplayData = profile
-            ? mapDocumentToDisplayData(profile)
-            : {
-                  name: 'Henry Bao',
-                  pronouns: ['He', 'Him'],
-                  education: ['MS @ Cornell', 'BS @ UW'],
-                  languages: ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
-                  linkedin: 'https://www.linkedin.com/in/henglibao',
-                  github: 'https://github.com/henry-bao',
-                  email: 'henry@bao.dev',
-              };
+        const data = profile ? mapDocumentToDisplayData(profile) : fallbackDisplayData;
+        const resume = profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : fallbackResumeUrl;
+        const profileImage = profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : null;
 
-        const resume = profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : '/file/Resume.pdf';
-        const profileImage = profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : '/img/henry_800x800.png';
 
         return {
             displayData: data,
             resumeUrl: resume,
-            profileImageUrl: profileImage
+            profileImageUrl: profileImage,
         };
     }, [profile]);
+
+    if (loading) {
+        return (
+            <section id="about" className="about-css">
+                <div className="about">
+                    <h1 className="sec-title">About Me</h1>
+                    <Box className="about-loading" aria-label="Loading profile">
+                        <CircularProgress />
+                    </Box>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section id="about" className="about-css">
@@ -63,9 +83,10 @@ const About = () => {
                 <h1 className="sec-title">About Me</h1>
                 <div className="about-container">
                     <div className="my-pic-container">
-                        <img
+                        <ImageWithFallback
                             className="my-pic"
-                            src={profileImageUrl || '/img/henry_800x800.png'}
+                            src={profileImageUrl}
+                            fallbackSrc={fallbackProfileImage}
                             alt="A picture of me (Henry Bao) in black and white"
                         />
                     </div>
@@ -110,12 +131,7 @@ const About = () => {
                         </li>
                         <li>
                             resume <span className="r-arrow-color">&lt;-</span>
-                            <a
-                                href={resumeUrl || '/file/Resume.pdf'}
-                                target="_blank"
-                                rel="noopener"
-                                className="about-click"
-                            >
+                            <a href={resumeUrl} target="_blank" rel="noopener" className="about-click">
                                 {' download()'}
                             </a>
                         </li>

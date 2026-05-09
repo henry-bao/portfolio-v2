@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Models } from 'appwrite';
 import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
 import { routes } from '../../routes/paths';
+import { ImageWithFallback } from '../shared';
 import './Blog.css';
 
 const Blog = () => {
@@ -51,8 +52,9 @@ const Blog = () => {
                                     <div className="blog-card">
                                         {post.coverImageId && (
                                             <div className="blog-card-image">
-                                                <img
+                                                <ImageWithFallback
                                                     src={getContentImagePreviewUrl(post.coverImageId)}
+                                                    fallbackSrc="/img/placeholder.svg"
                                                     alt={post.title}
                                                     loading="lazy"
                                                 />

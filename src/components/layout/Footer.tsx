@@ -1,17 +1,23 @@
 import './Footer.css';
 
 type FooterProps = {
+    isResumeLoading?: boolean;
     resumeUrl: string | null;
 };
-const Footer = ({ resumeUrl }: FooterProps) => {
+
+const Footer = ({ isResumeLoading = false, resumeUrl }: FooterProps) => {
     const currentYear = new Date().getFullYear();
 
     return (
         <footer className="footer">
             <p>
-                <a href={resumeUrl || '/file/Resume.pdf'} target="_blank" rel="noopener">
-                    Henry Bao
-                </a>{' '}
+                {isResumeLoading ? (
+                    <span>Henry Bao</span>
+                ) : (
+                    <a href={resumeUrl || '/file/Resume.pdf'} target="_blank" rel="noopener">
+                        Henry Bao
+                    </a>
+                )}{' '}
                 | <a href="#">Portfolio</a>
             </p>
             <p>
