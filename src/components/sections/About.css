@@ -1,4 +1,6 @@
 .about-css {
+    display: flex;
+    justify-content: center;
     background-color: rgba(245, 245, 245);
     color: black;
     min-height: 100vh;
@@ -35,8 +37,8 @@
 .about-container {
     display: flex;
     height: 100%;
-    justify-content: space-around;
-    padding-top: 4em;
+    justify-content: center;
+    gap: 100px;
 }
 
 .about-loading {
@@ -50,6 +52,7 @@
     display: flex;
     flex-direction: column;
     list-style: none;
+    justify-content: center;
 }
 
 .about-list li:first-child {
@@ -90,6 +93,7 @@
     .about-container {
         padding: 0;
         flex-direction: column-reverse;
+        gap: 50px;
     }
 
     .about-list li {
@@ -112,10 +116,14 @@
     }
 
     .my-pic {
-        width: 150px;
+        width: 200px;
     }
 
     .about-list li {
         font-size: 15px;
+    }
+
+    .about-container {
+        gap: 20px;
     }
 }
