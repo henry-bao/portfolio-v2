@@ -1,5 +1,5 @@
-import { databases, storage, DATABASE_ID, STORAGE_FILE_BUCKET_ID, COLLECTION_RESUME_ID } from './appwrite';
 import { ID, Query, Models } from 'appwrite';
+import { databases, storage, DATABASE_ID, STORAGE_FILE_BUCKET_ID, COLLECTION_RESUME_ID } from './appwrite';
 
 export interface ResumeVersion {
     fileId: string;
@@ -9,12 +9,20 @@ export interface ResumeVersion {
     description?: string;
 }
 
-// Get all resume versions
+const resumeUploadDateOrder = [Query.orderDesc('uploadDate')];
+
+const deactivateActiveResumeVersions = (versions: Array<Models.Document & ResumeVersion>) =>
+    Promise.all(
+        versions
+            .filter((version) => version.isActive)
+            .map((version) =>
+                databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, version.$id, { isActive: false })
+            )
+    );
+
 export const getResumeVersions = async (): Promise<(Models.Document & ResumeVersion)[]> => {
     try {
-        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_RESUME_ID, [
-            Query.orderDesc('uploadDate'), // Sort by upload date, newest first
-        ]);
+        const data = await databases.listDocuments(DATABASE_ID, COLLECTION_RESUME_ID, resumeUploadDateOrder);
 
         return data.documents as unknown as (Models.Document & ResumeVersion)[];
     } catch (error) {
@@ -23,7 +31,6 @@ export const getResumeVersions = async (): Promise<(Models.Document & ResumeVers
     }
 };
 
-// Get active resume version
 export const getActiveResumeVersion = async (): Promise<(Models.Document & ResumeVersion) | null> => {
     try {
         const data = await databases.listDocuments(DATABASE_ID, COLLECTION_RESUME_ID, [
@@ -42,40 +49,29 @@ export const getActiveResumeVersion = async (): Promise<(Models.Document & Resum
     }
 };
 
-// Add a new resume version
 export const addResumeVersion = async (
     file: File,
     description?: string,
-    setAsActive: boolean = false
+    setAsActive = false
 ): Promise<Models.Document & ResumeVersion> => {
     try {
-        // Upload the file
         const uploadResult = await storage.createFile(STORAGE_FILE_BUCKET_ID, ID.unique(), file);
-
-        // Check if this is the first resume version
         const existingVersions = await getResumeVersions();
         const isFirstVersion = existingVersions.length === 0;
+        const isActive = isFirstVersion || setAsActive;
 
-        // Create the resume version document
         const resumeData: ResumeVersion = {
             fileId: uploadResult.$id,
             fileName: file.name,
             uploadDate: new Date().toISOString(),
-            isActive: isFirstVersion || setAsActive, // Make it active if it's the first version or if setAsActive is true
-            description: description,
+            isActive,
+            description,
         };
 
-        // Add to database
         const result = await databases.createDocument(DATABASE_ID, COLLECTION_RESUME_ID, ID.unique(), resumeData);
 
-        // If this should be active and it's not the first version, deactivate other versions
         if (setAsActive && !isFirstVersion) {
-            // Set all other resumes to inactive
-            for (const version of existingVersions) {
-                if (version.isActive) {
-                    await databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, version.$id, { isActive: false });
-                }
-            }
+            await deactivateActiveResumeVersions(existingVersions);
         }
 
         return result as unknown as Models.Document & ResumeVersion;
@@ -85,19 +81,10 @@ export const addResumeVersion = async (
     }
 };
 
-// Set a resume version as active
 export const setResumeAsActive = async (resumeId: string): Promise<void> => {
     try {
-        // First, set all resumes to inactive
         const versions = await getResumeVersions();
-
-        for (const version of versions) {
-            if (version.isActive) {
-                await databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, version.$id, { isActive: false });
-            }
-        }
-
-        // Then set the selected resume as active
+        await deactivateActiveResumeVersions(versions);
         await databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId, { isActive: true });
     } catch (error) {
         console.error('Error setting resume as active:', error);
@@ -105,13 +92,11 @@ export const setResumeAsActive = async (resumeId: string): Promise<void> => {
     }
 };
 
-// Update a resume version
 export const updateResumeVersion = async (
     resumeId: string,
     updates: { fileName?: string; description?: string }
 ): Promise<Models.Document & ResumeVersion> => {
     try {
-        // Update the document
         const result = await databases.updateDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId, updates);
 
         return result as unknown as Models.Document & ResumeVersion;
@@ -121,23 +106,17 @@ export const updateResumeVersion = async (
     }
 };
 
-// Delete a resume version
 export const deleteResumeVersion = async (resumeId: string, fileId: string): Promise<void> => {
     try {
-        // Check if this is the active resume
         const resumeDoc = (await databases.getDocument(
             DATABASE_ID,
             COLLECTION_RESUME_ID,
             resumeId
         )) as unknown as Models.Document & ResumeVersion;
 
-        // Delete the document
         await databases.deleteDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId);
-
-        // Delete the file
         await storage.deleteFile(STORAGE_FILE_BUCKET_ID, fileId);
 
-        // If this was the active resume, set another one as active if available
         if (resumeDoc.isActive) {
             const remainingVersions = await getResumeVersions();
             if (remainingVersions.length > 0) {

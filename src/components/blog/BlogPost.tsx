@@ -1,60 +1,67 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Models } from 'appwrite';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {
-    getBlogPostBySlug,
-    BlogPost as BlogPostType,
-    incrementBlogPostViewCount,
-    getContentImagePreviewUrl,
-    SectionVisibility,
-} from '../../services/appwrite';
+import { getBlogPostBySlug, incrementBlogPostViewCount, getContentImagePreviewUrl } from '../../services/appwrite';
 import { LinearProgress, Alert } from '@mui/material';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
 import { routes } from '../../routes/paths';
 import { ImageWithFallback } from '../shared';
+import type {
+    BlogPost as BlogPostType,
+    BlogPostDocument,
+    SectionVisibilityDocument,
+    SectionVisibilityStatus,
+} from '../../types';
+import { BLOG_PREVIEW_STORAGE_KEY, BLOG_VIEW_COUNT_DELAY_MS, shouldRecordBlogView } from '../../utils/blog';
+import { formatBlogDate } from '../../utils/dates';
+import { isSectionVisible } from '../../utils/sectionVisibility';
 import './BlogPost.css';
 
-// Interface for preview blog post
 interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
     isPreview: boolean;
 }
 
 interface BlogPostProps {
-    sectionVisibility: (Models.Document & SectionVisibility) | null;
-    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
+    sectionVisibility: SectionVisibilityDocument | null;
+    sectionVisibilityStatus: SectionVisibilityStatus;
 }
+
+const isPersistedBlogPost = (post: BlogPostDocument | PreviewBlogPost): post is BlogPostDocument => '$id' in post;
 
 const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps) => {
     const { slug } = useParams<{ slug: string }>();
-    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const isPreview = searchParams.get('preview') === 'true' || slug === 'preview';
 
-    const [post, setPost] = useState<(Models.Document & BlogPostType) | PreviewBlogPost | null>(null);
+    const [post, setPost] = useState<BlogPostDocument | PreviewBlogPost | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const canShowBlogs = sectionVisibility ? sectionVisibility.blogs : sectionVisibilityStatus === 'fallback';
+    const canShowBlogs = useMemo(
+        () => isSectionVisible(sectionVisibility, sectionVisibilityStatus, 'blogs'),
+        [sectionVisibility, sectionVisibilityStatus]
+    );
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchData = async () => {
             setIsLoading(true);
+            setError(null);
+            setPost(null);
 
             try {
-                // If blogs are disabled and not in preview mode, don't fetch blog post
                 if (!canShowBlogs && !isPreview) {
                     setError('Blogs section is disabled');
                     setIsLoading(false);
                     return;
                 }
 
-                // Check if this is a preview from session storage (for drafts)
                 if (slug === 'preview') {
                     try {
-                        const previewData = sessionStorage.getItem('preview_blog_post');
+                        const previewData = sessionStorage.getItem(BLOG_PREVIEW_STORAGE_KEY);
                         if (!previewData) {
                             setError('Preview data not found');
                             setIsLoading(false);
@@ -62,7 +69,9 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                         }
 
                         const previewPost = JSON.parse(previewData) as PreviewBlogPost;
-                        setPost(previewPost);
+                        if (isMounted) {
+                            setPost(previewPost);
+                        }
                         setIsLoading(false);
                         return;
                     } catch (err) {
@@ -73,7 +82,6 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                     }
                 }
 
-                // Otherwise load from database
                 if (!slug) {
                     setIsLoading(false);
                     return;
@@ -81,7 +89,10 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
 
                 const blogPost = await getBlogPostBySlug(slug);
 
-                // If post not found or not published (and not in preview mode), show not found
+                if (!isMounted) {
+                    return;
+                }
+
                 if (!blogPost || (!blogPost.published && !isPreview)) {
                     setError('Post not found');
                     setIsLoading(false);
@@ -89,51 +100,41 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                 }
 
                 setPost(blogPost);
-
-                // Only increment view count if not in preview mode
-                if (!isPreview) {
-                    // Improved view counting logic
-                    const handleViewCount = () => {
-                        // Skip counting in development mode
-                        if (import.meta.env.DEV) return;
-
-                        // Get viewed posts from localStorage
-                        const viewedPosts = JSON.parse(localStorage.getItem('henry-blog-viewed-posts') || '{}');
-                        const lastViewedTime = viewedPosts[blogPost.$id] || 0;
-                        const currentTime = Date.now();
-
-                        // Only count a view if it's been more than 24 hours since the last view
-                        // or if the post has never been viewed
-                        if (!lastViewedTime || currentTime - lastViewedTime > 24 * 60 * 60 * 1000) {
-                            // Record this view with the current timestamp
-                            viewedPosts[blogPost.$id] = currentTime;
-                            localStorage.setItem('henry-blog-viewed-posts', JSON.stringify(viewedPosts));
-
-                            // Increment the view count in the database
-                            incrementBlogPostViewCount(blogPost.$id);
-                        }
-                    };
-
-                    // Add a small delay to ensure the page is actually viewed
-                    // This helps avoid counting accidental or bounce views
-                    const timer = setTimeout(handleViewCount, 10000);
-                    return () => clearTimeout(timer);
-                }
             } catch (err) {
                 console.error('Error fetching blog post:', err);
-                setError('Failed to load blog post');
+                if (isMounted) {
+                    setError('Failed to load blog post');
+                }
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
         };
 
-        // Only fetch data when sectionVisibility is loaded or fallback mode is active
         if (sectionVisibilityStatus !== 'loading') {
-            fetchData();
+            void fetchData();
         }
-    }, [slug, navigate, isPreview, canShowBlogs, sectionVisibilityStatus]);
 
-    // Continue showing loading state until sectionVisibility is loaded
+        return () => {
+            isMounted = false;
+        };
+    }, [slug, isPreview, canShowBlogs, sectionVisibilityStatus]);
+
+    useEffect(() => {
+        if (!post || isPreview || import.meta.env.DEV || !isPersistedBlogPost(post)) {
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            if (shouldRecordBlogView(post.$id)) {
+                void incrementBlogPostViewCount(post.$id);
+            }
+        }, BLOG_VIEW_COUNT_DELAY_MS);
+
+        return () => window.clearTimeout(timer);
+    }, [isPreview, post]);
+
     if (isLoading) {
         return (
             <div className="blog-page-wrapper">
@@ -147,7 +148,6 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
         );
     }
 
-    // If blogs are disabled and not in preview mode, show the NotFound page
     if (!canShowBlogs && !isPreview) {
         return <NotFound />;
     }
@@ -176,19 +176,12 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                     <h1 className="blog-post-title">{post.title}</h1>
 
                     <div className="blog-post-meta">
-                        <span className="blog-post-date">
-                            {new Date(post.publishedDate).toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                timeZone: 'UTC',
-                            })}
-                        </span>
+                        <span className="blog-post-date">{formatBlogDate(post.publishedDate)}</span>
 
                         {post.tags && post.tags.length > 0 && (
                             <div className="blog-post-tags">
                                 {post.tags.map((tag, index) => (
-                                    <span key={index} className="blog-post-tag">
+                                    <span key={`${tag}-${index}`} className="blog-post-tag">
                                         {tag}
                                     </span>
                                 ))}
@@ -196,7 +189,11 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                         )}
 
                         <div className="blog-post-views">
-                            <p>{isPreview ? 'Preview' : `${post.viewCount || 0} views`}</p>
+                            <p>
+                                {isPreview || !isPersistedBlogPost(post)
+                                    ? 'Preview'
+                                    : `${post.viewCount || 0} views`}
+                            </p>
                         </div>
                     </div>
 

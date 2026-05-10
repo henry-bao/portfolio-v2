@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Models } from 'appwrite';
-import { SectionVisibility } from './services/appwrite';
 import { useProfileData } from './hooks/useAppwriteData';
 import { getFileUrl } from './services/fileProxy';
+import type { SectionVisibility, SectionVisibilityDocument, SectionVisibilityStatus } from './types';
+import { classNames } from './utils/classNames';
+import { isSectionVisible } from './utils/sectionVisibility';
 
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
@@ -14,8 +15,8 @@ import Blog from './components/sections/Blog';
 import './Portfolio.css';
 
 interface PortfolioProps {
-    sectionVisibility: (Models.Document & SectionVisibility) | null;
-    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
+    sectionVisibility: SectionVisibilityDocument | null;
+    sectionVisibilityStatus: SectionVisibilityStatus;
 }
 
 type FooterMode = 'entering' | 'fixed' | 'exiting' | 'normal';
@@ -29,13 +30,11 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
     const resumeUrl = profile?.resumeFileId ? getFileUrl(profile.resumeFileId) : null;
     const footerClassName =
         footerMode !== 'normal'
-            ? [
+            ? classNames(
                   'footer--fixed-loading',
-                  footerMode === 'entering' ? 'footer--fixed-loading-enter' : '',
-                  footerMode === 'exiting' ? 'footer--fixed-loading-exit' : '',
-              ]
-                  .filter(Boolean)
-                  .join(' ')
+                  footerMode === 'entering' && 'footer--fixed-loading-enter',
+                  footerMode === 'exiting' && 'footer--fixed-loading-exit'
+              )
         : undefined;
 
     useEffect(() => {
@@ -123,22 +122,17 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
         };
     }, [isPageContentLoading]);
 
-    const isSectionVisible = (section: keyof SectionVisibility) => {
-        if (sectionVisibilityStatus === 'loading') {
-            return false;
-        }
-
-        return sectionVisibility ? sectionVisibility[section] : sectionVisibilityStatus === 'fallback';
-    };
+    const canShowSection = (section: keyof SectionVisibility) =>
+        isSectionVisible(sectionVisibility, sectionVisibilityStatus, section);
 
     return (
         <>
             <Navbar sectionVisibility={sectionVisibility} sectionVisibilityStatus={sectionVisibilityStatus} />
             <main>
                 <Landing />
-                {isSectionVisible('about') && <About loading={profileLoading} profile={profile} />}
-                {isSectionVisible('projects') && <Projects />}
-                {isSectionVisible('blogs') && <Blog />}
+                {canShowSection('about') && <About loading={profileLoading} profile={profile} />}
+                {canShowSection('projects') && <Projects />}
+                {canShowSection('blogs') && <Blog />}
             </main>
             <Footer
                 className={footerClassName}

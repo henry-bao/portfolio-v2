@@ -27,6 +27,7 @@ import type { ProjectDocument } from '../../types';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { Models } from 'appwrite';
 import { routes } from '../../routes/paths';
+import { useObjectUrl } from '../../hooks';
 
 const ProjectEditor = () => {
     const { projectId } = useParams();
@@ -39,7 +40,6 @@ const ProjectEditor = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Form fields
     const [title, setTitle] = useState('');
     const [role, setRole] = useState('');
     const [date, setDate] = useState('');
@@ -48,9 +48,10 @@ const ProjectEditor = () => {
     const [linkUrl, setLinkUrl] = useState('');
     const [linkText, setLinkText] = useState('Click here to learn more');
 
-    // Logo upload
     const [logo, setLogo] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const logoObjectUrl = useObjectUrl(logo);
+    const displayedLogoPreview = logoObjectUrl || logoPreview;
 
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(true);
 
@@ -66,7 +67,6 @@ const ProjectEditor = () => {
                 const projectData = await getProject(projectId as string);
                 setProject(projectData);
 
-                // Populate form fields
                 setTitle(projectData.title);
                 setRole(projectData.role);
                 setDate(projectData.date);
@@ -76,7 +76,6 @@ const ProjectEditor = () => {
                 if (projectData.link_url) setLinkUrl(projectData.link_url);
                 if (projectData.link_text) setLinkText(projectData.link_text);
 
-                // Load logo preview if exists
                 if (projectData.logoFileId) {
                     const logoUrl = getFilePreviewUrl(projectData.logoFileId);
                     setLogoPreview(logoUrl);
@@ -94,9 +93,7 @@ const ProjectEditor = () => {
 
     const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setLogo(file);
-            setLogoPreview(URL.createObjectURL(file));
+            setLogo(e.target.files[0]);
         }
     };
 
@@ -119,7 +116,6 @@ const ProjectEditor = () => {
     };
 
     const handleSave = async () => {
-        // Validate form
         if (!title.trim() || !role.trim() || !date.trim() || description.some((item) => !item.trim())) {
             setError('Please fill in all required fields');
             return;
@@ -132,19 +128,15 @@ const ProjectEditor = () => {
         try {
             let logoFileId = project?.logoFileId;
 
-            // Upload new logo if changed
             if (logo) {
-                // Delete old logo if exists
                 if (logoFileId) {
                     await deleteFile(logoFileId);
                 }
 
-                // Upload new logo
                 const uploadResult = await uploadFile(logo);
                 logoFileId = uploadResult.$id;
             }
 
-            // Prepare project data
             const projectData: ProjectData = {
                 title,
                 role,
@@ -154,25 +146,18 @@ const ProjectEditor = () => {
                 logoFileId,
             };
 
-            // Add link if provided
             if (linkUrl.trim()) {
                 projectData.link_url = linkUrl;
                 projectData.link_text = linkText || 'Click here to learn more';
             }
 
-            let result;
-            if (isNewProject) {
-                // Create new project
-                result = await createProject(projectData);
-            } else {
-                // Update existing project
-                result = await updateProject(projectId as string, projectData);
-            }
+            const result = isNewProject
+                ? await createProject(projectData)
+                : await updateProject(projectId as string, projectData);
 
             setSuccess(`Project ${isNewProject ? 'created' : 'updated'} successfully`);
 
             if (isNewProject) {
-                // Redirect to edit page after creation
                 setTimeout(() => {
                     navigate(routes.admin.projectEdit(result.$id));
                 }, 1500);
@@ -222,7 +207,6 @@ const ProjectEditor = () => {
 
             <Paper sx={{ p: 3 }}>
                 <Grid container spacing={3}>
-                    {/* Basic Information */}
                     <Grid item xs={12}>
                         <Typography variant="h6" gutterBottom>
                             Basic Information
@@ -270,7 +254,6 @@ const ProjectEditor = () => {
                         </Grid>
                     </Grid>
 
-                    {/* Project Description */}
                     <Grid item xs={12}>
                         <Box display="flex" justifyContent="space-between" alignItems="center">
                             <Typography variant="h6" gutterBottom>
@@ -318,7 +301,6 @@ const ProjectEditor = () => {
                         </Collapse>
                     </Grid>
 
-                    {/* Project Link */}
                     <Grid item xs={12}>
                         <Typography variant="h6" gutterBottom>
                             Project Link (Optional)
@@ -349,17 +331,16 @@ const ProjectEditor = () => {
                         </Grid>
                     </Grid>
 
-                    {/* Project Logo */}
                     <Grid item xs={12}>
                         <Typography variant="h6" gutterBottom>
                             Project Logo
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
-                        {logoPreview && (
+                        {displayedLogoPreview && (
                             <Box mb={2}>
                                 <img
-                                    src={logoPreview}
+                                    src={displayedLogoPreview}
                                     alt="Logo Preview"
                                     style={{
                                         maxWidth: '200px',
@@ -377,7 +358,6 @@ const ProjectEditor = () => {
                         </Button>
                     </Grid>
 
-                    {/* Save Button */}
                     <Grid item xs={12}>
                         <Box display="flex" justifyContent="flex-end" mt={2}>
                             <Button

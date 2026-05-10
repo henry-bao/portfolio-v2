@@ -44,6 +44,7 @@ import {
     updateResumeVersion,
     ResumeVersion,
 } from '../../services/resumeService';
+import { formatShortDateTime } from '../../utils/dates';
 
 const ResumeManager = () => {
     const [resumeVersions, setResumeVersions] = useState<(Models.Document & ResumeVersion)[]>([]);
@@ -59,14 +60,11 @@ const ResumeManager = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSettingActive, setIsSettingActive] = useState(false);
 
-    // Edit resume state
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [resumeToEdit, setResumeToEdit] = useState<(Models.Document & ResumeVersion) | null>(null);
-    // const [editFileName, setEditFileName] = useState('');
     const [editDescription, setEditDescription] = useState('');
     const [isEditing, setIsEditing] = useState(false);
 
-    // Responsive design hooks
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
@@ -158,7 +156,6 @@ const ResumeManager = () => {
 
     const handleEditClick = (resume: Models.Document & ResumeVersion) => {
         setResumeToEdit(resume);
-        // setEditFileName(resume.fileName);
         setEditDescription(resume.description || '');
         setEditDialogOpen(true);
     };
@@ -166,7 +163,6 @@ const ResumeManager = () => {
     const handleEditCancel = () => {
         setEditDialogOpen(false);
         setResumeToEdit(null);
-        // setEditFileName('');
         setEditDescription('');
     };
 
@@ -179,13 +175,11 @@ const ResumeManager = () => {
 
         try {
             await updateResumeVersion(resumeToEdit.$id, {
-                // fileName: editFileName,
                 description: editDescription,
             });
             setSuccess('Resume updated successfully');
             setEditDialogOpen(false);
             setResumeToEdit(null);
-            // setEditFileName('');
             setEditDescription('');
             await fetchResumeVersions();
         } catch (error) {
@@ -211,17 +205,6 @@ const ResumeManager = () => {
         } finally {
             setIsSettingActive(false);
         }
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
     };
 
     return (
@@ -318,7 +301,7 @@ const ResumeManager = () => {
                                             )}
                                         </TableCell>
                                         <TableCell sx={{ wordBreak: 'break-word' }}>{resume.fileName}</TableCell>
-                                        {!isMobile && <TableCell>{formatDate(resume.uploadDate)}</TableCell>}
+                                        {!isMobile && <TableCell>{formatShortDateTime(resume.uploadDate)}</TableCell>}
                                         {!isTablet && <TableCell>{resume.description || '-'}</TableCell>}
                                         <TableCell align="right">
                                             <Box
@@ -364,7 +347,6 @@ const ResumeManager = () => {
                 </TableContainer>
             </Paper>
 
-            {/* Upload Dialog */}
             <Dialog open={uploadDialogOpen} onClose={handleUploadCancel}>
                 <DialogTitle>Upload New Resume</DialogTitle>
                 <DialogContent>
@@ -402,7 +384,6 @@ const ResumeManager = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Delete Confirmation Dialog */}
             <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
                 <DialogTitle>Delete Resume Version</DialogTitle>
                 <DialogContent>
@@ -425,7 +406,6 @@ const ResumeManager = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Edit Dialog */}
             <Dialog
                 open={editDialogOpen}
                 onClose={handleEditCancel}
@@ -447,16 +427,6 @@ const ResumeManager = () => {
                     <DialogContentText sx={{ mb: 2 }}>
                         Edit the file description for this resume version.
                     </DialogContentText>
-                    {/*
-                    <TextField
-                        fullWidth
-                        label="File Name"
-                        value={editFileName}
-                        onChange={(e) => setEditFileName(e.target.value)}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-                    */}
                     <TextField
                         fullWidth
                         label="Description (optional)"
@@ -475,7 +445,6 @@ const ResumeManager = () => {
                     <Button
                         onClick={handleEditConfirm}
                         color="primary"
-                        // disabled={isEditing || !editFileName.trim()}
                         startIcon={isEditing ? <CircularProgress size={20} /> : <SaveIcon />}
                     >
                         {isEditing ? 'Saving...' : 'Save'}

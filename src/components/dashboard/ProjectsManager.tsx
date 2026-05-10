@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -57,7 +57,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { routes } from '../../routes/paths';
 
-// Sortable Table Row component
 interface SortableTableRowProps {
     id: string;
     project: Models.Document & ProjectData;
@@ -132,7 +131,6 @@ const SortableTableRow = ({
     );
 };
 
-// Sortable Card component for mobile/tablet view
 interface SortableCardProps {
     id: string;
     project: Models.Document & ProjectData;
@@ -159,12 +157,11 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
             sx={{
                 width: '100%',
                 overflow: 'hidden',
-                touchAction: 'pan-y', // Allow vertical touch scrolling
+                touchAction: 'pan-y',
             }}
         >
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    {/* Only the drag handle has touchAction: 'none' */}
                     <IconButton
                         {...attributes}
                         {...listeners}
@@ -172,7 +169,7 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
                         sx={{
                             cursor: 'grab',
                             color: 'text.secondary',
-                            touchAction: 'none', // Disable touch scrolling only on the drag handle
+                            touchAction: 'none',
                             flexShrink: 0,
                         }}
                     >
@@ -234,7 +231,6 @@ const SortableCard = ({ id, project, projectImages, onEdit, onDelete }: Sortable
 
 const ProjectsManager = () => {
     const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
-    const [projectImages, setProjectImages] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -245,15 +241,22 @@ const ProjectsManager = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
+    const projectImages = useMemo(
+        () =>
+            Object.fromEntries(
+                projects
+                    .filter((project) => Boolean(project.logoFileId))
+                    .map((project) => [project.$id, getFilePreviewUrl(project.logoFileId as string, 40, 40)])
+            ),
+        [projects]
+    );
 
-    // Set up sensors for drag and drop with improved touch handling
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            // Increased distance for touch devices to differentiate between dragging and scrolling
             activationConstraint: {
-                distance: 10, // Increase this value to require more movement before drag starts
-                tolerance: 5, // Add tolerance to help with touch precision
-                delay: 150, // Short delay to help determine user intent
+                distance: 10,
+                tolerance: 5,
+                delay: 150,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -261,26 +264,19 @@ const ProjectsManager = () => {
         })
     );
 
-    useEffect(() => {
-        fetchProjects();
-    }, []);
-
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         setIsLoading(true);
         try {
             const projectsList = await getProjects();
 
-            // Check if any projects are missing the order property
             const hasUnorderedProjects = projectsList.some((project) => project.order === undefined);
 
             if (hasUnorderedProjects) {
-                // Initialize order for projects that don't have it
                 const projectsWithOrder = [...projectsList].map((project, index) => ({
                     ...project,
                     order: project.order !== undefined ? project.order : index,
                 }));
 
-                // Update the order in the database for projects that don't have it
                 const updatePromises = projectsWithOrder
                     .filter(
                         (project) =>
@@ -291,7 +287,6 @@ const ProjectsManager = () => {
 
                 if (updatePromises.length > 0) {
                     await Promise.all(updatePromises);
-                    // Refetch projects after updating orders
                     const updatedProjectsList = await getProjects();
                     setProjects(updatedProjectsList);
                 } else {
@@ -301,23 +296,19 @@ const ProjectsManager = () => {
                 setProjects(projectsList);
             }
 
-            // Get image URLs for all projects
-            const imageUrls: Record<string, string> = {};
-            for (const project of projectsList) {
-                if (project.logoFileId) {
-                    imageUrls[project.$id] = getFilePreviewUrl(project.logoFileId, 40, 40);
-                }
-            }
-            setProjectImages(imageUrls);
         } catch (error) {
             console.error('Error fetching projects:', error);
             setError('Failed to load projects');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const handleDragEnd = async (event: DragEndEvent) => {
+    useEffect(() => {
+        void fetchProjects();
+    }, [fetchProjects]);
+
+    const handleDragEnd = useCallback(async (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (!over || active.id === over.id) {
@@ -326,15 +317,12 @@ const ProjectsManager = () => {
 
         setIsUpdatingOrder(true);
         try {
-            // Find the indices of the dragged item and the drop target
             const oldIndex = projects.findIndex((project) => project.$id === active.id);
             const newIndex = projects.findIndex((project) => project.$id === over.id);
 
-            // Update the projects array with the new order
             const updatedProjects = arrayMove(projects, oldIndex, newIndex);
             setProjects(updatedProjects);
 
-            // Update the order property for each project
             const updatePromises = updatedProjects.map((project, index) =>
                 updateProject(project.$id, { order: index })
             );
@@ -343,15 +331,14 @@ const ProjectsManager = () => {
         } catch (error) {
             console.error('Error updating project order:', error);
             setError('Failed to update project order');
-            // Revert to original order by refetching
-            fetchProjects();
+            void fetchProjects();
         } finally {
             setIsUpdatingOrder(false);
         }
-    };
+    }, [fetchProjects, projects]);
 
     const handleEditProject = (projectId: string) => {
-        navigate(`/admin/projects/edit/${projectId}`);
+        navigate(routes.admin.projectEdit(projectId));
     };
 
     const handleDeleteClick = (projectId: string) => {
@@ -381,13 +368,11 @@ const ProjectsManager = () => {
         setProjectToDelete(null);
     };
 
-    // Card view for mobile and tablet
     const renderCardView = () => (
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
-            // Improved configuration for touch devices
             autoScroll={{
                 threshold: {
                     x: 0.05,
@@ -401,7 +386,7 @@ const ProjectsManager = () => {
                 <Stack
                     spacing={2}
                     sx={{
-                        touchAction: 'pan-y', // Enable vertical scrolling on touch
+                        touchAction: 'pan-y',
                         overflowY: 'auto',
                         width: '100%',
                     }}
@@ -431,7 +416,6 @@ const ProjectsManager = () => {
         </DndContext>
     );
 
-    // Table view for desktop
     const renderTableView = () => (
         <TableContainer
             sx={{
@@ -476,20 +460,18 @@ const ProjectsManager = () => {
                             sensors={sensors}
                             collisionDetection={closestCenter}
                             onDragEnd={handleDragEnd}
-                            // Add configuration to prevent out-of-bounds issues
                             autoScroll={{
                                 threshold: {
-                                    x: 0, // Disable horizontal scrolling
-                                    y: 0.2, // Reduce vertical scroll sensitivity
+                                    x: 0,
+                                    y: 0.2,
                                 },
-                                acceleration: 5, // Slower acceleration
-                                interval: 5, // More frequent but smaller scrolls
+                                acceleration: 5,
+                                interval: 5,
                             }}
-                            // Use a custom modifier to restrict movement to vertical axis only
                             modifiers={[
                                 ({ transform }) => ({
                                     ...transform,
-                                    x: 0, // Lock horizontal movement
+                                    x: 0,
                                 }),
                             ]}
                         >
@@ -553,11 +535,9 @@ const ProjectsManager = () => {
             )}
 
             <Paper sx={{ p: { xs: 2, md: 0 }, mb: 3, width: '100%', overflow: 'hidden' }}>
-                {/* Card view for mobile/tablet, Table view for desktop */}
                 {isTablet ? renderCardView() : renderTableView()}
             </Paper>
 
-            {/* Delete Confirmation Dialog */}
             <Dialog
                 open={deleteDialogOpen}
                 onClose={handleDeleteCancel}

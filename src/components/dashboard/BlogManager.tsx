@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -40,12 +40,15 @@ import {
 } from '@mui/icons-material';
 import { getBlogPosts, deleteBlogPost, updateBlogPost } from '../../services/appwrite';
 import { getBlogDrafts, removeBlogDraft } from '../../services/blogDraftStorage';
+import type { DraftBlogPost } from '../../services/blogDraftStorage';
+import type { BlogPostDocument } from '../../types';
 import { routes } from '../../routes/paths';
+import { BLOG_PREVIEW_STORAGE_KEY } from '../../utils/blog';
+import { formatBlogDate, formatLocalDateTime } from '../../utils/dates';
 
-// Combined type for displaying both database posts and drafts
 interface DisplayBlogPost {
     $id: string;
-    id?: string; // Used for drafts that correspond to existing posts
+    id?: string;
     title: string;
     summary: string;
     slug: string;
@@ -54,9 +57,105 @@ interface DisplayBlogPost {
     viewCount?: number;
     status: 'published' | 'unpublished' | 'draft';
     isDraft: boolean;
-    hasDraft?: boolean; // Indicates if a published post has a draft version
+    hasDraft?: boolean;
     lastSaved?: string;
 }
+
+const isNewDraftId = (id?: string) => Boolean(id?.startsWith('new-'));
+
+const mapDatabasePost = (post: BlogPostDocument): DisplayBlogPost => ({
+    $id: post.$id,
+    title: post.title,
+    summary: post.summary,
+    slug: post.slug,
+    publishedDate: post.publishedDate,
+    tags: post.tags,
+    viewCount: post.viewCount,
+    status: post.published ? 'published' : 'unpublished',
+    isDraft: false,
+});
+
+const mapDraftPost = (draft: DraftBlogPost, index: number): DisplayBlogPost => ({
+    $id: draft.id || `draft-${index}`,
+    id: draft.id,
+    title: draft.title || 'Untitled Draft',
+    summary: draft.summary || '',
+    slug: draft.slug || '',
+    publishedDate: draft.publishedDate || new Date().toISOString(),
+    tags: draft.tags,
+    status: 'draft',
+    isDraft: true,
+    lastSaved: draft.lastSaved,
+});
+
+const buildDisplayPosts = (dbPosts: BlogPostDocument[], drafts: DraftBlogPost[]) => {
+    const formattedDbPosts = dbPosts.map(mapDatabasePost);
+    const draftPosts = drafts.map(mapDraftPost);
+    const dbPostIds = new Set(formattedDbPosts.map((post) => post.$id));
+    const newDrafts = draftPosts.filter((draft) => isNewDraftId(draft.id));
+    const existingPostDrafts = draftPosts.filter((draft) => draft.id && !isNewDraftId(draft.id) && dbPostIds.has(draft.id));
+    const draftsByPostId = new Map(existingPostDrafts.map((draft) => [draft.id, draft]));
+    const postsWithDrafts = formattedDbPosts.map((post) =>
+        draftsByPostId.has(post.$id) ? { ...post, hasDraft: true } : post
+    );
+
+    return [...postsWithDrafts, ...newDrafts].sort((a, b) => {
+        const getTimestamp = (item: DisplayBlogPost) => {
+            if (item.isDraft && item.lastSaved) {
+                return new Date(item.lastSaved).getTime();
+            }
+
+            if (!item.isDraft && item.hasDraft && draftsByPostId.has(item.$id)) {
+                return new Date(draftsByPostId.get(item.$id)?.lastSaved || item.publishedDate).getTime();
+            }
+
+            return new Date(item.publishedDate).getTime();
+        };
+
+        return getTimestamp(b) - getTimestamp(a);
+    });
+};
+
+const getPostDisplayDate = (post: DisplayBlogPost) =>
+    post.isDraft && post.lastSaved ? `Last edited: ${formatLocalDateTime(post.lastSaved)}` : formatBlogDate(post.publishedDate);
+
+const matchesSearch = (post: DisplayBlogPost, searchTerm: string) => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+        return true;
+    }
+
+    return (
+        post.title.toLowerCase().includes(normalizedSearch) ||
+        post.summary.toLowerCase().includes(normalizedSearch) ||
+        Boolean(post.tags?.some((tag) => tag.toLowerCase().includes(normalizedSearch)))
+    );
+};
+
+const BlogStatusChip = ({ post }: { post: DisplayBlogPost }) => {
+    if (post.isDraft && !isNewDraftId(post.id)) {
+        return <Chip size="small" color="warning" label="Modified" />;
+    }
+
+    if (post.isDraft) {
+        return <Chip size="small" color="warning" label="Draft" />;
+    }
+
+    if (post.status === 'published') {
+        return <Chip size="small" color="success" label="Published" />;
+    }
+
+    return <Chip size="small" color="default" label="Unpublished" />;
+};
+
+const BlogTags = ({ tags }: { tags?: string[] }) => (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: '200px' }}>
+        {tags?.map((tag, index) => (
+            <Chip key={`${tag}-${index}`} label={tag} size="small" sx={{ fontSize: '0.7rem', height: '22px' }} />
+        ))}
+    </Box>
+);
 
 const BlogManager = () => {
     const navigate = useNavigate();
@@ -75,91 +174,31 @@ const BlogManager = () => {
         severity: 'success' as 'success' | 'error',
     });
 
-    useEffect(() => {
-        const loadAllPosts = async () => {
-            setIsLoading(true);
-            try {
-                // Load posts from database
-                const dbPosts = await getBlogPosts(false); // Get all posts including unpublished
-
-                const drafts = getBlogDrafts();
-
-                // Format database posts for display
-                const formattedDbPosts: DisplayBlogPost[] = dbPosts.map((post) => ({
-                    $id: post.$id,
-                    title: post.title,
-                    summary: post.summary,
-                    slug: post.slug,
-                    publishedDate: post.publishedDate,
-                    tags: post.tags,
-                    viewCount: post.viewCount,
-                    status: post.published ? 'published' : 'unpublished',
-                    isDraft: false,
-                }));
-
-                // Format drafts for display
-                const draftPosts: DisplayBlogPost[] = drafts.map((draft, index) => ({
-                    $id: draft.id || `draft-${index}`,
-                    id: draft.id,
-                    title: draft.title || 'Untitled Draft',
-                    summary: draft.summary || '',
-                    slug: draft.slug || '',
-                    publishedDate: draft.publishedDate || new Date().toISOString(),
-                    tags: draft.tags,
-                    status: 'draft',
-                    isDraft: true,
-                    lastSaved: draft.lastSaved,
-                }));
-
-                // Merge database posts and drafts
-                // For drafts of existing posts, we want to show both the published version and the draft
-                const dbPostIds = new Set(formattedDbPosts.map((post) => post.$id));
-
-                // First filter out purely new drafts (those with 'new-' prefix)
-                const newDrafts = draftPosts.filter((draft) => draft.id?.startsWith('new-'));
-
-                // Then find drafts for existing posts
-                const existingPostDrafts = draftPosts.filter(
-                    (draft) => draft.id && !draft.id.startsWith('new-') && dbPostIds.has(draft.id)
-                );
-
-                // Create a modified version of existing posts to show their draft status
-                const postsWithDrafts = formattedDbPosts.map((post) => {
-                    const hasDraft = existingPostDrafts.some((draft) => draft.id === post.$id);
-                    return hasDraft ? { ...post, hasDraft: true } : post;
-                });
-
-                // Combine all posts: published/unpublished without drafts, published/unpublished with drafts, and new drafts
-                const combinedPosts = [...postsWithDrafts, ...newDrafts];
-
-                // Sort by last modified date
-                combinedPosts.sort((a, b) => {
-                    const draftsMap = new Map(existingPostDrafts.map((d) => [d.id, d]));
-
-                    // For posts with drafts, use the draft's last saved time
-                    const getDateForItem = (item: DisplayBlogPost) => {
-                        if (item.isDraft && item.lastSaved) {
-                            return new Date(item.lastSaved).getTime();
-                        } else if (!item.isDraft && item.hasDraft && item.$id && draftsMap.has(item.$id)) {
-                            return new Date(draftsMap.get(item.$id)?.lastSaved || item.publishedDate).getTime();
-                        }
-                        return new Date(item.publishedDate).getTime();
-                    };
-
-                    return getDateForItem(b) - getDateForItem(a);
-                });
-
-                setAllPosts(combinedPosts);
-            } catch (error) {
-                console.error('Error fetching blog posts:', error);
-                showSnackbar('Failed to load blog posts', 'error');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadAllPosts();
+    const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
+        setSnackbar({
+            open: true,
+            message,
+            severity,
+        });
     }, []);
+
+    const loadAllPosts = useCallback(async () => {
+        setIsLoading(true);
+
+        try {
+            const [dbPosts, drafts] = await Promise.all([getBlogPosts(false), Promise.resolve(getBlogDrafts())]);
+            setAllPosts(buildDisplayPosts(dbPosts, drafts));
+        } catch (error) {
+            console.error('Error fetching blog posts:', error);
+            showSnackbar('Failed to load blog posts', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showSnackbar]);
+
+    useEffect(() => {
+        void loadAllPosts();
+    }, [loadAllPosts]);
 
     const handleDeleteClick = (post: DisplayBlogPost) => {
         setSelectedPost(post);
@@ -174,12 +213,10 @@ const BlogManager = () => {
                 removeBlogDraft(selectedPost.id || selectedPost.$id);
                 showSnackbar('Draft deleted successfully', 'success');
             } else {
-                // Delete from database
                 await deleteBlogPost(selectedPost.$id);
                 showSnackbar('Blog post deleted successfully', 'success');
             }
 
-            // Remove from UI
             setAllPosts((prev) => prev.filter((post) => post.$id !== selectedPost.$id));
         } catch (error) {
             console.error('Error deleting blog post:', error);
@@ -197,7 +234,6 @@ const BlogManager = () => {
 
     const handlePublishToggle = async (post: DisplayBlogPost) => {
         if (post.isDraft) {
-            // Can't publish a draft directly
             showSnackbar('Save draft to database before publishing', 'error');
             return;
         }
@@ -229,26 +265,19 @@ const BlogManager = () => {
     };
 
     const handleNewPost = () => {
-        // Instead of clearing drafts, just navigate to new post page
-        // We'll handle this in the BlogEditor component
         navigate(routes.admin.blogNew);
     };
 
     const handleEditPost = (post: DisplayBlogPost) => {
         if (post.isDraft && post.id) {
-            if (post.id.startsWith('new-')) {
-                // This is a new draft, navigate to new post page with query parameter
+            if (isNewDraftId(post.id)) {
                 navigate(routes.admin.blogNewWithDraft(post.id));
             } else {
-                // This is a draft of an existing post
                 navigate(routes.admin.blogEdit(post.$id));
             }
         } else if (post.hasDraft) {
-            // This is a published post with unsaved changes (draft)
-            // Navigate to its edit page - the draft will be loaded automatically
             navigate(routes.admin.blogEdit(post.$id));
         } else {
-            // Regular database post without draft
             navigate(routes.admin.blogEdit(post.$id));
         }
     };
@@ -258,15 +287,13 @@ const BlogManager = () => {
     };
 
     const handlePreviewPost = (post: DisplayBlogPost) => {
-        // For drafts, first set the preview post
         if (post.isDraft) {
             const drafts = getBlogDrafts();
             const draftContent = drafts.find((draft) => (post.id && draft.id === post.id) || post.$id === draft.id);
 
             if (draftContent) {
-                // Store in session storage for the preview page to access
                 sessionStorage.setItem(
-                    'preview_blog_post',
+                    BLOG_PREVIEW_STORAGE_KEY,
                     JSON.stringify({
                         title: draftContent.title,
                         content: draftContent.content,
@@ -279,31 +306,19 @@ const BlogManager = () => {
                     })
                 );
 
-                // Open in a new tab
                 window.open(routes.blogPostBySlug('preview'), '_blank');
             } else {
                 showSnackbar('Could not find draft content to preview', 'error');
             }
         } else {
-            // For published posts, just open the existing post
             window.open(`${routes.blogPostBySlug(post.slug)}?preview=true`, '_blank');
         }
     };
 
-    const filteredPosts = allPosts.filter(
-        (post) =>
-            post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (post.tags && post.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+    const filteredPosts = useMemo(
+        () => allPosts.filter((post) => matchesSearch(post, searchTerm)),
+        [allPosts, searchTerm]
     );
-
-    const showSnackbar = (message: string, severity: 'success' | 'error') => {
-        setSnackbar({
-            open: true,
-            message,
-            severity,
-        });
-    };
 
     const handleCloseSnackbar = () => {
         setSnackbar((prev) => ({
@@ -312,21 +327,6 @@ const BlogManager = () => {
         }));
     };
 
-    const getStatusChip = (post: DisplayBlogPost) => {
-        if (post.isDraft && !post.id?.startsWith('new-')) {
-            // This is a draft of an existing post
-            return <Chip size="small" color="warning" label="Modified" />;
-        } else if (post.isDraft) {
-            // This is a new draft
-            return <Chip size="small" color="warning" label="Draft" />;
-        } else if (post.status === 'published') {
-            return <Chip size="small" color="success" label="Published" />;
-        } else {
-            return <Chip size="small" color="default" label="Unpublished" />;
-        }
-    };
-
-    // Card view for mobile and tablet
     const renderCardView = () => (
         <Stack spacing={2} mt={2}>
             {filteredPosts.map((post) => (
@@ -344,17 +344,10 @@ const BlogManager = () => {
                             }}
                         >
                             <Typography variant="body2" color="text.secondary">
-                                {post.isDraft && post.lastSaved
-                                    ? `Last edited: ${new Date(post.lastSaved).toLocaleString()}`
-                                    : new Date(post.publishedDate).toLocaleString('en-US', {
-                                          year: 'numeric',
-                                          month: 'long',
-                                          day: 'numeric',
-                                          timeZone: 'UTC',
-                                      })}
+                                {getPostDisplayDate(post)}
                             </Typography>
 
-                            {getStatusChip(post)}
+                            <BlogStatusChip post={post} />
                         </Box>
 
                         {post.hasDraft && (
@@ -369,33 +362,7 @@ const BlogManager = () => {
                             </Typography>
                         )}
 
-                        {post.isDraft && post.lastSaved && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                Last edited: {new Date(post.lastSaved).toLocaleString()}
-                            </Typography>
-                        )}
-
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                mb: 1,
-                            }}
-                        >
-                            {post.tags &&
-                                post.tags.map((tag, index) => (
-                                    <Chip
-                                        key={index}
-                                        label={tag}
-                                        size="small"
-                                        sx={{
-                                            fontSize: '0.7rem',
-                                            height: '22px',
-                                        }}
-                                    />
-                                ))}
-                        </Box>
+                        <BlogTags tags={post.tags} />
                     </CardContent>
 
                     <Divider />
@@ -440,7 +407,6 @@ const BlogManager = () => {
         </Stack>
     );
 
-    // Table view for desktop
     const renderTableView = () => (
         <TableContainer>
             <Table>
@@ -459,17 +425,10 @@ const BlogManager = () => {
                         <TableRow key={post.$id}>
                             <TableCell>{post.title}</TableCell>
                             <TableCell>
-                                {post.isDraft && post.lastSaved
-                                    ? `Last edited: ${new Date(post.lastSaved).toLocaleString()}`
-                                    : new Date(post.publishedDate).toLocaleString('en-US', {
-                                          year: 'numeric',
-                                          month: 'long',
-                                          day: 'numeric',
-                                          timeZone: 'UTC',
-                                      })}
+                                {getPostDisplayDate(post)}
                             </TableCell>
                             <TableCell>
-                                {getStatusChip(post)}
+                                <BlogStatusChip post={post} />
                                 {post.hasDraft && (
                                     <Typography color="warning.main" fontSize="0.75rem" paddingTop={0.5}>
                                         Has unsaved changes
@@ -484,27 +443,7 @@ const BlogManager = () => {
                                 )}
                             </TableCell>
                             <TableCell>
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 0.5,
-                                        maxWidth: '200px',
-                                    }}
-                                >
-                                    {post.tags &&
-                                        post.tags.map((tag, index) => (
-                                            <Chip
-                                                key={index}
-                                                label={tag}
-                                                size="small"
-                                                sx={{
-                                                    fontSize: '0.7rem',
-                                                    height: '22px',
-                                                }}
-                                            />
-                                        ))}
-                                </Box>
+                                <BlogTags tags={post.tags} />
                             </TableCell>
                             <TableCell align="right">
                                 <Box>
@@ -623,14 +562,10 @@ const BlogManager = () => {
                         </Typography>
                     </Box>
                 ) : (
-                    <>
-                        {/* Card view for mobile/tablet, Table view for desktop */}
-                        {isTablet ? renderCardView() : renderTableView()}
-                    </>
+                    <>{isTablet ? renderCardView() : renderTableView()}</>
                 )}
             </Paper>
 
-            {/* Delete Confirmation Dialog */}
             <Dialog
                 open={deleteDialogOpen}
                 onClose={handleDeleteCancel}
@@ -652,7 +587,6 @@ const BlogManager = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbar for notifications */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={5000}

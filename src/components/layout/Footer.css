@@ -60,3 +60,15 @@
 .footer > p > a:hover {
     color: #2f7295;
 }
+
+@media (max-width: 768px) {
+    .footer {
+        font-size: 0.8rem;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .footer > p {
+        margin: 3px 0;
+    }
+}

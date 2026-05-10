@@ -1,31 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Models } from 'appwrite';
-import { getBlogPosts, BlogPost, getContentImagePreviewUrl } from '../../services/appwrite';
+import { useBlogPosts } from '../../hooks';
 import { routes } from '../../routes/paths';
-import { ImageWithFallback } from '../shared';
+import { BlogCard } from '../blog/BlogCard';
 import './Blog.css';
 
 const Blog = () => {
-    const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchBlogPosts = async () => {
-            try {
-                // Only fetch published blog posts for the public view
-                // Limit to 3 most recent posts for the section preview
-                const posts = await getBlogPosts(true);
-                setBlogPosts(posts.slice(0, 3));
-            } catch (error) {
-                console.error('Error fetching blog posts:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchBlogPosts();
-    }, []);
+    const { data: blogPostsData, loading: isLoading } = useBlogPosts(true, { initialData: [] });
+    const blogPosts = useMemo(() => (blogPostsData || []).slice(0, 3), [blogPostsData]);
 
     if (isLoading) {
         return (
@@ -48,44 +30,7 @@ const Blog = () => {
                     <>
                         <div className="blog-grid">
                             {blogPosts.map((post) => (
-                                <Link to={routes.blogPostBySlug(post.slug)} key={post.$id} className="blog-card-link">
-                                    <div className="blog-card">
-                                        {post.coverImageId && (
-                                            <div className="blog-card-image">
-                                                <ImageWithFallback
-                                                    src={getContentImagePreviewUrl(post.coverImageId)}
-                                                    fallbackSrc="/img/placeholder.svg"
-                                                    alt={post.title}
-                                                    loading="lazy"
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="blog-card-content">
-                                            <h3 className="blog-title">{post.title}</h3>
-                                            <p className="blog-date">
-                                                {new Date(post.publishedDate).toLocaleString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                    timeZone: 'UTC',
-                                                })}
-                                            </p>
-                                            <p className="blog-summary">{post.summary}</p>
-
-                                            {post.tags && post.tags.length > 0 && (
-                                                <div className="blog-tags">
-                                                    {post.tags.map((tag, index) => (
-                                                        <span key={index} className="blog-tag">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            <div className="blog-read-more">Read more →</div>
-                                        </div>
-                                    </div>
-                                </Link>
+                                <BlogCard key={post.$id} post={post} />
                             ))}
                         </div>
                         <div className="view-all-container">

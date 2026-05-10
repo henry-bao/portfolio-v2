@@ -41,6 +41,8 @@ import { useMarkdownEditor } from '../../hooks/useMarkdownEditor';
 import { useObjectUrl } from '../../hooks/useObjectUrl';
 import { routes } from '../../routes/paths';
 import type { BlogPost, BlogPostDocument } from '../../types';
+import { buildSlug } from '../../utils/blog';
+import { formatLocalDateTime, getTodayInputDate, toInputDate } from '../../utils/dates';
 import {
     BlogContentEditor,
     BlogEditorSkeleton,
@@ -68,17 +70,7 @@ interface EditorSnapshot {
     draftId?: string;
 }
 
-const getTodayInputDate = () => new Date().toISOString().split('T')[0];
-const toInputDate = (date: string) => date.split('T')[0];
 const createDraftId = () => `new-${Date.now()}`;
-
-const buildSlug = (title: string) =>
-    title
-        .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
 
 const BlogEditor = () => {
     const { postId } = useParams();
@@ -168,7 +160,7 @@ const BlogEditor = () => {
         setPublished(Boolean(draft.published));
         setTags(draft.tags || []);
         setCoverImagePreview(draft.hasCoverImage && draft.coverImageUrl ? draft.coverImageUrl : null);
-        setLastSaved(`Draft last saved: ${new Date(draft.lastSaved).toLocaleString()}`);
+        setLastSaved(`Draft last saved: ${formatLocalDateTime(draft.lastSaved)}`);
         setIsDraft(true);
     }, []);
 
@@ -305,7 +297,7 @@ const BlogEditor = () => {
                 coverImageUrl: displayedCoverImagePreview || undefined,
             });
 
-            setLastSaved(`Draft saved: ${new Date().toLocaleString()}`);
+            setLastSaved(`Draft saved: ${formatLocalDateTime(new Date().toISOString())}`);
             setIsDraft(true);
         }, AUTOSAVE_DELAY_MS);
 

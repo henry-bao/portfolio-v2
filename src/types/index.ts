@@ -49,6 +49,7 @@ export type ProfileDocument = Models.Document & ProfileData;
 export type ProjectDocument = Models.Document & ProjectData;
 export type BlogPostDocument = Models.Document & BlogPost;
 export type SectionVisibilityDocument = Models.Document & SectionVisibility;
+export type SectionVisibilityStatus = 'loading' | 'ready' | 'fallback';
 
 // API State types
 export type DataState<T> =

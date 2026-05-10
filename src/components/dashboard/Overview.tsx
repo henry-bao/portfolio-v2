@@ -58,66 +58,66 @@ const Overview = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const profile = await getProfileData();
-                setProfileData(profile);
-            } catch (error) {
-                console.error('Error fetching profile data:', error);
-            } finally {
-                setLoading((prev) => ({ ...prev, profile: false }));
+        let isMounted = true;
+
+        const fetchOverviewData = async () => {
+            const [profileResult, projectsResult, resumesResult, blogsResult, visibilityResult] =
+                await Promise.allSettled([
+                    getProfileData(),
+                    getProjects(),
+                    getResumeVersions(),
+                    getBlogPosts(false),
+                    getSectionVisibility(),
+                ]);
+
+            if (!isMounted) {
+                return;
             }
+
+            if (profileResult.status === 'fulfilled') {
+                setProfileData(profileResult.value);
+            } else {
+                console.error('Error fetching profile data:', profileResult.reason);
+            }
+
+            if (projectsResult.status === 'fulfilled') {
+                setProjects(projectsResult.value);
+            } else {
+                console.error('Error fetching projects:', projectsResult.reason);
+            }
+
+            if (resumesResult.status === 'fulfilled') {
+                setResumes(resumesResult.value);
+            } else {
+                console.error('Error fetching resumes:', resumesResult.reason);
+            }
+
+            if (blogsResult.status === 'fulfilled') {
+                setBlogPosts(blogsResult.value);
+            } else {
+                console.error('Error fetching blog posts:', blogsResult.reason);
+            }
+
+            if (visibilityResult.status === 'fulfilled') {
+                setSectionVisibility(visibilityResult.value);
+            } else {
+                console.error('Error fetching section visibility:', visibilityResult.reason);
+            }
+
+            setLoading({
+                profile: false,
+                projects: false,
+                resumes: false,
+                blogs: false,
+                visibility: false,
+            });
         };
 
-        const fetchProjects = async () => {
-            try {
-                const projectsList = await getProjects();
-                setProjects(projectsList);
-            } catch (error) {
-                console.error('Error fetching projects:', error);
-            } finally {
-                setLoading((prev) => ({ ...prev, projects: false }));
-            }
-        };
+        void fetchOverviewData();
 
-        const fetchResumes = async () => {
-            try {
-                const resumeList = await getResumeVersions();
-                setResumes(resumeList);
-            } catch (error) {
-                console.error('Error fetching resumes:', error);
-            } finally {
-                setLoading((prev) => ({ ...prev, resumes: false }));
-            }
+        return () => {
+            isMounted = false;
         };
-
-        const fetchBlogs = async () => {
-            try {
-                const blogs = await getBlogPosts(false);
-                setBlogPosts(blogs);
-            } catch (error) {
-                console.error('Error fetching blog posts:', error);
-            } finally {
-                setLoading((prev) => ({ ...prev, blogs: false }));
-            }
-        };
-
-        const fetchSectionVisibility = async () => {
-            try {
-                const visibility = await getSectionVisibility();
-                setSectionVisibility(visibility);
-            } catch (error) {
-                console.error('Error fetching section visibility:', error);
-            } finally {
-                setLoading((prev) => ({ ...prev, visibility: false }));
-            }
-        };
-
-        fetchProfile();
-        fetchProjects();
-        fetchResumes();
-        fetchBlogs();
-        fetchSectionVisibility();
     }, []);
 
     const handleVisibilityToggle = async (section: keyof SectionVisibility) => {

@@ -17,6 +17,7 @@ import {
     Typography,
 } from '@mui/material';
 import { MoreVert as MoreVertIcon, Upload as UploadIcon } from '@mui/icons-material';
+import { formatShortDateTime } from '../../../utils/dates';
 
 interface MediaLibraryDialogProps {
     images: Models.File[];
@@ -82,7 +83,7 @@ export function MediaLibraryDialog({
                                             {image.name}
                                         </Typography>
                                         <Typography variant="caption" color="textSecondary">
-                                            {new Date(image.$createdAt).toLocaleDateString()}
+                                            {formatShortDateTime(image.$createdAt)}
                                         </Typography>
                                     </CardContent>
                                     <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>

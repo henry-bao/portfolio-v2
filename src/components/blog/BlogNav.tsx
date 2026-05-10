@@ -1,31 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
+import { useBodyScrollLock, useStickyHeader } from '../../hooks';
 import { routes } from '../../routes/paths';
 import '../layout/Navbar.css';
 
 const BlogNav = () => {
     const [menuOpen, setMenuOpen] = useState(false);
-    const [isSticky, setIsSticky] = useState(false);
+    const isSticky = useStickyHeader();
     const { isAuthenticated } = useAuth();
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsSticky(window.scrollY > 20);
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    useBodyScrollLock(menuOpen);
 
     const toggleMenu = () => {
-        setMenuOpen(!menuOpen);
-        document.body.classList.toggle('disableScroll', !menuOpen);
+        setMenuOpen((currentMenuOpen) => !currentMenuOpen);
     };
 
     const closeMenu = () => {
         setMenuOpen(false);
-        document.body.classList.remove('disableScroll');
     };
 
     return (

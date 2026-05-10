@@ -1,52 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
-import { SectionVisibility } from '../../services/appwrite';
-import { Models } from 'appwrite';
 import { routes } from '../../routes/paths';
 import { scrollToSection } from '../../utils/scroll';
+import { isSectionVisible } from '../../utils/sectionVisibility';
+import { useBodyScrollLock, useStickyHeader } from '../../hooks';
+import type { SectionVisibility, SectionVisibilityDocument, SectionVisibilityStatus } from '../../types';
 import './Navbar.css';
 
 type NavbarProps = {
-    sectionVisibility: (Models.Document & SectionVisibility) | null;
-    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
+    sectionVisibility: SectionVisibilityDocument | null;
+    sectionVisibilityStatus: SectionVisibilityStatus;
 };
+
+const navSections: Array<{ id: keyof Pick<SectionVisibility, 'about' | 'projects' | 'blogs'>; label: string }> = [
+    { id: 'about', label: 'About Me' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'blogs', label: 'Blogs' },
+];
 
 const Navbar = ({ sectionVisibility, sectionVisibilityStatus }: NavbarProps) => {
     const [menuOpen, setMenuOpen] = useState(false);
-    const [isSticky, setIsSticky] = useState(false);
+    const isSticky = useStickyHeader();
     const { isAuthenticated } = useAuth();
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsSticky(window.scrollY > 20);
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    useBodyScrollLock(menuOpen);
 
     const toggleMenu = () => {
-        setMenuOpen(!menuOpen);
-        document.body.classList.toggle('disableScroll', !menuOpen);
+        setMenuOpen((currentMenuOpen) => !currentMenuOpen);
     };
 
     const closeMenu = () => {
         setMenuOpen(false);
-        document.body.classList.remove('disableScroll');
     };
 
     const handleSectionClick = (sectionId: string) => {
         closeMenu();
         scrollToSection(sectionId);
     };
-    const isSectionVisible = (section: keyof SectionVisibility) => {
-        if (sectionVisibilityStatus === 'loading') {
-            return false;
-        }
 
-        return sectionVisibility ? sectionVisibility[section] : sectionVisibilityStatus === 'fallback';
-    };
     const isLoadingSectionLinks = sectionVisibilityStatus === 'loading';
 
     return (
@@ -76,26 +68,15 @@ const Navbar = ({ sectionVisibility, sectionVisibilityStatus }: NavbarProps) => 
                             </li>
                         </>
                     )}
-                    {isSectionVisible('about') && (
-                        <li className="nav-link-enter">
-                            <button type="button" className="nav-link-button" onClick={() => handleSectionClick('about')}>
-                                About Me
-                            </button>
-                        </li>
-                    )}
-                    {isSectionVisible('projects') && (
-                        <li className="nav-link-enter">
-                            <button type="button" className="nav-link-button" onClick={() => handleSectionClick('projects')}>
-                                Projects
-                            </button>
-                        </li>
-                    )}
-                    {isSectionVisible('blogs') && (
-                        <li className="nav-link-enter">
-                            <button type="button" className="nav-link-button" onClick={() => handleSectionClick('blogs')}>
-                                Blogs
-                            </button>
-                        </li>
+                    {navSections.map(
+                        ({ id, label }) =>
+                            isSectionVisible(sectionVisibility, sectionVisibilityStatus, id) && (
+                                <li className="nav-link-enter" key={id}>
+                                    <button type="button" className="nav-link-button" onClick={() => handleSectionClick(id)}>
+                                        {label}
+                                    </button>
+                                </li>
+                            )
                     )}
                     {isAuthenticated && (
                         <li>

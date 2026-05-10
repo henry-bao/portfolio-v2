@@ -26,6 +26,7 @@ import type { ProfileDocument } from '../../types';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 import { routes } from '../../routes/paths';
+import { useObjectUrl } from '../../hooks';
 import {
     DndContext,
     KeyboardSensor,
@@ -47,7 +48,6 @@ import {
 } from '@dnd-kit/sortable';
 import { SxProps, Theme } from '@mui/material/styles';
 
-// Helper function to map Appwrite document to ProfileData
 const mapDocumentToProfileData = (doc: ProfileDocument): ProfileData => {
     return {
         name: doc.name || '',
@@ -62,7 +62,6 @@ const mapDocumentToProfileData = (doc: ProfileDocument): ProfileData => {
     };
 };
 
-// Regular Chip component (non-sortable)
 const RegularChip = ({ label, onDelete, sx = {} }: { label: string; onDelete?: () => void; sx?: SxProps<Theme> }) => {
     return (
         <Chip
@@ -80,7 +79,6 @@ const RegularChip = ({ label, onDelete, sx = {} }: { label: string; onDelete?: (
     );
 };
 
-// Sortable Chip component
 interface SortableChipProps {
     id: string;
     label: string;
@@ -124,12 +122,11 @@ const SortableChip = ({ id, label, onDelete, isDraggedOver }: SortableChipProps)
     );
 };
 
-// Modified DragOverlay component that ensures consistent size
 const StyledDragOverlay = ({ children }: { children: React.ReactNode }) => {
     return (
         <DragOverlay
-            dropAnimation={null} // Disable drop animation to prevent any size changes
-            modifiers={[]} // No modifiers that might affect size
+            dropAnimation={null}
+            modifiers={[]}
             zIndex={1000}
         >
             {children}
@@ -144,7 +141,6 @@ const ProfileEditor = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Form fields
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -158,14 +154,14 @@ const ProfileEditor = () => {
         github: '',
     });
 
-    // File uploads
     const [profileImage, setProfileImage] = useState<File | null>(null);
     const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+    const profileImageObjectUrl = useObjectUrl(profileImage);
+    const displayedProfileImagePreview = profileImageObjectUrl || profileImagePreview;
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [resumeFileName, setResumeFileName] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    // DnD sensors
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -177,11 +173,9 @@ const ProfileEditor = () => {
         })
     );
 
-    // Add new state for tracking active drag
     const [activeId, setActiveId] = useState<string | null>(null);
     const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
 
-    // Track which item is being dragged over
     const [overItemId, setOverItemId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -192,7 +186,6 @@ const ProfileEditor = () => {
                 if (profileData) {
                     setProfile(profileData);
 
-                    // Map Appwrite document fields to our form fields
                     const mappedData = mapDocumentToProfileData(profileData);
                     setFormData({
                         name: mappedData.name,
@@ -207,21 +200,18 @@ const ProfileEditor = () => {
                         github: mappedData.github || '',
                     });
 
-                    // Load image preview if exists
                     if (mappedData.profileImageId) {
                         const imageUrl = getFilePreviewUrl(mappedData.profileImageId);
                         setProfileImagePreview(imageUrl);
                     }
 
-                    // Check for active resume first
                     try {
                         const activeResume = await getActiveResumeVersion();
                         if (activeResume) {
                             setResumeFileName(activeResume.fileName);
                         }
-                        // Fallback to profile resumeFileId if no active resume
                         else if (mappedData.resumeFileId) {
-                            setResumeFileName('Resume.pdf'); // Default name, could be stored in metadata
+                            setResumeFileName('Resume.pdf');
                         }
                     } catch (error) {
                         console.error('Error fetching active resume:', error);
@@ -235,15 +225,12 @@ const ProfileEditor = () => {
             }
         };
 
-        // Start loading data after initial render
         fetchProfile();
     }, []);
 
     const handleProfileImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setProfileImage(file);
-            setProfileImagePreview(URL.createObjectURL(file));
+            setProfileImage(e.target.files[0]);
         }
     };
 
@@ -306,7 +293,6 @@ const ProfileEditor = () => {
         });
     };
 
-    // Handle form field changes
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({
@@ -315,18 +301,15 @@ const ProfileEditor = () => {
         });
     };
 
-    // Handle drag over to track the hover state
     const handleDragOver = (event: DragOverEvent) => {
         const { over } = event;
         setOverItemId(over ? String(over.id) : null);
     };
 
-    // Update all relevant drag handlers
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
         const activeId = active.id as string;
 
-        // Determine which collection the item belongs to and what its label is
         if (activeId.startsWith('pronoun-')) {
             const label = activeId.replace('pronoun-', '');
             setActiveDragData({ type: 'pronoun', label });
@@ -341,7 +324,6 @@ const ProfileEditor = () => {
         setActiveId(activeId);
     };
 
-    // Reset all tracking states on drag end
     const resetDragStates = () => {
         setActiveId(null);
         setActiveDragData(null);
@@ -403,7 +385,6 @@ const ProfileEditor = () => {
     };
 
     const handleSave = async () => {
-        // Validate required fields
         if (!formData.name.trim() || !formData.email.trim()) {
             setError('Name and email are required');
             return;
@@ -414,36 +395,28 @@ const ProfileEditor = () => {
         setSuccess('');
 
         try {
-            // Get current values from profile document
             const currentProfileImageId = profile?.profileImageId;
             const currentResumeFileId = profile?.resumeFileId;
 
             let profileImageId = currentProfileImageId;
             let resumeFileId = currentResumeFileId;
 
-            // Upload new profile image if changed
             if (profileImage) {
-                // Delete old image if exists
                 if (currentProfileImageId) {
                     await deleteFile(currentProfileImageId);
                 }
 
-                // Upload new image
                 const uploadResult = await uploadFile(profileImage);
                 profileImageId = uploadResult.$id;
             }
 
-            // Upload new resume if changed
             if (resumeFile) {
                 try {
-                    // Add to resume versioning system
                     const resumeVersion = await addResumeVersion(resumeFile, 'Uploaded from Profile Editor', true);
 
-                    // Use the file ID from the resume version
                     resumeFileId = resumeVersion.fileId;
                 } catch (error) {
                     console.error('Error adding resume to versioning system:', error);
-                    // Fallback to old method if versioning fails
                     if (currentResumeFileId) {
                         await deleteFile(currentResumeFileId);
                     }
@@ -451,7 +424,6 @@ const ProfileEditor = () => {
                     resumeFileId = uploadResult.$id;
                 }
             } else if (!resumeFileId) {
-                // If no resume file is selected, try to get the active resume
                 try {
                     const activeResume = await getActiveResumeVersion();
                     if (activeResume) {
@@ -462,7 +434,6 @@ const ProfileEditor = () => {
                 }
             }
 
-            // Prepare profile data
             const profileData: ProfileData = {
                 name: formData.name,
                 email: formData.email,
@@ -477,10 +448,8 @@ const ProfileEditor = () => {
 
             let updatedProfile;
             if (profile) {
-                // Update existing profile
                 updatedProfile = await updateProfileData(profile.$id, profileData);
             } else {
-                // Create new profile
                 updatedProfile = await createProfileData(profileData);
             }
 
@@ -864,10 +833,10 @@ const ProfileEditor = () => {
                                     </Box>
                                 ) : (
                                     <>
-                                        {profileImagePreview && (
+                                        {displayedProfileImagePreview && (
                                             <Box mb={2}>
                                                 <img
-                                                    src={profileImagePreview}
+                                                    src={displayedProfileImagePreview}
                                                     alt="Profile Preview"
                                                     style={{
                                                         maxWidth: '100%',

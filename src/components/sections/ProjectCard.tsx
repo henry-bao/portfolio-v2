@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
@@ -29,15 +29,14 @@ const ProjectCard = ({
     const [isExpanded, setIsExpanded] = useState(isOpen);
     const theme = useTheme();
     const isTablet = useMediaQuery(theme.breakpoints.down(992));
-
-    const renderContent = () => {
-        const content = (
+    const content = useMemo(
+        () => (
             <>
                 <ImageWithFallback src={logoUrl} fallbackSrc="/img/placeholder.svg" alt={`${title}'s logo`} />
                 <div className="description">
                     <h1>{role}</h1>
                     {description.map((paragraph, index) => (
-                        <p key={index}>{`● ${paragraph}`}</p>
+                        <p key={`${paragraph}-${index}`}>{`● ${paragraph}`}</p>
                     ))}
                     <strong>{date}</strong>
                     {link_url && (
@@ -49,14 +48,15 @@ const ProjectCard = ({
                     )}
                 </div>
             </>
-        );
+        ),
+        [date, description, link_text, link_url, logoUrl, role, title]
+    );
 
-        // For tablet devices and below, render without animations
+    const renderContent = useCallback(() => {
         if (isTablet) {
             return isExpanded && <div>{content}</div>;
         }
 
-        // For desktop, use motion animations
         return (
             <AnimatePresence>
                 {isExpanded && (
@@ -71,20 +71,15 @@ const ProjectCard = ({
                 )}
             </AnimatePresence>
         );
-    };
+    }, [content, isExpanded, isTablet]);
 
     return (
         <details className="project-details" open={isExpanded}>
-            <summary className="project-summary"
+            <summary
+                className="project-summary"
                 onClick={(e) => {
                     e.preventDefault();
-                    setIsExpanded(!isExpanded);
-                }}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
+                    setIsExpanded((currentIsExpanded) => !currentIsExpanded);
                 }}
             >
                 {title}

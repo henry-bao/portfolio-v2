@@ -1,51 +1,31 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Models } from 'appwrite';
+import { useMemo } from 'react';
 import { CircularProgress } from '@mui/material';
-import { getBlogPosts, BlogPost, getContentImagePreviewUrl, SectionVisibility } from '../../services/appwrite';
-import { routes } from '../../routes/paths';
+import { useBlogPosts } from '../../hooks';
+import type { SectionVisibilityDocument, SectionVisibilityStatus } from '../../types';
+import { isSectionVisible } from '../../utils/sectionVisibility';
 import Footer from '../layout/Footer';
 import BlogNav from './BlogNav';
 import NotFound from '../NotFound';
-import { ImageWithFallback } from '../shared';
+import { BlogCard } from './BlogCard';
 import './BlogList.css';
 
 interface BlogListProps {
-    sectionVisibility: (Models.Document & SectionVisibility) | null;
-    sectionVisibilityStatus: 'loading' | 'ready' | 'fallback';
+    sectionVisibility: SectionVisibilityDocument | null;
+    sectionVisibilityStatus: SectionVisibilityStatus;
 }
 
 const BlogList = ({ sectionVisibility, sectionVisibilityStatus }: BlogListProps) => {
-    const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const resumeUrl = null; // Fixed to avoid unused state variable
-    const canShowBlogs = sectionVisibility ? sectionVisibility.blogs : sectionVisibilityStatus === 'fallback';
+    const canShowBlogs = useMemo(
+        () => isSectionVisible(sectionVisibility, sectionVisibilityStatus, 'blogs'),
+        [sectionVisibility, sectionVisibilityStatus]
+    );
+    const { data: blogPostsData, loading: blogPostsLoading } = useBlogPosts(true, {
+        enabled: canShowBlogs,
+        initialData: [],
+    });
+    const blogPosts = blogPostsData ?? [];
+    const isLoading = sectionVisibilityStatus === 'loading' || (canShowBlogs && blogPostsLoading);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-
-            try {
-                const posts = await getBlogPosts(true);
-                setBlogPosts(posts);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (canShowBlogs) {
-            fetchData();
-            return;
-        }
-
-        if (sectionVisibilityStatus !== 'loading') {
-            setIsLoading(false);
-        }
-    }, [canShowBlogs, sectionVisibilityStatus]);
-
-    // Show loading state until sectionVisibility is loaded and component data is ready
     if (isLoading) {
         return (
             <div className="blog-page-wrapper">
@@ -53,12 +33,11 @@ const BlogList = ({ sectionVisibility, sectionVisibilityStatus }: BlogListProps)
                 <div className="blog-loading-container">
                     <CircularProgress />
                 </div>
-                <Footer resumeUrl={resumeUrl} />
+                <Footer resumeUrl={null} />
             </div>
         );
     }
 
-    // If blogs are disabled, show the NotFound page
     if (!canShowBlogs) {
         return <NotFound />;
     }
@@ -79,55 +58,12 @@ const BlogList = ({ sectionVisibility, sectionVisibilityStatus }: BlogListProps)
                 ) : (
                     <div className="blog-list-grid">
                         {blogPosts.map((post) => (
-                            <Link to={routes.blogPostBySlug(post.slug)} key={post.$id} className="blog-list-card-link">
-                                <article className="blog-list-card">
-                                    {post.coverImageId && (
-                                        <div className="blog-list-card-image">
-                                            <ImageWithFallback
-                                                src={getContentImagePreviewUrl(post.coverImageId)}
-                                                fallbackSrc="/img/placeholder.svg"
-                                                alt={post.title}
-                                                loading="lazy"
-                                            />
-                                        </div>
-                                    )}
-                                    <div className="blog-list-card-content">
-                                        <h2 className="blog-list-title">{post.title}</h2>
-                                        <p className="blog-list-date">
-                                            {new Date(post.publishedDate).toLocaleString('en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                timeZone: 'UTC',
-                                            })}
-                                        </p>
-                                        <p className="blog-list-summary">{post.summary}</p>
-
-                                        <div className="blog-list-card-meta">
-                                            {post.tags && post.tags.length > 0 && (
-                                                <div className="blog-list-tags">
-                                                    {post.tags.map((tag, index) => (
-                                                        <span key={index} className="blog-list-tag">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            <div className="blog-list-views">
-                                                <span>{post.viewCount || 0} views</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="read-more">Read more →</div>
-                                    </div>
-                                </article>
-                            </Link>
+                            <BlogCard key={post.$id} post={post} variant="list" />
                         ))}
                     </div>
                 )}
             </div>
-            <Footer resumeUrl={resumeUrl} />
+            <Footer resumeUrl={null} />
         </div>
     );
 };

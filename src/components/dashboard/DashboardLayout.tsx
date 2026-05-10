@@ -32,6 +32,7 @@ import {
     Book as BlogIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/useAuth';
+import { useBodyScrollLock } from '../../hooks';
 import { routes } from '../../routes/paths';
 
 const expandedDrawerWidth = 240;
@@ -78,21 +79,21 @@ const DashboardLayout = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down(992));
 
+    useBodyScrollLock(mobileOpen);
+
     useEffect(() => {
         setIsCollapsed(isTablet);
     }, [isTablet]);
 
     const handleMenuItemClick = (path: string) => {
         if (mobileOpen) {
-            document.body.classList.toggle('disableScroll', !mobileOpen);
             setMobileOpen(false);
         }
         navigate(path);
     };
 
     const handleDrawerToggle = () => {
-        document.body.classList.toggle('disableScroll', !mobileOpen);
-        setMobileOpen(!mobileOpen);
+        setMobileOpen((currentMobileOpen) => !currentMobileOpen);
     };
 
     const handleDrawerCollapse = () => {

@@ -2,60 +2,43 @@ import { useMemo } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { getFilePreviewUrl } from '../../services/fileProxy';
 import type { ProfileDocument } from '../../types';
+import {
+    fallbackProfileImage,
+    fallbackResumeUrl,
+    mapProfileDocumentToDisplayData,
+} from '../../utils/profile';
 import { ImageWithFallback } from '../shared';
 import './About.css';
-
-interface DisplayData {
-    name: string;
-    pronouns: string[];
-    education: string[];
-    languages: string[];
-    resumeFileId?: string;
-    profileImageId?: string;
-    linkedin: string;
-    github: string;
-    email: string;
-}
-
-// Helper function to map profile document to our display format
-const mapDocumentToDisplayData = (doc: ProfileDocument): DisplayData => {
-    return {
-        name: doc.name || 'Henry Bao',
-        pronouns: doc.pronouns || ['He', 'Him'],
-        education: doc.education || ['MS @ Cornell', 'BS @ UW'],
-        languages: doc.languages || ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
-        resumeFileId: doc.resumeFileId,
-        profileImageId: doc.profileImageId,
-        linkedin: doc.linkedin || 'https://www.linkedin.com/in/henglibao',
-        github: doc.github || 'https://github.com/henry-bao',
-        email: doc.email || 'henry@bao.dev',
-    };
-};
 
 interface AboutProps {
     loading: boolean;
     profile: ProfileDocument | null;
 }
 
-const fallbackDisplayData: DisplayData = {
-    name: 'Henry Bao',
-    pronouns: ['He', 'Him'],
-    education: ['MS @ Cornell', 'BS @ UW'],
-    languages: ['Python', 'JavaScript/TypeScript', 'Swift', 'Java'],
-    linkedin: 'https://www.linkedin.com/in/henglibao',
-    github: 'https://github.com/henry-bao',
-    email: 'henry@bao.dev',
-};
+const renderTokenList = (items: string[], separator = '&&') =>
+    items.map((item, index) => (
+        <span key={`${item}-${index}`}>
+            <span className="r-string-color"> "{item}"</span>
+            {index < items.length - 1 && <span style={{ color: '#59597f' }}>&nbsp;{separator}</span>}
+        </span>
+    ));
 
-const fallbackProfileImage = '/img/henry_800x800.png';
-const fallbackResumeUrl = '/file/Resume.pdf';
+const renderEmail = (email: string) =>
+    email.split(/([@.])/).map((part, index) =>
+        part === '@' || part === '.' ? (
+            <span key={`${part}-${index}`} style={{ color: '#59597f' }}>
+                {part}
+            </span>
+        ) : (
+            <span key={`${part}-${index}`}>{part}</span>
+        )
+    );
 
 const About = ({ loading, profile }: AboutProps) => {
     const { displayData, resumeUrl, profileImageUrl } = useMemo(() => {
-        const data = profile ? mapDocumentToDisplayData(profile) : fallbackDisplayData;
+        const data = mapProfileDocumentToDisplayData(profile);
         const resume = profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : fallbackResumeUrl;
         const profileImage = profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : null;
-
 
         return {
             displayData: data,
@@ -97,25 +80,11 @@ const About = ({ loading, profile }: AboutProps) => {
                         </li>
                         <li>
                             pronouns <span className="r-arrow-color">&lt;-</span>
-                            {displayData.pronouns.map((pronoun: string, index: number) => (
-                                <span key={index}>
-                                    <span className="r-string-color"> "{pronoun}"</span>
-                                    {index < displayData.pronouns.length - 1 && (
-                                        <span style={{ color: '#59597f' }}>&nbsp;&&</span>
-                                    )}
-                                </span>
-                            ))}
+                            {renderTokenList(displayData.pronouns)}
                         </li>
                         <li>
                             education <span className="r-arrow-color">&lt;-</span>
-                            {displayData.education.map((edu: string, index: number) => (
-                                <span key={index}>
-                                    <span className="r-string-color"> "{edu}"</span>
-                                    {index < displayData.education.length - 1 && (
-                                        <span style={{ color: '#59597f' }}>&nbsp;&&</span>
-                                    )}
-                                </span>
-                            ))}
+                            {renderTokenList(displayData.education)}
                         </li>
                         <li>
                             languages <span className="r-arrow-color">&lt;-</span>{' '}
@@ -149,14 +118,7 @@ const About = ({ loading, profile }: AboutProps) => {
                         </li>
                         <li>
                             e-mail <span className="r-arrow-color">&lt;-</span>
-                            <span
-                                className="r-string-color"
-                                dangerouslySetInnerHTML={{
-                                    __html: ` "${displayData.email
-                                        .replace('@', '<span style="color: #59597f">@</span>')
-                                        .replace('.', '<span style="color: #59597f">.</span>')}"`,
-                                }}
-                            />
+                            <span className="r-string-color"> "{renderEmail(displayData.email)}"</span>
                         </li>
                     </ul>
                 </div>
