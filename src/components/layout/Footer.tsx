@@ -1,15 +1,17 @@
 import './Footer.css';
 
 type FooterProps = {
+    className?: string;
     isResumeLoading?: boolean;
     resumeUrl: string | null;
 };
 
-const Footer = ({ isResumeLoading = false, resumeUrl }: FooterProps) => {
+const Footer = ({ className = '', isResumeLoading = false, resumeUrl }: FooterProps) => {
     const currentYear = new Date().getFullYear();
+    const footerClassName = ['footer', className].filter(Boolean).join(' ');
 
     return (
-        <footer className="footer">
+        <footer className={footerClassName}>
             <p>
                 {isResumeLoading ? (
                     <span>Henry Bao</span>
