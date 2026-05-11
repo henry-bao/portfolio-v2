@@ -20,11 +20,20 @@ interface PortfolioProps {
 }
 
 type FooterMode = 'entering' | 'fixed' | 'exiting' | 'normal';
+const MOBILE_FOOTER_QUERY = '(max-width: 768px)';
+
+const getInitialFooterMode = (): FooterMode => {
+    if (typeof window !== 'undefined' && window.matchMedia(MOBILE_FOOTER_QUERY).matches) {
+        return 'normal';
+    }
+
+    return 'fixed';
+};
 
 function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProps) {
     const { data: profile, loading: profileLoading } = useProfileData();
     const isPageContentLoading = sectionVisibilityStatus === 'loading';
-    const [footerMode, setFooterMode] = useState<FooterMode>('fixed');
+    const [footerMode, setFooterMode] = useState<FooterMode>(getInitialFooterMode);
     const footerReleaseTimeout = useRef<number | null>(null);
 
     const resumeUrl = profile?.resumeFileId ? getFileUrl(profile.resumeFileId) : null;
@@ -53,7 +62,7 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
             }
         };
 
-        if (!isPageContentLoading) {
+        if (!isPageContentLoading || window.matchMedia(MOBILE_FOOTER_QUERY).matches) {
             return;
         }
 
@@ -66,11 +75,23 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
             return;
         }
 
+        const mobileFooterMedia = window.matchMedia(MOBILE_FOOTER_QUERY);
+
         const clearFooterReleaseTimeout = () => {
             if (footerReleaseTimeout.current) {
                 window.clearTimeout(footerReleaseTimeout.current);
                 footerReleaseTimeout.current = null;
             }
+        };
+
+        const useNormalFooterOnMobile = () => {
+            if (!mobileFooterMedia.matches) {
+                return false;
+            }
+
+            clearFooterReleaseTimeout();
+            setFooterMode('normal');
+            return true;
         };
 
         const showFooterAtHero = () => {
@@ -106,6 +127,10 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
         };
 
         const syncFooterPlacement = () => {
+            if (useNormalFooterOnMobile()) {
+                return;
+            }
+
             if (window.scrollY <= 1) {
                 showFooterAtHero();
                 return;
@@ -116,9 +141,11 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
 
         syncFooterPlacement();
         window.addEventListener('scroll', syncFooterPlacement, { passive: true });
+        mobileFooterMedia.addEventListener('change', syncFooterPlacement);
 
         return () => {
             window.removeEventListener('scroll', syncFooterPlacement);
+            mobileFooterMedia.removeEventListener('change', syncFooterPlacement);
         };
     }, [isPageContentLoading]);
 

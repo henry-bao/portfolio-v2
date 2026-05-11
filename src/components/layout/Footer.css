@@ -68,6 +68,15 @@
         padding-bottom: 8px;
     }
 
+    .footer--fixed-loading {
+        animation: none;
+        opacity: 1;
+        pointer-events: auto;
+        position: static;
+        transform: none;
+        transition: none;
+    }
+
     .footer > p {
         margin: 3px 0;
     }
