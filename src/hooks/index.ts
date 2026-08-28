@@ -2,7 +2,6 @@ export { useAsyncData } from './useAsyncData';
 export { useBlogPosts, useProfileData, useProjects } from './useAppwriteData';
 export { useBodyScrollLock } from './useBodyScrollLock';
 export { COMPACT_LAYOUT_WIDTH_PX, useBreakpoints } from './useBreakpoints';
-export { useFooterMode } from './useFooterMode';
 export { useImagePreview } from './useImagePreview';
 export { useMarkdownEditor } from './useMarkdownEditor';
 export type { MarkdownFormatAction } from './useMarkdownEditor';

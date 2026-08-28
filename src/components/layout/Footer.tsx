@@ -1,21 +1,19 @@
 import { CONTACT_EMAIL } from '../../config/site';
-import { classNames } from '../../utils/classNames';
 import { FALLBACK_RESUME_URL } from '../../utils/assets';
 import './Footer.css';
 
 interface FooterProps {
-    className?: string;
     isResumeLoading?: boolean;
     resumeUrl: string | null;
 }
 
 const FIRST_COPYRIGHT_YEAR = 2022;
 
-const Footer = ({ className, isResumeLoading = false, resumeUrl }: FooterProps) => {
+const Footer = ({ isResumeLoading = false, resumeUrl }: FooterProps) => {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className={classNames('footer', className)}>
+        <footer className="footer">
             <p>
                 {isResumeLoading ? (
                     <span>Henry Bao</span>

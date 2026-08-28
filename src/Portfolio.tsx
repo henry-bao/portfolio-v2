@@ -1,7 +1,6 @@
-import { useFooterMode, useProfileData } from './hooks';
+import { useProfileData } from './hooks';
 import { getFileUrl } from './services/storageService';
 import type { SectionVisibility, SectionVisibilityDocument, SectionVisibilityStatus } from './types';
-import { classNames } from './utils/classNames';
 import { isSectionVisible } from './utils/sectionVisibility';
 
 import Footer from './components/layout/Footer';
@@ -20,17 +19,8 @@ interface PortfolioProps {
 
 function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProps) {
     const { data: profile, loading: profileLoading } = useProfileData();
-    const footerMode = useFooterMode(sectionVisibilityStatus === 'loading');
 
     const resumeUrl = profile?.resumeFileId ? getFileUrl(profile.resumeFileId) : null;
-    const footerClassName =
-        footerMode === 'normal'
-            ? undefined
-            : classNames(
-                  'footer--fixed-loading',
-                  footerMode === 'entering' && 'footer--fixed-loading-enter',
-                  footerMode === 'exiting' && 'footer--fixed-loading-exit'
-              );
 
     const canShowSection = (section: keyof SectionVisibility) =>
         isSectionVisible(sectionVisibility, sectionVisibilityStatus, section);
@@ -44,7 +34,7 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
                 {canShowSection('projects') && <Projects />}
                 {canShowSection('blogs') && <Blog />}
             </main>
-            <Footer className={footerClassName} resumeUrl={resumeUrl} isResumeLoading={profileLoading} />
+            <Footer resumeUrl={resumeUrl} isResumeLoading={profileLoading} />
         </>
     );
 }
