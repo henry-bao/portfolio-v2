@@ -7,7 +7,8 @@ export interface ProfileData {
     education?: string[];
     languages?: string[];
     resumeFileId?: string;
-    profileImageId?: string;
+    /** `null` clears a stored image; `undefined` leaves whatever is already saved. */
+    profileImageId?: string | null;
     linkedin?: string;
     github?: string;
 }
@@ -32,7 +33,7 @@ export interface BlogPost {
     publishedDate: string;
     published: boolean;
     tags?: string[];
-    coverImageId?: string;
+    coverImageId?: string | null;
     viewCount?: number;
 }
 

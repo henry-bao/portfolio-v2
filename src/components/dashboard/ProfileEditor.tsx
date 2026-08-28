@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, CircularProgress, Divider, Grid, Paper, Skeleton, TextField, Typography } from '@mui/material';
-import { Upload as UploadIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { createProfileData, getProfileData, updateProfileData } from '../../services/profileService';
 import {
     ALLOWED_DOCUMENT_TYPES,
@@ -13,6 +13,7 @@ import {
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 import type { ProfileData, ProfileDocument } from '../../types';
 import { routes } from '../../routes/paths';
+import { FALLBACK_PROFILE_IMAGE } from '../../utils/assets';
 import { useImagePreview } from '../../hooks';
 import { StatusAlerts } from '../shared';
 import { SortableChipList } from './SortableChipList';
@@ -53,9 +54,12 @@ const ProfileEditor = () => {
     const [drafts, setDrafts] = useState(emptyDrafts);
 
     const profileImage = useImagePreview();
-    const { setRemoteUrl: setProfileImageRemoteUrl } = profileImage;
+    const { previewUrl: profileImagePreviewUrl, setRemoteUrl: setProfileImageRemoteUrl } = profileImage;
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [resumeFileName, setResumeFileName] = useState<string | null>(null);
+
+    // "Remove Image" clears the preview, so a stored image with nothing previewed means the user dropped it.
+    const hasRemovedProfileImage = profileImagePreviewUrl === null && Boolean(profile?.profileImageId);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -111,6 +115,17 @@ const ProfileEditor = () => {
         setDrafts((current) => ({ ...current, [field]: '' }));
     };
 
+    const handleProfileImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        if (file) {
+            profileImage.setFile(file);
+        }
+
+        // Clear the input so re-picking the same file after a removal still fires a change event.
+        event.target.value = '';
+    };
+
     const handleResumeChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
 
@@ -150,14 +165,15 @@ const ProfileEditor = () => {
         setSuccess('');
 
         try {
-            let profileImageId = profile?.profileImageId;
+            const storedImageId = profile?.profileImageId;
+            let profileImageId = storedImageId;
 
             if (profileImage.file) {
-                if (profileImageId) {
-                    await deleteFile(profileImageId);
-                }
-
+                // Upload before discarding the old file so a failed upload leaves the profile untouched.
                 profileImageId = (await uploadFile(profileImage.file)).$id;
+            } else if (hasRemovedProfileImage) {
+                // `null` clears the stored id; `undefined` would be stripped from the update payload.
+                profileImageId = null;
             }
 
             const profileData: ProfileData = {
@@ -167,11 +183,23 @@ const ProfileEditor = () => {
                 resumeFileId: await resolveResumeFileId(profile?.resumeFileId),
             };
 
-            const updatedProfile = profile
+            const savedProfile = (profile
                 ? await updateProfileData(profile.$id, profileData)
-                : await createProfileData(profileData);
+                : await createProfileData(profileData)) as unknown as ProfileDocument;
 
-            setProfile(updatedProfile as unknown as ProfileDocument);
+            if (storedImageId && profileImageId !== storedImageId) {
+                try {
+                    await deleteFile(storedImageId);
+                } catch {
+                    // Already logged, and the profile no longer references it -- only an orphaned file remains.
+                }
+            }
+
+            setProfile(savedProfile);
+            profileImage.setFile(null);
+            setProfileImageRemoteUrl(
+                savedProfile.profileImageId ? getFilePreviewUrl(savedProfile.profileImageId) : null
+            );
             setSuccess('Profile updated successfully');
         } catch (error) {
             console.error('Error saving profile:', error);
@@ -269,36 +297,50 @@ const ProfileEditor = () => {
                                     </Box>
                                 ) : (
                                     <>
-                                        {profileImage.previewUrl && (
-                                            <Box mb={2}>
-                                                <img
-                                                    src={profileImage.previewUrl}
-                                                    alt="Profile preview"
-                                                    style={{
-                                                        maxWidth: '100%',
-                                                        maxHeight: '200px',
-                                                        display: 'block',
-                                                        marginBottom: '10px',
-                                                    }}
-                                                />
-                                            </Box>
-                                        )}
-
-                                        <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
-                                            Upload Image
-                                            <input
-                                                type="file"
-                                                hidden
-                                                accept="image/*"
-                                                onChange={(event) => {
-                                                    const file = event.target.files?.[0];
-
-                                                    if (file) {
-                                                        profileImage.setFile(file);
-                                                    }
+                                        <Box mb={2}>
+                                            <img
+                                                src={profileImagePreviewUrl ?? FALLBACK_PROFILE_IMAGE}
+                                                alt={
+                                                    profileImagePreviewUrl
+                                                        ? 'Profile preview'
+                                                        : 'Default profile image preview'
+                                                }
+                                                style={{
+                                                    maxWidth: '100%',
+                                                    maxHeight: '200px',
+                                                    display: 'block',
+                                                    marginBottom: '10px',
                                                 }}
                                             />
-                                        </Button>
+                                            {!profileImagePreviewUrl && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    No profile image set &mdash; the site shows this default.
+                                                </Typography>
+                                            )}
+                                        </Box>
+
+                                        <Box display="flex" gap={2}>
+                                            <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+                                                {profileImagePreviewUrl ? 'Replace Image' : 'Upload Image'}
+                                                <input
+                                                    type="file"
+                                                    hidden
+                                                    accept="image/*"
+                                                    onChange={handleProfileImageChange}
+                                                />
+                                            </Button>
+
+                                            {profileImagePreviewUrl && (
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    startIcon={<DeleteIcon />}
+                                                    onClick={profileImage.clear}
+                                                >
+                                                    Remove Image
+                                                </Button>
+                                            )}
+                                        </Box>
                                     </>
                                 )}
                             </Grid>

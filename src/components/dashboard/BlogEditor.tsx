@@ -213,7 +213,7 @@ const BlogEditor = () => {
                 tags,
                 lastSaved: lastSavedAt,
                 hasCoverImage: coverImagePreview !== null,
-                coverImageId: post?.coverImageId,
+                coverImageId: post?.coverImageId ?? undefined,
                 coverImageUrl: coverImagePreview || undefined,
             });
 
@@ -343,7 +343,8 @@ const BlogEditor = () => {
                 coverImageId = (await uploadContentImage(coverImage.file)).fileId;
             } else if (coverImagePreview === null && coverImageId) {
                 await deleteContentImage(coverImageId);
-                coverImageId = undefined;
+                // `null` clears the stored id; `undefined` would be stripped from the update payload.
+                coverImageId = null;
             }
 
             const blogData: BlogPost = {
