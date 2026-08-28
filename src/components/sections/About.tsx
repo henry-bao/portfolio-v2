@@ -11,6 +11,7 @@ import './About.css';
 interface AboutProps {
     loading: boolean;
     profile: ProfileDocument | null;
+    resumeUrl: string | null;
 }
 
 /** Renders `"a" && "b"` the way the surrounding R-flavoured pseudo-code reads. */
@@ -68,11 +69,10 @@ const ExternalLink = ({ href, children }: { href: string; children: string }) =>
     </a>
 );
 
-const About = ({ loading, profile }: AboutProps) => {
-    const { displayData, resumeUrl, profileImageUrl } = useMemo(
+const About = ({ loading, profile, resumeUrl }: AboutProps) => {
+    const { displayData, profileImageUrl } = useMemo(
         () => ({
             displayData: mapProfileDocumentToDisplayData(profile),
-            resumeUrl: profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : FALLBACK_RESUME_URL,
             profileImageUrl: profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : null,
         }),
         [profile]
@@ -112,7 +112,9 @@ const About = ({ loading, profile }: AboutProps) => {
                                 <TokenVector items={displayData.languages} />
                             </AboutRow>
                             <AboutRow label="resume">
-                                <ExternalLink href={resumeUrl}>{' download()'}</ExternalLink>
+                                <ExternalLink href={resumeUrl || FALLBACK_RESUME_URL}>
+                                    {' download()'}
+                                </ExternalLink>
                             </AboutRow>
                             <AboutRow label="linkedin">
                                 <ExternalLink href={displayData.linkedin}>{' redirect()'}</ExternalLink>

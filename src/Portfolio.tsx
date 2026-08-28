@@ -1,4 +1,4 @@
-import { useProfileData } from './hooks';
+import { useActiveResumeVersion, useProfileData } from './hooks';
 import { getFileUrl } from './services/storageService';
 import type { SectionVisibility, SectionVisibilityDocument, SectionVisibilityStatus } from './types';
 import { isSectionVisible } from './utils/sectionVisibility';
@@ -19,8 +19,11 @@ interface PortfolioProps {
 
 function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProps) {
     const { data: profile, loading: profileLoading } = useProfileData();
+    const { data: activeResume, loading: resumeLoading } = useActiveResumeVersion();
 
-    const resumeUrl = profile?.resumeFileId ? getFileUrl(profile.resumeFileId) : null;
+    // The versioned resume is the source of truth; the profile's copy of the id can lag behind it.
+    const resumeFileId = activeResume?.fileId ?? profile?.resumeFileId;
+    const resumeUrl = resumeFileId ? getFileUrl(resumeFileId) : null;
 
     const canShowSection = (section: keyof SectionVisibility) =>
         isSectionVisible(sectionVisibility, sectionVisibilityStatus, section);
@@ -30,11 +33,13 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
             <Navbar sectionVisibility={sectionVisibility} sectionVisibilityStatus={sectionVisibilityStatus} />
             <main>
                 <Landing />
-                {canShowSection('about') && <About loading={profileLoading} profile={profile} />}
+                {canShowSection('about') && (
+                    <About loading={profileLoading} profile={profile} resumeUrl={resumeUrl} />
+                )}
                 {canShowSection('projects') && <Projects />}
                 {canShowSection('blogs') && <Blog />}
             </main>
-            <Footer resumeUrl={resumeUrl} isResumeLoading={profileLoading} />
+            <Footer resumeUrl={resumeUrl} isResumeLoading={profileLoading || resumeLoading} />
         </>
     );
 }

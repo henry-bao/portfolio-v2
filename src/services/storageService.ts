@@ -18,7 +18,10 @@ const assertAllowedType = (file: File, allowedTypes: string[]) => {
 /** URL of a file in the main bucket, used for resumes and other downloads. */
 export const getFileUrl = (fileId: string) => storage.getFileView(STORAGE_FILE_BUCKET_ID, fileId);
 
-/** Optionally resized preview of a file in the main bucket. */
+/**
+ * Optionally resized preview of an *image* in the main bucket. Appwrite's preview endpoint
+ * only renders images -- point documents at `getFileUrl` instead, or it serves a placeholder.
+ */
 export const getFilePreviewUrl = (fileId: string, width?: number, height?: number) =>
     storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId, width, height);
 
