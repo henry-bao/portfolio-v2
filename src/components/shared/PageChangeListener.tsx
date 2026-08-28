@@ -5,13 +5,14 @@ interface PageChangeListenerProps {
     onPageChange: () => void;
 }
 
-const PageChangeListener: React.FC<PageChangeListenerProps> = ({ onPageChange }) => {
-    const location = useLocation();
+/** Resets scroll position and refreshes route-level data on every navigation. */
+const PageChangeListener = ({ onPageChange }: PageChangeListenerProps) => {
+    const { pathname } = useLocation();
 
     useEffect(() => {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         onPageChange();
-    }, [location, onPageChange]);
+    }, [onPageChange, pathname]);
 
     return null;
 };

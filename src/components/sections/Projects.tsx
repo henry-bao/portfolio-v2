@@ -1,61 +1,33 @@
-import { useMemo } from 'react';
-import ProjectCard from './ProjectCard';
-import { useProjects } from '../../hooks/useAppwriteData';
-import { getFilePreviewUrl } from '../../services/fileProxy';
+import { useProjects } from '../../hooks';
+import { getFilePreviewUrl } from '../../services/storageService';
 import { LoadingError } from '../shared';
+import ProjectCard from './ProjectCard';
 
 import './Projects.css';
 
-
 const Projects = () => {
-    const { data: projectsData, loading, error, refresh } = useProjects();
-
-    const projects = useMemo(() => {
-        if (!projectsData) return [];
-        
-        return projectsData.map((project) => {
-            const logoUrl = project.logoFileId ? getFilePreviewUrl(project.logoFileId) : undefined;
-
-            return {
-                id: project.$id,
-                title: project.title,
-                role: project.role,
-                description: project.description,
-                date: project.date,
-                logoUrl,
-                link_url: project.link_url,
-                link_text: project.link_text,
-                isOpen: project.isOpen,
-            };
-        });
-    }, [projectsData]);
+    const { data: projects, loading, error, refresh } = useProjects();
 
     return (
         <section id="projects" className="projects-css">
             <h1 className="sec-title">Projects</h1>
-            
+
             <LoadingError loading={loading} error={error} onRetry={refresh}>
-                {projects.length === 0 ? (
+                {projects?.length ? (
+                    projects.map((project) => (
+                        <ProjectCard
+                            key={project.$id}
+                            project={project}
+                            logoUrl={project.logoFileId ? getFilePreviewUrl(project.logoFileId) : undefined}
+                        />
+                    ))
+                ) : (
                     <div className="empty-container">
                         <p>oops, no projects found</p>
                         <p>db probably broke (i blame appwrite)</p>
                         <p>at least the about me section has fallback data</p>
                         <p>you can still contact me there :)</p>
                     </div>
-                ) : (
-                    projects.map((project) => (
-                        <ProjectCard
-                            key={project.id}
-                            title={project.title}
-                            logoUrl={project.logoUrl}
-                            role={project.role}
-                            description={project.description}
-                            date={project.date}
-                            link_url={project.link_url}
-                            link_text={project.link_text}
-                            isOpen={project.isOpen}
-                        />
-                    ))
                 )}
             </LoadingError>
         </section>

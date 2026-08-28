@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css?family=Source+Code+Pro');
-
 .sec-title {
     font-size: 30px;
     font-weight: 600;
@@ -19,9 +17,5 @@
     section {
         padding-left: 1.5em;
         padding-right: 1.5em;
-    }
-
-    body.disableScroll {
-        overflow: hidden;
     }
 }

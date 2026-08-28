@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthProvider';
 import Portfolio from './Portfolio';
@@ -17,66 +17,45 @@ import BlogList from './components/blog/BlogList';
 import NotFound from './components/NotFound';
 import ResumeRedirect from './components/ResumeRedirect';
 import PageChangeListener from './components/shared/PageChangeListener';
+import { ErrorBoundary } from './components/shared';
 import { routes } from './routes/paths';
 import { useSectionVisibility } from './hooks';
 
 function App() {
     const { sectionVisibility, sectionVisibilityStatus, refreshSectionVisibility } = useSectionVisibility();
+    const visibilityProps = { sectionVisibility, sectionVisibilityStatus };
 
     return (
         <Router>
             <AuthProvider>
                 <PageChangeListener onPageChange={refreshSectionVisibility} />
-                <Routes>
-                    <Route
-                        path={routes.home}
-                        element={
-                            <Portfolio
-                                sectionVisibility={sectionVisibility}
-                                sectionVisibilityStatus={sectionVisibilityStatus}
-                            />
-                        }
-                    />
+                <ErrorBoundary fallback={<NotFound />}>
+                    <Routes>
+                        <Route path={routes.home} element={<Portfolio {...visibilityProps} />} />
 
-                    <Route
-                        path={routes.blogs}
-                        element={
-                            <BlogList
-                                sectionVisibility={sectionVisibility}
-                                sectionVisibilityStatus={sectionVisibilityStatus}
-                            />
-                        }
-                    />
-                    <Route
-                        path={routes.blogPost}
-                        element={
-                            <BlogPost
-                                sectionVisibility={sectionVisibility}
-                                sectionVisibilityStatus={sectionVisibilityStatus}
-                            />
-                        }
-                    />
+                        <Route path={routes.blogs} element={<BlogList {...visibilityProps} />} />
+                        <Route path={routes.blogPost} element={<BlogPost {...visibilityProps} />} />
 
-                    <Route path={routes.admin.login} element={<Login />} />
-
-                    <Route path={routes.admin.root} element={<Navigate to={routes.admin.overview} replace />} />
-
-                    <Route path={routes.admin.root} element={<ProtectedRoute />}>
-                        <Route element={<DashboardLayout />}>
-                            <Route path="overview" element={<Overview />} />
-                            <Route path="profile" element={<ProfileEditor />} />
-                            <Route path="projects" element={<ProjectsManager />} />
-                            <Route path="projects/new" element={<ProjectEditor />} />
-                            <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
-                            <Route path="resumes" element={<ResumeManager />} />
-                            <Route path="blogs" element={<BlogManager />} />
-                            <Route path="blogs/new" element={<BlogEditor />} />
-                            <Route path="blogs/edit/:postId" element={<BlogEditor />} />
+                        <Route path={routes.admin.login} element={<Login />} />
+                        <Route path={routes.admin.root} element={<ProtectedRoute />}>
+                            <Route element={<DashboardLayout />}>
+                                <Route index element={<Navigate to={routes.admin.overview} replace />} />
+                                <Route path="overview" element={<Overview />} />
+                                <Route path="profile" element={<ProfileEditor />} />
+                                <Route path="projects" element={<ProjectsManager />} />
+                                <Route path="projects/new" element={<ProjectEditor />} />
+                                <Route path="projects/edit/:projectId" element={<ProjectEditor />} />
+                                <Route path="resumes" element={<ResumeManager />} />
+                                <Route path="blogs" element={<BlogManager />} />
+                                <Route path="blogs/new" element={<BlogEditor />} />
+                                <Route path="blogs/edit/:postId" element={<BlogEditor />} />
+                            </Route>
                         </Route>
-                    </Route>
-                    <Route path={routes.resumeRedirect} element={<ResumeRedirect />} />
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
+
+                        <Route path={routes.resumeRedirect} element={<ResumeRedirect />} />
+                        <Route path="*" element={<NotFound />} />
+                    </Routes>
+                </ErrorBoundary>
             </AuthProvider>
         </Router>
     );

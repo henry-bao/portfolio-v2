@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react';
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 import {
     Box,
     Button,

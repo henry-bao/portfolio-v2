@@ -1,6 +1,6 @@
 import { Box, Tab, Tabs, TextField } from '@mui/material';
 import { BlogToolbar } from './BlogToolbar';
-import type { MarkdownFormatAction } from '../../../hooks/useMarkdownEditor';
+import type { MarkdownFormatAction } from '../../../hooks';
 
 interface BlogContentEditorProps {
     content: string;

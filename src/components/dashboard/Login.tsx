@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Paper, Container, Alert, CircularProgress, Divider } from '@mui/material';
-import { login } from '../../services/appwrite';
+import { Box, Button, CircularProgress, Container, Divider, Paper, TextField, Typography } from '@mui/material';
+import { login } from '../../services/authService';
 import { useAuth } from '../../context/useAuth';
 import { routes } from '../../routes/paths';
+import { StatusAlerts } from '../shared';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -13,25 +15,22 @@ const Login = () => {
     const navigate = useNavigate();
     const { isAuthenticated, checkAuthStatus } = useAuth();
 
-    // Check if user is already logged in
     useEffect(() => {
         if (isAuthenticated) {
-            navigate(routes.admin.overview);
+            // `replace` keeps the login screen out of the history stack.
+            navigate(routes.admin.overview, { replace: true });
         }
     }, [isAuthenticated, navigate]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (event: FormEvent) => {
+        event.preventDefault();
         setError('');
         setIsLoading(true);
 
         try {
-            // Only attempt login if not already authenticated
-            if (!isAuthenticated) {
-                await login(email, password);
-                await checkAuthStatus();
-            }
-            navigate(routes.admin.overview);
+            await login(email, password);
+            await checkAuthStatus();
+            navigate(routes.admin.overview, { replace: true });
         } catch (err) {
             console.error('Login error:', err);
             setError(`Login failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -51,22 +50,12 @@ const Login = () => {
                     height: '100dvh',
                 }}
             >
-                <Paper
-                    elevation={3}
-                    sx={{
-                        p: 4,
-                        width: '100%',
-                    }}
-                >
+                <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
                     <Typography component="h1" variant="h5" align="center" gutterBottom>
                         Dashboard Login
                     </Typography>
 
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
+                    <StatusAlerts error={error} />
 
                     <Box component="form" onSubmit={handleSubmit} noValidate>
                         <TextField
@@ -79,7 +68,7 @@ const Login = () => {
                             autoComplete="email"
                             autoFocus
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(event) => setEmail(event.target.value)}
                             disabled={isLoading}
                         />
                         <TextField
@@ -92,7 +81,7 @@ const Login = () => {
                             id="password"
                             autoComplete="current-password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(event) => setPassword(event.target.value)}
                             disabled={isLoading}
                         />
                         <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} disabled={isLoading}>

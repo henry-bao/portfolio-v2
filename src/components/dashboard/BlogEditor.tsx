@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import type { ChangeEvent, MouseEvent } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-    Alert,
     Box,
     Button,
     CircularProgress,
@@ -18,31 +17,23 @@ import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import type { Models } from 'appwrite';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { createBlogPost, getBlogPost, getBlogPostBySlug, updateBlogPost } from '../../services/blogService';
 import {
     ALLOWED_IMAGE_TYPES,
-    createBlogPost,
-    deleteFile,
-    getBlogPost,
-    getBlogPostBySlug,
+    deleteContentImage,
     getContentImagePreviewUrl,
     getContentImages,
-    STORAGE_BLOGS_BUCKET_ID,
-    updateBlogPost,
     updateContentImage,
     uploadContentImage,
-} from '../../services/appwrite';
-import {
-    getBlogDrafts,
-    removeBlogDraft,
-    upsertBlogDraft,
-    type DraftBlogPost,
-} from '../../services/blogDraftStorage';
-import { useMarkdownEditor } from '../../hooks/useMarkdownEditor';
-import { useObjectUrl } from '../../hooks/useObjectUrl';
+} from '../../services/storageService';
+import { getBlogDrafts, removeBlogDraft, upsertBlogDraft } from '../../services/blogDraftStorage';
+import type { DraftBlogPost } from '../../services/blogDraftStorage';
+import { useImagePreview, useMarkdownEditor } from '../../hooks';
 import { routes } from '../../routes/paths';
 import type { BlogPost, BlogPostDocument } from '../../types';
 import { buildSlug } from '../../utils/blog';
 import { formatLocalDateTime, getTodayInputDate, toInputDate } from '../../utils/dates';
+import { StatusAlerts } from '../shared';
 import {
     BlogContentEditor,
     BlogEditorSkeleton,
@@ -57,28 +48,16 @@ import './markdown-preview.css';
 const AUTOSAVE_DELAY_MS = 1000;
 const IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(',');
 
-interface EditorSnapshot {
-    title: string;
-    content: string;
-    summary: string;
-    slug: string;
-    publishedDate: string;
-    published: boolean;
-    tags: string[];
-    isNewPost: boolean;
-    postId?: string;
-    draftId?: string;
-}
-
 const createDraftId = () => `new-${Date.now()}`;
 
 const BlogEditor = () => {
     const { postId } = useParams();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const isNewPost = !postId;
 
     const [post, setPost] = useState<BlogPostDocument | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(!isNewPost);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -90,20 +69,17 @@ const BlogEditor = () => {
     const [content, setContent] = useState('');
     const [summary, setSummary] = useState('');
     const [slug, setSlug] = useState('');
-    const [publishedDate, setPublishedDate] = useState('');
+    const [publishedDate, setPublishedDate] = useState(getTodayInputDate());
     const [published, setPublished] = useState(false);
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
-    const [coverImage, setCoverImage] = useState<File | null>(null);
-    const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
-    const coverImageObjectUrl = useObjectUrl(coverImage);
-    const displayedCoverImagePreview = coverImageObjectUrl || coverImagePreview;
+    const coverImage = useImagePreview();
+    const { setRemoteUrl: setCoverImageRemoteUrl, clear: clearCoverImage } = coverImage;
 
     const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
     const [contentImage, setContentImage] = useState<File | null>(null);
-    const [contentImageName, setContentImageName] = useState('');
     const [isUploadingContentImage, setIsUploadingContentImage] = useState(false);
 
     const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
@@ -112,85 +88,47 @@ const BlogEditor = () => {
     const [selectedLibraryImage, setSelectedLibraryImage] = useState<Models.File | null>(null);
     const [imageMenuAnchorEl, setImageMenuAnchorEl] = useState<HTMLElement | null>(null);
     const [targetImageId, setTargetImageId] = useState<string | null>(null);
-    const [isEditingImage, setIsEditingImage] = useState(false);
     const [imageToEdit, setImageToEdit] = useState<Models.File | null>(null);
     const [newImageFile, setNewImageFile] = useState<File | null>(null);
 
-    const draftSaveTimerRef = useRef<number | null>(null);
-    const stateRef = useRef<EditorSnapshot>({
-        title: '',
-        content: '',
-        summary: '',
-        slug: '',
-        publishedDate: '',
-        published: false,
-        tags: [],
-        isNewPost,
-        postId,
-    });
+    /** Id of the locally autosaved draft; `undefined` once it has been saved to the database. */
+    const draftIdRef = useRef<string | undefined>(undefined);
 
     const { formatMarkdown, insertTextAtCursor, textFieldRef, trackSelectionChange } = useMarkdownEditor(
         content,
         setContent
     );
 
-    useEffect(() => {
-        stateRef.current = {
-            ...stateRef.current,
-            title,
-            content,
-            summary,
-            slug,
-            publishedDate,
-            published,
-            tags,
-            isNewPost,
-            postId,
-        };
-    }, [content, isNewPost, postId, published, publishedDate, slug, summary, tags, title]);
+    const applyDraft = useCallback(
+        (draft: DraftBlogPost) => {
+            draftIdRef.current = draft.id;
 
-    const populateFormFromDraft = useCallback((draft: DraftBlogPost) => {
-        stateRef.current.draftId = draft.id;
+            setTitle(draft.title);
+            setContent(draft.content);
+            setSummary(draft.summary);
+            setSlug(draft.slug);
+            setPublishedDate(draft.publishedDate ? toInputDate(draft.publishedDate) : getTodayInputDate());
+            setPublished(Boolean(draft.published));
+            setTags(draft.tags || []);
+            setCoverImageRemoteUrl(draft.hasCoverImage && draft.coverImageUrl ? draft.coverImageUrl : null);
+            setLastSaved(`Draft last saved: ${formatLocalDateTime(draft.lastSaved)}`);
+            setIsDraft(true);
+        },
+        [setCoverImageRemoteUrl]
+    );
 
-        setTitle(draft.title);
-        setContent(draft.content);
-        setSummary(draft.summary);
-        setSlug(draft.slug);
-        setPublishedDate(draft.publishedDate ? toInputDate(draft.publishedDate) : getTodayInputDate());
-        setPublished(Boolean(draft.published));
-        setTags(draft.tags || []);
-        setCoverImagePreview(draft.hasCoverImage && draft.coverImageUrl ? draft.coverImageUrl : null);
-        setLastSaved(`Draft last saved: ${formatLocalDateTime(draft.lastSaved)}`);
-        setIsDraft(true);
-    }, []);
+    const requestedDraftId = searchParams.get('loadDraft') === 'true' ? searchParams.get('draftId') : null;
 
     useEffect(() => {
-        stateRef.current = {
-            ...stateRef.current,
-            title: '',
-            content: '',
-            summary: '',
-            slug: '',
-            publishedDate: '',
-            published: false,
-            tags: [],
-            isNewPost,
-            postId,
-        };
+        draftIdRef.current = undefined;
 
         if (isNewPost) {
-            setPublishedDate(getTodayInputDate());
+            const draft = requestedDraftId
+                ? getBlogDrafts().find((storedDraft) => storedDraft.id === requestedDraftId)
+                : undefined;
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const loadDraft = urlParams.get('loadDraft');
-            const draftId = urlParams.get('draftId');
-
-            if (loadDraft === 'true' && draftId) {
-                const draft = getBlogDrafts().find((storedDraft) => storedDraft.id === draftId);
-
-                if (draft) {
-                    populateFormFromDraft(draft);
-                }
+            if (draft) {
+                applyDraft(draft);
             }
 
             setIsLoading(false);
@@ -207,10 +145,10 @@ const BlogEditor = () => {
                 setPost(postData);
 
                 if (existingDraft) {
-                    populateFormFromDraft(existingDraft);
+                    applyDraft(existingDraft);
 
                     if (!existingDraft.coverImageUrl && postData.coverImageId) {
-                        setCoverImagePreview(getContentImagePreviewUrl(postData.coverImageId));
+                        setCoverImageRemoteUrl(getContentImagePreviewUrl(postData.coverImageId));
                     }
 
                     return;
@@ -223,9 +161,10 @@ const BlogEditor = () => {
                 setPublishedDate(toInputDate(postData.publishedDate));
                 setPublished(Boolean(postData.published));
                 setTags(postData.tags || []);
-                setCoverImagePreview(postData.coverImageId ? getContentImagePreviewUrl(postData.coverImageId) : null);
+                setCoverImageRemoteUrl(
+                    postData.coverImageId ? getContentImagePreviewUrl(postData.coverImageId) : null
+                );
                 setIsDraft(false);
-                stateRef.current.draftId = undefined;
             } catch (error) {
                 console.error('Error fetching blog post:', error);
                 setError('Failed to load blog post data');
@@ -234,84 +173,73 @@ const BlogEditor = () => {
             }
         };
 
-        fetchPost();
-    }, [isNewPost, populateFormFromDraft, postId]);
+        void fetchPost();
+    }, [applyDraft, isNewPost, postId, requestedDraftId, setCoverImageRemoteUrl]);
 
-    const hasUnsavedChanges = useCallback(() => {
-        if (!post) {
-            return false;
-        }
-
-        return (
-            title !== post.title ||
-            content !== post.content ||
-            summary !== post.summary ||
-            slug !== post.slug ||
-            publishedDate !== toInputDate(post.publishedDate) ||
-            published !== post.published ||
-            JSON.stringify(tags) !== JSON.stringify(post.tags || []) ||
-            (displayedCoverImagePreview === null && Boolean(post.coverImageId)) ||
-            coverImage !== null
-        );
-    }, [content, coverImage, displayedCoverImagePreview, post, published, publishedDate, slug, summary, tags, title]);
-
-    const saveDraftToStorage = useCallback(
-        (draft: DraftBlogPost) => {
-            const draftId = stateRef.current.draftId || draft.id || createDraftId();
-            const draftToSave = { ...draft, id: draftId };
-
-            stateRef.current.draftId = draftId;
-            upsertBlogDraft(draftToSave);
-
-            return draftId;
-        },
-        []
-    );
+    const coverImagePreview = coverImage.previewUrl;
+    const hasUnsavedChanges =
+        Boolean(post) &&
+        (title !== post?.title ||
+            content !== post?.content ||
+            summary !== post?.summary ||
+            slug !== post?.slug ||
+            publishedDate !== toInputDate(post?.publishedDate ?? '') ||
+            published !== post?.published ||
+            JSON.stringify(tags) !== JSON.stringify(post?.tags || []) ||
+            (coverImagePreview === null && Boolean(post?.coverImageId)) ||
+            coverImage.file !== null);
 
     useEffect(() => {
-        if (draftSaveTimerRef.current) {
-            window.clearTimeout(draftSaveTimerRef.current);
+        const hasContentWorthSaving = title.trim() || content.trim() || summary.trim();
+        const shouldSaveDraft = isNewPost || hasUnsavedChanges || draftIdRef.current;
+
+        if (!shouldSaveDraft || !hasContentWorthSaving) {
+            return;
         }
 
-        draftSaveTimerRef.current = window.setTimeout(() => {
-            const state = stateRef.current;
-            const hasContentWorthSaving = state.title.trim() || state.content.trim() || state.summary.trim();
-            const shouldSaveDraft = isNewPost || (post && hasUnsavedChanges()) || state.draftId;
+        const timer = window.setTimeout(() => {
+            const draftId = draftIdRef.current ?? postId ?? createDraftId();
+            const lastSavedAt = new Date().toISOString();
 
-            if (!shouldSaveDraft || !hasContentWorthSaving) {
-                return;
-            }
-
-            saveDraftToStorage({
-                id: state.draftId || state.postId,
-                title: state.title,
-                content: state.content,
-                summary: state.summary,
-                slug: state.slug,
-                publishedDate: state.publishedDate,
-                tags: state.tags,
-                lastSaved: new Date().toISOString(),
-                published: state.published,
-                hasCoverImage: displayedCoverImagePreview !== null,
+            draftIdRef.current = draftId;
+            upsertBlogDraft({
+                id: draftId,
+                title,
+                content,
+                summary,
+                slug,
+                publishedDate,
+                published,
+                tags,
+                lastSaved: lastSavedAt,
+                hasCoverImage: coverImagePreview !== null,
                 coverImageId: post?.coverImageId,
-                coverImageUrl: displayedCoverImagePreview || undefined,
+                coverImageUrl: coverImagePreview || undefined,
             });
 
-            setLastSaved(`Draft saved: ${formatLocalDateTime(new Date().toISOString())}`);
+            setLastSaved(`Draft saved: ${formatLocalDateTime(lastSavedAt)}`);
             setIsDraft(true);
         }, AUTOSAVE_DELAY_MS);
 
-        return () => {
-            if (draftSaveTimerRef.current) {
-                window.clearTimeout(draftSaveTimerRef.current);
-            }
-        };
-    }, [displayedCoverImagePreview, hasUnsavedChanges, isNewPost, post, saveDraftToStorage]);
+        return () => window.clearTimeout(timer);
+    }, [
+        content,
+        coverImagePreview,
+        hasUnsavedChanges,
+        isNewPost,
+        post?.coverImageId,
+        postId,
+        published,
+        publishedDate,
+        slug,
+        summary,
+        tags,
+        title,
+    ]);
 
     const removeCurrentDraft = useCallback(() => {
-        const currentDraftId = stateRef.current.draftId || postId;
-        removeBlogDraft(currentDraftId);
-        stateRef.current.draftId = undefined;
+        removeBlogDraft(draftIdRef.current ?? postId);
+        draftIdRef.current = undefined;
     }, [postId]);
 
     const handleCoverImageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -326,31 +254,15 @@ const BlogEditor = () => {
             return;
         }
 
-        setCoverImage(file);
-    };
-
-    const handleRemoveCoverImage = () => {
-        setCoverImage(null);
-        setCoverImagePreview(null);
+        coverImage.setFile(file);
     };
 
     const handleTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const newTitle = event.target.value;
-        setTitle(newTitle);
+        setTitle(event.target.value);
 
         if (!slugManuallyEdited) {
-            setSlug(buildSlug(newTitle));
+            setSlug(buildSlug(event.target.value));
         }
-    };
-
-    const handleSlugChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setSlug(event.target.value.replace(/\s+/g, '-'));
-        setSlugManuallyEdited(true);
-    };
-
-    const handleManualSlugGenerate = () => {
-        setSlug(buildSlug(title));
-        setSlugManuallyEdited(true);
     };
 
     const handleAddTag = () => {
@@ -364,12 +276,8 @@ const BlogEditor = () => {
         setTagInput('');
     };
 
-    const handleRemoveTag = (tagToRemove: string) => {
-        setTags((currentTags) => currentTags.filter((tag) => tag !== tagToRemove));
-    };
-
     const handleDiscardDraft = () => {
-        if (!isNewPost && post) {
+        if (post) {
             setTitle(post.title);
             setContent(post.content);
             setSummary(post.summary);
@@ -377,8 +285,8 @@ const BlogEditor = () => {
             setPublishedDate(toInputDate(post.publishedDate));
             setPublished(Boolean(post.published));
             setTags(post.tags || []);
-            setCoverImage(null);
-            setCoverImagePreview(post.coverImageId ? getContentImagePreviewUrl(post.coverImageId) : null);
+            coverImage.setFile(null);
+            setCoverImageRemoteUrl(post.coverImageId ? getContentImagePreviewUrl(post.coverImageId) : null);
         } else {
             setTitle('');
             setContent('');
@@ -387,8 +295,7 @@ const BlogEditor = () => {
             setPublishedDate(getTodayInputDate());
             setPublished(false);
             setTags([]);
-            setCoverImage(null);
-            setCoverImagePreview(null);
+            clearCoverImage();
         }
 
         removeCurrentDraft();
@@ -397,16 +304,16 @@ const BlogEditor = () => {
         setSuccess('Draft discarded');
     };
 
-    const validateForm = useCallback(() => {
+    const validateForm = () => {
         if (!title.trim()) return 'Title is required';
         if (!content.trim()) return 'Content is required';
         if (!summary.trim()) return 'Summary is required';
         if (!slug.trim()) return 'Slug is required';
         if (!publishedDate) return 'Published date is required';
         return null;
-    }, [content, publishedDate, slug, summary, title]);
+    };
 
-    const handleSave = useCallback(async () => {
+    const handleSave = async () => {
         const validationError = validateForm();
 
         if (validationError) {
@@ -421,27 +328,21 @@ const BlogEditor = () => {
         try {
             const existingPost = await getBlogPostBySlug(slug);
 
-            if (isNewPost && existingPost) {
-                setError('A blog post with this slug already exists. Please choose a different slug.');
-                return;
-            }
-
-            if (!isNewPost && existingPost && existingPost.$id !== postId) {
+            if (existingPost && existingPost.$id !== postId) {
                 setError('This slug is already used by another blog post. Please choose a different slug.');
                 return;
             }
 
             let coverImageId = post?.coverImageId;
 
-            if (coverImage) {
+            if (coverImage.file) {
                 if (coverImageId) {
-                    await deleteFile(coverImageId, STORAGE_BLOGS_BUCKET_ID);
+                    await deleteContentImage(coverImageId);
                 }
 
-                const uploadResult = await uploadContentImage(coverImage);
-                coverImageId = uploadResult.fileId;
-            } else if (displayedCoverImagePreview === null && coverImageId) {
-                await deleteFile(coverImageId, STORAGE_BLOGS_BUCKET_ID);
+                coverImageId = (await uploadContentImage(coverImage.file)).fileId;
+            } else if (coverImagePreview === null && coverImageId) {
+                await deleteContentImage(coverImageId);
                 coverImageId = undefined;
             }
 
@@ -456,14 +357,12 @@ const BlogEditor = () => {
                 coverImageId,
             };
 
-            const result = isNewPost
-                ? await createBlogPost(blogData)
-                : await updateBlogPost(postId as string, blogData);
+            const result = isNewPost ? await createBlogPost(blogData) : await updateBlogPost(postId, blogData);
 
             removeCurrentDraft();
             setIsDraft(false);
-            setCoverImage(null);
-            setCoverImagePreview(result.coverImageId ? getContentImagePreviewUrl(result.coverImageId) : null);
+            coverImage.setFile(null);
+            setCoverImageRemoteUrl(result.coverImageId ? getContentImagePreviewUrl(result.coverImageId) : null);
             setSuccess(`Blog post ${isNewPost ? 'created' : 'updated'} successfully`);
 
             if (isNewPost) {
@@ -477,38 +376,10 @@ const BlogEditor = () => {
         } finally {
             setIsSaving(false);
         }
-    }, [
-        content,
-        coverImage,
-        displayedCoverImagePreview,
-        isNewPost,
-        navigate,
-        post?.coverImageId,
-        postId,
-        published,
-        publishedDate,
-        removeCurrentDraft,
-        slug,
-        summary,
-        tags,
-        title,
-        validateForm,
-    ]);
-
-    const handleContentImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-
-        if (!file) {
-            return;
-        }
-
-        setContentImage(file);
-        setContentImageName(file.name);
     };
 
     const handleOpenImageDialog = () => {
         setContentImage(null);
-        setContentImageName('');
         setIsMediaLibraryOpen(false);
         setIsImageDialogOpen(true);
     };
@@ -522,9 +393,8 @@ const BlogEditor = () => {
 
         try {
             const { url } = await uploadContentImage(contentImage);
-            const altText = contentImageName.split('.')[0] || 'image';
 
-            insertTextAtCursor(`![${altText}](${url})`);
+            insertTextAtCursor(`![${contentImage.name.split('.')[0] || 'image'}](${url})`);
             setIsImageDialogOpen(false);
             setSuccess('Image uploaded successfully');
         } catch (error) {
@@ -550,7 +420,7 @@ const BlogEditor = () => {
 
     useEffect(() => {
         if (isMediaLibraryOpen) {
-            loadContentImages();
+            void loadContentImages();
         }
     }, [isMediaLibraryOpen, loadContentImages]);
 
@@ -565,13 +435,12 @@ const BlogEditor = () => {
         }
 
         const url = getContentImagePreviewUrl(selectedLibraryImage.$id);
-        const altText = selectedLibraryImage.name.split('.')[0] || 'image';
 
-        insertTextAtCursor(`![${altText}](${url})`);
+        insertTextAtCursor(`![${selectedLibraryImage.name.split('.')[0] || 'image'}](${url})`);
         handleCloseMediaLibrary();
     };
 
-    const handleImageMenuOpen = (event: React.MouseEvent<HTMLElement>, imageId: string) => {
+    const handleImageMenuOpen = (event: MouseEvent<HTMLElement>, imageId: string) => {
         setImageMenuAnchorEl(event.currentTarget);
         setTargetImageId(imageId);
     };
@@ -587,7 +456,7 @@ const BlogEditor = () => {
         }
 
         try {
-            await deleteFile(targetImageId, STORAGE_BLOGS_BUCKET_ID);
+            await deleteContentImage(targetImageId);
             await loadContentImages();
             setSuccess('Image deleted successfully');
         } catch (error) {
@@ -598,28 +467,9 @@ const BlogEditor = () => {
         }
     };
 
-    const handleOpenEditImage = () => {
-        if (!targetImageId) {
-            return;
-        }
-
-        setImageToEdit(contentImages.find((image) => image.$id === targetImageId) || null);
-        setIsEditingImage(true);
-        handleImageMenuClose();
-    };
-
     const handleCloseEditImage = () => {
-        setIsEditingImage(false);
         setImageToEdit(null);
         setNewImageFile(null);
-    };
-
-    const handleNewImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-
-        if (file) {
-            setNewImageFile(file);
-        }
     };
 
     const handleUpdateImage = async () => {
@@ -659,17 +509,7 @@ const BlogEditor = () => {
                 {isNewPost ? 'Create New Blog Post' : 'Edit Blog Post'}
             </Typography>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    {success}
-                </Alert>
-            )}
+            <StatusAlerts error={error} success={success} />
 
             <Paper sx={{ p: 3 }}>
                 <Grid container spacing={3}>
@@ -682,21 +522,29 @@ const BlogEditor = () => {
                         tags={tags}
                         tagInput={tagInput}
                         onTitleChange={handleTitleChange}
-                        onSlugChange={handleSlugChange}
+                        onSlugChange={(event) => {
+                            setSlug(event.target.value.replace(/\s+/g, '-'));
+                            setSlugManuallyEdited(true);
+                        }}
                         onSummaryChange={setSummary}
                         onPublishedDateChange={setPublishedDate}
                         onPublishedChange={setPublished}
                         onTagInputChange={setTagInput}
-                        onManualSlugGenerate={handleManualSlugGenerate}
+                        onManualSlugGenerate={() => {
+                            setSlug(buildSlug(title));
+                            setSlugManuallyEdited(true);
+                        }}
                         onTagAdd={handleAddTag}
-                        onTagRemove={handleRemoveTag}
+                        onTagRemove={(tagToRemove) =>
+                            setTags((currentTags) => currentTags.filter((tag) => tag !== tagToRemove))
+                        }
                     />
 
                     <CoverImageField
                         accept={IMAGE_ACCEPT}
-                        coverImagePreview={displayedCoverImagePreview}
+                        coverImagePreview={coverImagePreview}
                         onImageChange={handleCoverImageChange}
-                        onRemove={handleRemoveCoverImage}
+                        onRemove={clearCoverImage}
                     />
 
                     <Grid item xs={12}>
@@ -766,7 +614,7 @@ const BlogEditor = () => {
                 isUploading={isUploadingContentImage}
                 open={isImageDialogOpen}
                 onClose={() => setIsImageDialogOpen(false)}
-                onImageChange={handleContentImageChange}
+                onImageChange={(event) => setContentImage(event.target.files?.[0] ?? null)}
                 onInsert={handleInsertContentImage}
             />
 
@@ -784,7 +632,12 @@ const BlogEditor = () => {
             />
 
             <Menu anchorEl={imageMenuAnchorEl} open={Boolean(imageMenuAnchorEl)} onClose={handleImageMenuClose}>
-                <MenuItem onClick={handleOpenEditImage}>
+                <MenuItem
+                    onClick={() => {
+                        setImageToEdit(contentImages.find((image) => image.$id === targetImageId) || null);
+                        handleImageMenuClose();
+                    }}
+                >
                     <ListItemIcon>
                         <EditIcon fontSize="small" />
                     </ListItemIcon>
@@ -802,10 +655,10 @@ const BlogEditor = () => {
                 accept={IMAGE_ACCEPT}
                 imageToEdit={imageToEdit}
                 newImageFile={newImageFile}
-                open={isEditingImage}
+                open={Boolean(imageToEdit)}
                 getImageUrl={getContentImagePreviewUrl}
                 onClose={handleCloseEditImage}
-                onFileChange={handleNewImageSelect}
+                onFileChange={(event) => setNewImageFile(event.target.files?.[0] ?? null)}
                 onUpdate={handleUpdateImage}
             />
         </Box>

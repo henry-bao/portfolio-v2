@@ -152,7 +152,9 @@
     color: var(--link-color);
     text-decoration: none;
     border-bottom: 1px solid var(--link-color);
-    transition: border-color 0.2s, color 0.2s;
+    transition:
+        border-color 0.2s,
+        color 0.2s;
 }
 
 .blog-post-content a:hover {
@@ -274,4 +276,8 @@
     .blog-post-content {
         font-size: 1rem;
     }
+}
+
+.blog-post-container--preview {
+    padding-top: 2rem;
 }

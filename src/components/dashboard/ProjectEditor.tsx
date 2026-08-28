@@ -1,41 +1,44 @@
-import { useState, useEffect, ChangeEvent } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
-    Typography,
-    TextField,
     Button,
-    Grid,
-    Paper,
     CircularProgress,
-    Alert,
-    Switch,
-    FormControlLabel,
-    Divider,
-    IconButton,
     Collapse,
+    Divider,
+    FormControlLabel,
+    Grid,
+    IconButton,
+    Paper,
+    Switch,
+    TextField,
+    Typography,
 } from '@mui/material';
 import {
-    Delete as DeleteIcon,
-    Upload as UploadIcon,
     Add as AddIcon,
-    ExpandMore as ExpandMoreIcon,
+    Delete as DeleteIcon,
     ExpandLess as ExpandLessIcon,
+    ExpandMore as ExpandMoreIcon,
+    Upload as UploadIcon,
 } from '@mui/icons-material';
-import { getProject, createProject, updateProject, uploadFile, deleteFile, ProjectData } from '../../services/appwrite';
-import type { ProjectDocument } from '../../types';
-import { getFilePreviewUrl } from '../../services/fileProxy';
-import { Models } from 'appwrite';
+import { createProject, getProject, updateProject } from '../../services/projectService';
+import { deleteFile, getFilePreviewUrl, uploadFile } from '../../services/storageService';
+import type { ProjectData, ProjectDocument } from '../../types';
 import { routes } from '../../routes/paths';
-import { useObjectUrl } from '../../hooks';
+import { useImagePreview } from '../../hooks';
+import { StatusAlerts } from '../shared';
+
+const DEFAULT_LINK_TEXT = 'Click here to learn more';
+const REDIRECT_AFTER_CREATE_MS = 1500;
 
 const ProjectEditor = () => {
     const { projectId } = useParams();
     const navigate = useNavigate();
     const isNewProject = !projectId;
 
-    const [project, setProject] = useState<(Models.Document & ProjectData) | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [project, setProject] = useState<ProjectDocument | null>(null);
+    const [isLoading, setIsLoading] = useState(!isNewProject);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -46,40 +49,35 @@ const ProjectEditor = () => {
     const [description, setDescription] = useState<string[]>(['']);
     const [isOpen, setIsOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
-    const [linkText, setLinkText] = useState('Click here to learn more');
-
-    const [logo, setLogo] = useState<File | null>(null);
-    const [logoPreview, setLogoPreview] = useState<string | null>(null);
-    const logoObjectUrl = useObjectUrl(logo);
-    const displayedLogoPreview = logoObjectUrl || logoPreview;
-
+    const [linkText, setLinkText] = useState(DEFAULT_LINK_TEXT);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(true);
 
+    const logo = useImagePreview();
+    const { setRemoteUrl: setLogoRemoteUrl } = logo;
+    const redirectTimerRef = useRef<number | null>(null);
+
+    useEffect(() => () => window.clearTimeout(redirectTimerRef.current ?? undefined), []);
+
     useEffect(() => {
-        if (isNewProject) {
-            setIsLoading(false);
+        if (!projectId) {
             return;
         }
 
         const fetchProject = async () => {
             setIsLoading(true);
-            try {
-                const projectData = await getProject(projectId as string);
-                setProject(projectData);
 
+            try {
+                const projectData = await getProject(projectId);
+
+                setProject(projectData);
                 setTitle(projectData.title);
                 setRole(projectData.role);
                 setDate(projectData.date);
-                setDescription(projectData.description || ['']);
+                setDescription(projectData.description?.length ? projectData.description : ['']);
                 setIsOpen(projectData.isOpen || false);
-
-                if (projectData.link_url) setLinkUrl(projectData.link_url);
-                if (projectData.link_text) setLinkText(projectData.link_text);
-
-                if (projectData.logoFileId) {
-                    const logoUrl = getFilePreviewUrl(projectData.logoFileId);
-                    setLogoPreview(logoUrl);
-                }
+                setLinkUrl(projectData.link_url || '');
+                setLinkText(projectData.link_text || DEFAULT_LINK_TEXT);
+                setLogoRemoteUrl(projectData.logoFileId ? getFilePreviewUrl(projectData.logoFileId) : null);
             } catch (error) {
                 console.error('Error fetching project:', error);
                 setError('Failed to load project data');
@@ -88,31 +86,25 @@ const ProjectEditor = () => {
             }
         };
 
-        fetchProject();
-    }, [projectId, isNewProject]);
+        void fetchProject();
+    }, [projectId, setLogoRemoteUrl]);
 
-    const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setLogo(e.target.files[0]);
+    const handleLogoChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        if (file) {
+            logo.setFile(file);
         }
     };
 
-    const handleDescriptionChange = (index: number, value: string) => {
-        const newDescription = [...description];
-        newDescription[index] = value;
-        setDescription(newDescription);
+    const updateDescriptionItem = (index: number, value: string) => {
+        setDescription((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
     };
 
-    const handleAddDescriptionItem = () => {
-        setDescription([...description, '']);
-    };
-
-    const handleRemoveDescriptionItem = (index: number) => {
-        if (description.length > 1) {
-            const newDescription = [...description];
-            newDescription.splice(index, 1);
-            setDescription(newDescription);
-        }
+    const removeDescriptionItem = (index: number) => {
+        setDescription((current) =>
+            current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current
+        );
     };
 
     const handleSave = async () => {
@@ -128,13 +120,12 @@ const ProjectEditor = () => {
         try {
             let logoFileId = project?.logoFileId;
 
-            if (logo) {
+            if (logo.file) {
                 if (logoFileId) {
                     await deleteFile(logoFileId);
                 }
 
-                const uploadResult = await uploadFile(logo);
-                logoFileId = uploadResult.$id;
+                logoFileId = (await uploadFile(logo.file)).$id;
             }
 
             const projectData: ProjectData = {
@@ -144,23 +135,19 @@ const ProjectEditor = () => {
                 description: description.filter((item) => item.trim() !== ''),
                 isOpen,
                 logoFileId,
+                ...(linkUrl.trim() ? { link_url: linkUrl, link_text: linkText || DEFAULT_LINK_TEXT } : {}),
             };
-
-            if (linkUrl.trim()) {
-                projectData.link_url = linkUrl;
-                projectData.link_text = linkText || 'Click here to learn more';
-            }
 
             const result = isNewProject
                 ? await createProject(projectData)
-                : await updateProject(projectId as string, projectData);
+                : await updateProject(projectId, projectData);
 
             setSuccess(`Project ${isNewProject ? 'created' : 'updated'} successfully`);
 
             if (isNewProject) {
-                setTimeout(() => {
+                redirectTimerRef.current = window.setTimeout(() => {
                     navigate(routes.admin.projectEdit(result.$id));
-                }, 1500);
+                }, REDIRECT_AFTER_CREATE_MS);
             } else {
                 setProject(result as unknown as ProjectDocument);
             }
@@ -174,14 +161,7 @@ const ProjectEditor = () => {
 
     if (isLoading) {
         return (
-            <Box
-                sx={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                }}
-            >
+            <Box sx={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
                 <CircularProgress />
             </Box>
         );
@@ -193,17 +173,7 @@ const ProjectEditor = () => {
                 {isNewProject ? 'Create New Project' : 'Edit Project'}
             </Typography>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                    {success}
-                </Alert>
-            )}
+            <StatusAlerts error={error} success={success} />
 
             <Paper sx={{ p: 3 }}>
                 <Grid container spacing={3}>
@@ -219,7 +189,7 @@ const ProjectEditor = () => {
                                     fullWidth
                                     label="Project Title"
                                     value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    onChange={(event) => setTitle(event.target.value)}
                                     margin="normal"
                                     required
                                 />
@@ -229,7 +199,7 @@ const ProjectEditor = () => {
                                     fullWidth
                                     label="Your Role"
                                     value={role}
-                                    onChange={(e) => setRole(e.target.value)}
+                                    onChange={(event) => setRole(event.target.value)}
                                     margin="normal"
                                     required
                                 />
@@ -239,7 +209,7 @@ const ProjectEditor = () => {
                                     fullWidth
                                     label="Date/Period"
                                     value={date}
-                                    onChange={(e) => setDate(e.target.value)}
+                                    onChange={(event) => setDate(event.target.value)}
                                     margin="normal"
                                     placeholder="e.g., June 2022 - Present"
                                     required
@@ -247,7 +217,12 @@ const ProjectEditor = () => {
                             </Grid>
                             <Grid item xs={12}>
                                 <FormControlLabel
-                                    control={<Switch checked={isOpen} onChange={(e) => setIsOpen(e.target.checked)} />}
+                                    control={
+                                        <Switch
+                                            checked={isOpen}
+                                            onChange={(event) => setIsOpen(event.target.checked)}
+                                        />
+                                    }
                                     label="Show expanded by default"
                                 />
                             </Grid>
@@ -261,12 +236,17 @@ const ProjectEditor = () => {
                             </Typography>
                             <Box>
                                 <IconButton
-                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                    onClick={() => setIsDescriptionExpanded((current) => !current)}
+                                    aria-label={isDescriptionExpanded ? 'Collapse description' : 'Expand description'}
                                     size="small"
                                 >
                                     {isDescriptionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </IconButton>
-                                <Button startIcon={<AddIcon />} onClick={handleAddDescriptionItem} size="small">
+                                <Button
+                                    startIcon={<AddIcon />}
+                                    onClick={() => setDescription((current) => [...current, ''])}
+                                    size="small"
+                                >
                                     Add Item
                                 </Button>
                             </Box>
@@ -280,7 +260,7 @@ const ProjectEditor = () => {
                                         fullWidth
                                         label={`Description Item ${index + 1}`}
                                         value={item}
-                                        onChange={(e) => handleDescriptionChange(index, e.target.value)}
+                                        onChange={(event) => updateDescriptionItem(index, event.target.value)}
                                         margin="normal"
                                         multiline
                                         minRows={2}
@@ -290,7 +270,8 @@ const ProjectEditor = () => {
                                     {description.length > 1 && (
                                         <IconButton
                                             color="error"
-                                            onClick={() => handleRemoveDescriptionItem(index)}
+                                            onClick={() => removeDescriptionItem(index)}
+                                            aria-label={`Remove description item ${index + 1}`}
                                             sx={{ ml: 1 }}
                                         >
                                             <DeleteIcon />
@@ -313,7 +294,7 @@ const ProjectEditor = () => {
                                     fullWidth
                                     label="Link URL"
                                     value={linkUrl}
-                                    onChange={(e) => setLinkUrl(e.target.value)}
+                                    onChange={(event) => setLinkUrl(event.target.value)}
                                     margin="normal"
                                     placeholder="https://example.com"
                                 />
@@ -323,9 +304,9 @@ const ProjectEditor = () => {
                                     fullWidth
                                     label="Link Text"
                                     value={linkText}
-                                    onChange={(e) => setLinkText(e.target.value)}
+                                    onChange={(event) => setLinkText(event.target.value)}
                                     margin="normal"
-                                    placeholder="Click here to learn more"
+                                    placeholder={DEFAULT_LINK_TEXT}
                                 />
                             </Grid>
                         </Grid>
@@ -337,11 +318,11 @@ const ProjectEditor = () => {
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
-                        {displayedLogoPreview && (
+                        {logo.previewUrl && (
                             <Box mb={2}>
                                 <img
-                                    src={displayedLogoPreview}
-                                    alt="Logo Preview"
+                                    src={logo.previewUrl}
+                                    alt="Logo preview"
                                     style={{
                                         maxWidth: '200px',
                                         maxHeight: '200px',

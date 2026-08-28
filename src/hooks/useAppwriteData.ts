@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
 import { useAsyncData } from './useAsyncData';
 import type { AsyncDataOptions } from './useAsyncData';
-import { getProjects, getBlogPosts, getProfileData } from '../services/appwrite';
+import { getBlogPosts } from '../services/blogService';
+import { getProfileData } from '../services/profileService';
+import { getProjects } from '../services/projectService';
 import type { ProjectDocument, BlogPostDocument, ProfileDocument } from '../types';
 
 export function useProjects(options?: AsyncDataOptions<ProjectDocument[]>) {

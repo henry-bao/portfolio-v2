@@ -13,7 +13,11 @@ export interface DraftBlogPost {
     coverImageUrl?: string;
 }
 
-export const BLOG_DRAFTS_STORAGE_KEY = 'blog_drafts';
+const BLOG_DRAFTS_STORAGE_KEY = 'blog_drafts';
+
+const writeBlogDrafts = (drafts: DraftBlogPost[]) => {
+    localStorage.setItem(BLOG_DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+};
 
 export const getBlogDrafts = (): DraftBlogPost[] => {
     try {
@@ -24,12 +28,6 @@ export const getBlogDrafts = (): DraftBlogPost[] => {
         return [];
     }
 };
-
-export const setBlogDrafts = (drafts: DraftBlogPost[]) => {
-    localStorage.setItem(BLOG_DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
-};
-
-export const getBlogDraft = (draftId: string) => getBlogDrafts().find((draft) => draft.id === draftId) || null;
 
 export const upsertBlogDraft = (draft: DraftBlogPost) => {
     if (!draft.id) {
@@ -45,7 +43,7 @@ export const upsertBlogDraft = (draft: DraftBlogPost) => {
         drafts.push(draft);
     }
 
-    setBlogDrafts(drafts);
+    writeBlogDrafts(drafts);
     return draft.id;
 };
 
@@ -54,5 +52,5 @@ export const removeBlogDraft = (draftId?: string) => {
         return;
     }
 
-    setBlogDrafts(getBlogDrafts().filter((draft) => draft.id !== draftId));
+    writeBlogDrafts(getBlogDrafts().filter((draft) => draft.id !== draftId));
 };

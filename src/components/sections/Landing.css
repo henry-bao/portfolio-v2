@@ -61,6 +61,12 @@
 }
 
 .wave-hand {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
     animation-name: wave-animation;
     animation-duration: 3.5s;
     animation-iteration-count: infinite;

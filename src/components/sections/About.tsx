@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { Box, CircularProgress } from '@mui/material';
-import { getFilePreviewUrl } from '../../services/fileProxy';
+import { getFilePreviewUrl } from '../../services/storageService';
 import type { ProfileDocument } from '../../types';
-import {
-    fallbackProfileImage,
-    fallbackResumeUrl,
-    mapProfileDocumentToDisplayData,
-} from '../../utils/profile';
+import { FALLBACK_PROFILE_IMAGE, FALLBACK_RESUME_URL } from '../../utils/assets';
+import { mapProfileDocumentToDisplayData } from '../../utils/profile';
 import { ImageWithFallback } from '../shared';
 import './About.css';
 
@@ -15,113 +13,123 @@ interface AboutProps {
     profile: ProfileDocument | null;
 }
 
-const renderTokenList = (items: string[], separator = '&&') =>
-    items.map((item, index) => (
-        <span key={`${item}-${index}`}>
-            <span className="r-string-color"> "{item}"</span>
-            {index < items.length - 1 && <span style={{ color: '#59597f' }}>&nbsp;{separator}</span>}
-        </span>
-    ));
-
-const renderEmail = (email: string) =>
-    email.split(/([@.])/).map((part, index) =>
-        part === '@' || part === '.' ? (
-            <span key={`${part}-${index}`} style={{ color: '#59597f' }}>
-                {part}
+/** Renders `"a" && "b"` the way the surrounding R-flavoured pseudo-code reads. */
+const TokenList = ({ items, separator = '&&' }: { items: string[]; separator?: string }) => (
+    <>
+        {items.map((item, index) => (
+            <span key={`${item}-${index}`}>
+                <span className="r-string-color"> "{item}"</span>
+                {index < items.length - 1 && <span className="r-punctuation-color">&nbsp;{separator}</span>}
             </span>
-        ) : (
-            <span key={`${part}-${index}`}>{part}</span>
-        )
-    );
+        ))}
+    </>
+);
+
+/** Renders `c("a", "b")`. */
+const TokenVector = ({ items }: { items: string[] }) => (
+    <>
+        <span className="r-function-color">c</span>
+        <span className="r-punctuation-color">(</span>
+        {items.map((item, index) => (
+            <span key={`${item}-${index}`}>
+                <span className="r-string-color">"{item}"</span>
+                {index < items.length - 1 && ', '}
+            </span>
+        ))}
+        <span className="r-punctuation-color">)</span>
+    </>
+);
+
+/** Dims the `@` and `.` so the address reads as a string literal. */
+const EmailTokens = ({ email }: { email: string }) => (
+    <>
+        {email.split(/([@.])/).map((part, index) =>
+            part === '@' || part === '.' ? (
+                <span key={`${part}-${index}`} className="r-punctuation-color">
+                    {part}
+                </span>
+            ) : (
+                <span key={`${part}-${index}`}>{part}</span>
+            )
+        )}
+    </>
+);
+
+const AboutRow = ({ label, children }: { label: string; children: ReactNode }) => (
+    <li>
+        {label} <span className="r-arrow-color">&lt;-</span>
+        {children}
+    </li>
+);
+
+const ExternalLink = ({ href, children }: { href: string; children: string }) => (
+    <a href={href} target="_blank" rel="noopener" className="about-click">
+        {children}
+    </a>
+);
 
 const About = ({ loading, profile }: AboutProps) => {
-    const { displayData, resumeUrl, profileImageUrl } = useMemo(() => {
-        const data = mapProfileDocumentToDisplayData(profile);
-        const resume = profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : fallbackResumeUrl;
-        const profileImage = profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : null;
-
-        return {
-            displayData: data,
-            resumeUrl: resume,
-            profileImageUrl: profileImage,
-        };
-    }, [profile]);
-
-    if (loading) {
-        return (
-            <section id="about" className="about-css">
-                <div className="about">
-                    <h1 className="sec-title">About Me</h1>
-                    <Box className="about-loading" aria-label="Loading profile">
-                        <CircularProgress />
-                    </Box>
-                </div>
-            </section>
-        );
-    }
+    const { displayData, resumeUrl, profileImageUrl } = useMemo(
+        () => ({
+            displayData: mapProfileDocumentToDisplayData(profile),
+            resumeUrl: profile?.resumeFileId ? getFilePreviewUrl(profile.resumeFileId) : FALLBACK_RESUME_URL,
+            profileImageUrl: profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : null,
+        }),
+        [profile]
+    );
 
     return (
         <section id="about" className="about-css">
             <div className="about">
                 <h1 className="sec-title">About Me</h1>
-                <div className="about-container">
-                    <div className="my-pic-container">
-                        <ImageWithFallback
-                            className="my-pic"
-                            src={profileImageUrl}
-                            fallbackSrc={fallbackProfileImage}
-                            alt="A picture of me (Henry Bao) in black and white"
-                        />
-                    </div>
-                    <ul className="about-list">
-                        <li>
-                            name <span className="r-arrow-color">&lt;-</span>
-                            <span className="r-string-color"> "{displayData.name}"</span>
-                        </li>
-                        <li>
-                            pronouns <span className="r-arrow-color">&lt;-</span>
-                            {renderTokenList(displayData.pronouns)}
-                        </li>
-                        <li>
-                            education <span className="r-arrow-color">&lt;-</span>
-                            {renderTokenList(displayData.education)}
-                        </li>
-                        <li>
-                            languages <span className="r-arrow-color">&lt;-</span>{' '}
-                            <span style={{ color: '#6b96b6' }}>c</span>
-                            <span style={{ color: '#59597f' }}>(</span>
-                            {displayData.languages.map((lang: string, index: number) => (
-                                <span key={index}>
-                                    <span className="r-string-color">"{lang}"</span>
-                                    {index < displayData.languages.length - 1 && ', '}
+
+                {loading ? (
+                    <Box className="about-loading" aria-label="Loading profile">
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <div className="about-container">
+                        <div className="my-pic-container">
+                            <ImageWithFallback
+                                className="my-pic"
+                                src={profileImageUrl}
+                                fallbackSrc={FALLBACK_PROFILE_IMAGE}
+                                alt="A picture of me (Henry Bao) in black and white"
+                            />
+                        </div>
+                        <ul className="about-list">
+                            <AboutRow label="name">
+                                <span className="r-string-color"> "{displayData.name}"</span>
+                            </AboutRow>
+                            <AboutRow label="pronouns">
+                                <TokenList items={displayData.pronouns} />
+                            </AboutRow>
+                            <AboutRow label="education">
+                                <TokenList items={displayData.education} />
+                            </AboutRow>
+                            <AboutRow label="languages">
+                                {' '}
+                                <TokenVector items={displayData.languages} />
+                            </AboutRow>
+                            <AboutRow label="resume">
+                                <ExternalLink href={resumeUrl}>{' download()'}</ExternalLink>
+                            </AboutRow>
+                            <AboutRow label="linkedin">
+                                <ExternalLink href={displayData.linkedin}>{' redirect()'}</ExternalLink>
+                            </AboutRow>
+                            <AboutRow label="github">
+                                <ExternalLink href={displayData.github}>{' redirect()'}</ExternalLink>
+                            </AboutRow>
+                            <AboutRow label="e-mail">
+                                <span className="r-string-color">
+                                    {' "'}
+                                    <EmailTokens email={displayData.email} />
+                                    {'"'}
                                 </span>
-                            ))}
-                            <span style={{ color: '#59597f' }}>)</span>
-                        </li>
-                        <li>
-                            resume <span className="r-arrow-color">&lt;-</span>
-                            <a href={resumeUrl} target="_blank" rel="noopener" className="about-click">
-                                {' download()'}
-                            </a>
-                        </li>
-                        <li>
-                            linkedin <span className="r-arrow-color">&lt;-</span>
-                            <a href={displayData.linkedin} target="_blank" rel="noopener" className="about-click">
-                                {' redirect()'}
-                            </a>
-                        </li>
-                        <li>
-                            github <span className="r-arrow-color">&lt;-</span>
-                            <a href={displayData.github} target="_blank" rel="noopener" className="about-click">
-                                {' redirect()'}
-                            </a>
-                        </li>
-                        <li>
-                            e-mail <span className="r-arrow-color">&lt;-</span>
-                            <span className="r-string-color"> "{renderEmail(displayData.email)}"</span>
-                        </li>
-                    </ul>
-                </div>
+                            </AboutRow>
+                        </ul>
+                    </div>
+                )}
             </div>
         </section>
     );

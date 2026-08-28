@@ -12,7 +12,7 @@ import {
     FormatSize as HeadingIcon,
     PhotoLibrary as PhotoLibraryIcon,
 } from '@mui/icons-material';
-import type { MarkdownFormatAction } from '../../../hooks/useMarkdownEditor';
+import type { MarkdownFormatAction } from '../../../hooks';
 
 interface BlogToolbarProps {
     onFormatText: (type: MarkdownFormatAction) => void;

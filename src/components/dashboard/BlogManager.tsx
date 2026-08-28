@@ -1,51 +1,51 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+    Alert,
     Box,
-    Typography,
-    Paper,
     Button,
-    TextField,
+    Card,
+    CardActions,
+    CardContent,
+    Chip,
     CircularProgress,
+    Divider,
     IconButton,
+    Paper,
+    Snackbar,
+    Stack,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Alert,
-    Snackbar,
-    useTheme,
-    useMediaQuery,
-    Stack,
-    Card,
-    CardContent,
-    CardActions,
-    Divider,
+    TextField,
+    Typography,
 } from '@mui/material';
 import {
     Add as AddIcon,
-    Edit as EditIcon,
     Delete as DeleteIcon,
+    Edit as EditIcon,
+    Preview as PreviewIcon,
     Visibility as VisibilityIcon,
     VisibilityOff as VisibilityOffIcon,
-    Preview as PreviewIcon,
 } from '@mui/icons-material';
-import { getBlogPosts, deleteBlogPost, updateBlogPost } from '../../services/appwrite';
+import { deleteBlogPost, getBlogPosts, updateBlogPost } from '../../services/blogService';
 import { getBlogDrafts, removeBlogDraft } from '../../services/blogDraftStorage';
 import type { DraftBlogPost } from '../../services/blogDraftStorage';
 import type { BlogPostDocument } from '../../types';
 import { routes } from '../../routes/paths';
+import { useBreakpoints } from '../../hooks';
 import { BLOG_PREVIEW_STORAGE_KEY } from '../../utils/blog';
 import { formatBlogDate, formatLocalDateTime } from '../../utils/dates';
+import { ConfirmDialog, PageHeader } from '../shared';
 
+const SNACKBAR_DURATION_MS = 5000;
+
+type SnackbarSeverity = 'success' | 'error';
+
+/** A saved post, a local-only draft, or a saved post that has unsaved local edits. */
 interface DisplayBlogPost {
     $id: string;
     id?: string;
@@ -61,6 +61,7 @@ interface DisplayBlogPost {
     lastSaved?: string;
 }
 
+/** Drafts for posts that were never saved to the database get a synthetic `new-` id. */
 const isNewDraftId = (id?: string) => Boolean(id?.startsWith('new-'));
 
 const mapDatabasePost = (post: BlogPostDocument): DisplayBlogPost => ({
@@ -89,35 +90,30 @@ const mapDraftPost = (draft: DraftBlogPost, index: number): DisplayBlogPost => (
 });
 
 const buildDisplayPosts = (dbPosts: BlogPostDocument[], drafts: DraftBlogPost[]) => {
-    const formattedDbPosts = dbPosts.map(mapDatabasePost);
+    const posts = dbPosts.map(mapDatabasePost);
     const draftPosts = drafts.map(mapDraftPost);
-    const dbPostIds = new Set(formattedDbPosts.map((post) => post.$id));
-    const newDrafts = draftPosts.filter((draft) => isNewDraftId(draft.id));
-    const existingPostDrafts = draftPosts.filter((draft) => draft.id && !isNewDraftId(draft.id) && dbPostIds.has(draft.id));
-    const draftsByPostId = new Map(existingPostDrafts.map((draft) => [draft.id, draft]));
-    const postsWithDrafts = formattedDbPosts.map((post) =>
-        draftsByPostId.has(post.$id) ? { ...post, hasDraft: true } : post
+    const postIds = new Set(posts.map((post) => post.$id));
+    const draftsByPostId = new Map(
+        draftPosts
+            .filter((draft) => draft.id && !isNewDraftId(draft.id) && postIds.has(draft.id))
+            .map((draft) => [draft.id, draft])
     );
 
-    return [...postsWithDrafts, ...newDrafts].sort((a, b) => {
-        const getTimestamp = (item: DisplayBlogPost) => {
-            if (item.isDraft && item.lastSaved) {
-                return new Date(item.lastSaved).getTime();
-            }
+    const getSortTimestamp = (item: DisplayBlogPost) => {
+        const draftTimestamp = item.isDraft ? item.lastSaved : draftsByPostId.get(item.$id)?.lastSaved;
+        return new Date(draftTimestamp || item.publishedDate).getTime();
+    };
 
-            if (!item.isDraft && item.hasDraft && draftsByPostId.has(item.$id)) {
-                return new Date(draftsByPostId.get(item.$id)?.lastSaved || item.publishedDate).getTime();
-            }
-
-            return new Date(item.publishedDate).getTime();
-        };
-
-        return getTimestamp(b) - getTimestamp(a);
-    });
+    return [
+        ...posts.map((post) => (draftsByPostId.has(post.$id) ? { ...post, hasDraft: true } : post)),
+        ...draftPosts.filter((draft) => isNewDraftId(draft.id)),
+    ].sort((a, b) => getSortTimestamp(b) - getSortTimestamp(a));
 };
 
 const getPostDisplayDate = (post: DisplayBlogPost) =>
-    post.isDraft && post.lastSaved ? `Last edited: ${formatLocalDateTime(post.lastSaved)}` : formatBlogDate(post.publishedDate);
+    post.isDraft && post.lastSaved
+        ? `Last edited: ${formatLocalDateTime(post.lastSaved)}`
+        : formatBlogDate(post.publishedDate);
 
 const matchesSearch = (post: DisplayBlogPost, searchTerm: string) => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -134,19 +130,15 @@ const matchesSearch = (post: DisplayBlogPost, searchTerm: string) => {
 };
 
 const BlogStatusChip = ({ post }: { post: DisplayBlogPost }) => {
-    if (post.isDraft && !isNewDraftId(post.id)) {
-        return <Chip size="small" color="warning" label="Modified" />;
-    }
-
     if (post.isDraft) {
-        return <Chip size="small" color="warning" label="Draft" />;
+        return <Chip size="small" color="warning" label={isNewDraftId(post.id) ? 'Draft' : 'Modified'} />;
     }
 
-    if (post.status === 'published') {
-        return <Chip size="small" color="success" label="Published" />;
-    }
-
-    return <Chip size="small" color="default" label="Unpublished" />;
+    return post.status === 'published' ? (
+        <Chip size="small" color="success" label="Published" />
+    ) : (
+        <Chip size="small" color="default" label="Unpublished" />
+    );
 };
 
 const BlogTags = ({ tags }: { tags?: string[] }) => (
@@ -157,37 +149,71 @@ const BlogTags = ({ tags }: { tags?: string[] }) => (
     </Box>
 );
 
+interface BlogPostActionsProps {
+    post: DisplayBlogPost;
+    onPreview: (post: DisplayBlogPost) => void;
+    onEdit: (post: DisplayBlogPost) => void;
+    onDelete: (post: DisplayBlogPost) => void;
+    onTogglePublish: (post: DisplayBlogPost) => void;
+    onView: (post: DisplayBlogPost) => void;
+}
+
+const BlogPostActions = ({ post, onPreview, onEdit, onDelete, onTogglePublish, onView }: BlogPostActionsProps) => {
+    const isPublished = post.status === 'published';
+
+    return (
+        <>
+            <IconButton color="secondary" onClick={() => onPreview(post)} size="small" title="Preview">
+                <PreviewIcon fontSize="small" />
+            </IconButton>
+            <IconButton color="primary" onClick={() => onEdit(post)} size="small" title="Edit">
+                <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton color="error" onClick={() => onDelete(post)} size="small" title="Delete">
+                <DeleteIcon fontSize="small" />
+            </IconButton>
+            {!post.isDraft && (
+                <IconButton
+                    color={isPublished ? 'warning' : 'success'}
+                    onClick={() => onTogglePublish(post)}
+                    size="small"
+                    title={isPublished ? 'Unpublish' : 'Publish'}
+                >
+                    {isPublished ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                </IconButton>
+            )}
+            {isPublished && (
+                <IconButton color="info" onClick={() => onView(post)} size="small" title="View">
+                    <VisibilityIcon fontSize="small" />
+                </IconButton>
+            )}
+        </>
+    );
+};
+
 const BlogManager = () => {
     const navigate = useNavigate();
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    const { isMobile, isTablet } = useBreakpoints();
 
     const [allPosts, setAllPosts] = useState<DisplayBlogPost[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedPost, setSelectedPost] = useState<DisplayBlogPost | null>(null);
+    const [postToDelete, setPostToDelete] = useState<DisplayBlogPost | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [snackbar, setSnackbar] = useState({
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: SnackbarSeverity }>({
         open: false,
         message: '',
-        severity: 'success' as 'success' | 'error',
+        severity: 'success',
     });
 
-    const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
-        setSnackbar({
-            open: true,
-            message,
-            severity,
-        });
+    const showSnackbar = useCallback((message: string, severity: SnackbarSeverity) => {
+        setSnackbar({ open: true, message, severity });
     }, []);
 
     const loadAllPosts = useCallback(async () => {
         setIsLoading(true);
 
         try {
-            const [dbPosts, drafts] = await Promise.all([getBlogPosts(false), Promise.resolve(getBlogDrafts())]);
-            setAllPosts(buildDisplayPosts(dbPosts, drafts));
+            setAllPosts(buildDisplayPosts(await getBlogPosts(false), getBlogDrafts()));
         } catch (error) {
             console.error('Error fetching blog posts:', error);
             showSnackbar('Failed to load blog posts', 'error');
@@ -200,36 +226,27 @@ const BlogManager = () => {
         void loadAllPosts();
     }, [loadAllPosts]);
 
-    const handleDeleteClick = (post: DisplayBlogPost) => {
-        setSelectedPost(post);
-        setDeleteDialogOpen(true);
-    };
-
     const handleDeleteConfirm = async () => {
-        if (!selectedPost) return;
+        if (!postToDelete) {
+            return;
+        }
 
         try {
-            if (selectedPost.isDraft) {
-                removeBlogDraft(selectedPost.id || selectedPost.$id);
+            if (postToDelete.isDraft) {
+                removeBlogDraft(postToDelete.id || postToDelete.$id);
                 showSnackbar('Draft deleted successfully', 'success');
             } else {
-                await deleteBlogPost(selectedPost.$id);
+                await deleteBlogPost(postToDelete.$id);
                 showSnackbar('Blog post deleted successfully', 'success');
             }
 
-            setAllPosts((prev) => prev.filter((post) => post.$id !== selectedPost.$id));
+            setAllPosts((current) => current.filter((post) => post.$id !== postToDelete.$id));
         } catch (error) {
             console.error('Error deleting blog post:', error);
             showSnackbar('Failed to delete blog post', 'error');
         } finally {
-            setDeleteDialogOpen(false);
-            setSelectedPost(null);
+            setPostToDelete(null);
         }
-    };
-
-    const handleDeleteCancel = () => {
-        setDeleteDialogOpen(false);
-        setSelectedPost(null);
     };
 
     const handlePublishToggle = async (post: DisplayBlogPost) => {
@@ -238,81 +255,58 @@ const BlogManager = () => {
             return;
         }
 
+        const nextStatus = post.status === 'unpublished' ? 'published' : 'unpublished';
+
         try {
-            await updateBlogPost(post.$id, {
-                published: post.status === 'unpublished',
-            });
-
-            setAllPosts((prev) =>
-                prev.map((p) =>
-                    p.$id === post.$id
-                        ? {
-                              ...p,
-                              status: post.status === 'unpublished' ? 'published' : 'unpublished',
-                          }
-                        : p
-                )
+            await updateBlogPost(post.$id, { published: nextStatus === 'published' });
+            setAllPosts((current) =>
+                current.map((item) => (item.$id === post.$id ? { ...item, status: nextStatus } : item))
             );
-
-            showSnackbar(
-                `Blog post ${post.status === 'unpublished' ? 'published' : 'unpublished'} successfully`,
-                'success'
-            );
+            showSnackbar(`Blog post ${nextStatus} successfully`, 'success');
         } catch (error) {
             console.error('Error updating blog post:', error);
             showSnackbar('Failed to update blog post', 'error');
         }
     };
 
-    const handleNewPost = () => {
-        navigate(routes.admin.blogNew);
-    };
-
     const handleEditPost = (post: DisplayBlogPost) => {
-        if (post.isDraft && post.id) {
-            if (isNewDraftId(post.id)) {
-                navigate(routes.admin.blogNewWithDraft(post.id));
-            } else {
-                navigate(routes.admin.blogEdit(post.$id));
-            }
-        } else if (post.hasDraft) {
-            navigate(routes.admin.blogEdit(post.$id));
-        } else {
-            navigate(routes.admin.blogEdit(post.$id));
-        }
+        navigate(
+            post.isDraft && isNewDraftId(post.id)
+                ? routes.admin.blogNewWithDraft(post.$id)
+                : routes.admin.blogEdit(post.$id)
+        );
     };
 
-    const handleViewPost = (post: DisplayBlogPost) => {
-        window.open(routes.blogPostBySlug(post.slug), '_blank');
-    };
+    const handleViewPost = (post: DisplayBlogPost) => window.open(routes.blogPostBySlug(post.slug), '_blank');
 
     const handlePreviewPost = (post: DisplayBlogPost) => {
-        if (post.isDraft) {
-            const drafts = getBlogDrafts();
-            const draftContent = drafts.find((draft) => (post.id && draft.id === post.id) || post.$id === draft.id);
-
-            if (draftContent) {
-                sessionStorage.setItem(
-                    BLOG_PREVIEW_STORAGE_KEY,
-                    JSON.stringify({
-                        title: draftContent.title,
-                        content: draftContent.content,
-                        summary: draftContent.summary,
-                        slug: draftContent.slug || 'preview',
-                        publishedDate: draftContent.publishedDate || new Date().toISOString(),
-                        tags: draftContent.tags || [],
-                        viewCount: 0,
-                        isPreview: true,
-                    })
-                );
-
-                window.open(routes.blogPostBySlug('preview'), '_blank');
-            } else {
-                showSnackbar('Could not find draft content to preview', 'error');
-            }
-        } else {
+        if (!post.isDraft) {
             window.open(`${routes.blogPostBySlug(post.slug)}?preview=true`, '_blank');
+            return;
         }
+
+        const draft = getBlogDrafts().find((storedDraft) => storedDraft.id === (post.id ?? post.$id));
+
+        if (!draft) {
+            showSnackbar('Could not find draft content to preview', 'error');
+            return;
+        }
+
+        sessionStorage.setItem(
+            BLOG_PREVIEW_STORAGE_KEY,
+            JSON.stringify({
+                title: draft.title,
+                content: draft.content,
+                summary: draft.summary,
+                slug: draft.slug || 'preview',
+                publishedDate: draft.publishedDate || new Date().toISOString(),
+                tags: draft.tags || [],
+                viewCount: 0,
+                isPreview: true,
+            })
+        );
+
+        window.open(routes.blogPostBySlug('preview'), '_blank');
     };
 
     const filteredPosts = useMemo(
@@ -320,11 +314,12 @@ const BlogManager = () => {
         [allPosts, searchTerm]
     );
 
-    const handleCloseSnackbar = () => {
-        setSnackbar((prev) => ({
-            ...prev,
-            open: false,
-        }));
+    const actionHandlers = {
+        onPreview: handlePreviewPost,
+        onEdit: handleEditPost,
+        onDelete: setPostToDelete,
+        onTogglePublish: handlePublishToggle,
+        onView: handleViewPost,
     };
 
     const renderCardView = () => (
@@ -336,17 +331,10 @@ const BlogManager = () => {
                             {post.title}
                         </Typography>
 
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                mb: 1,
-                            }}
-                        >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="body2" color="text.secondary">
                                 {getPostDisplayDate(post)}
                             </Typography>
-
                             <BlogStatusChip post={post} />
                         </Box>
 
@@ -368,39 +356,7 @@ const BlogManager = () => {
                     <Divider />
 
                     <CardActions sx={{ justifyContent: 'flex-end' }}>
-                        <IconButton
-                            color="secondary"
-                            onClick={() => handlePreviewPost(post)}
-                            size="small"
-                            title="Preview"
-                        >
-                            <PreviewIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton color="primary" onClick={() => handleEditPost(post)} size="small" title="Edit">
-                            <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton color="error" onClick={() => handleDeleteClick(post)} size="small" title="Delete">
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
-                        {!post.isDraft && (
-                            <IconButton
-                                color={post.status === 'published' ? 'warning' : 'success'}
-                                onClick={() => handlePublishToggle(post)}
-                                size="small"
-                                title={post.status === 'published' ? 'Unpublish' : 'Publish'}
-                            >
-                                {post.status === 'published' ? (
-                                    <VisibilityOffIcon fontSize="small" />
-                                ) : (
-                                    <VisibilityIcon fontSize="small" />
-                                )}
-                            </IconButton>
-                        )}
-                        {post.status === 'published' && (
-                            <IconButton color="info" onClick={() => handleViewPost(post)} size="small" title="View">
-                                <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                        )}
+                        <BlogPostActions post={post} {...actionHandlers} />
                     </CardActions>
                 </Card>
             ))}
@@ -424,9 +380,7 @@ const BlogManager = () => {
                     {filteredPosts.map((post) => (
                         <TableRow key={post.$id}>
                             <TableCell>{post.title}</TableCell>
-                            <TableCell>
-                                {getPostDisplayDate(post)}
-                            </TableCell>
+                            <TableCell>{getPostDisplayDate(post)}</TableCell>
                             <TableCell>
                                 <BlogStatusChip post={post} />
                                 {post.hasDraft && (
@@ -436,65 +390,14 @@ const BlogManager = () => {
                                 )}
                             </TableCell>
                             <TableCell>
-                                {post.isDraft ? (
-                                    <Typography variant="body2">–</Typography>
-                                ) : (
-                                    <Typography variant="body2">{post.viewCount || 0}</Typography>
-                                )}
+                                <Typography variant="body2">{post.isDraft ? '–' : post.viewCount || 0}</Typography>
                             </TableCell>
                             <TableCell>
                                 <BlogTags tags={post.tags} />
                             </TableCell>
                             <TableCell align="right">
                                 <Box>
-                                    <IconButton
-                                        color="secondary"
-                                        onClick={() => handlePreviewPost(post)}
-                                        size="small"
-                                        title="Preview"
-                                    >
-                                        <PreviewIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        color="primary"
-                                        onClick={() => handleEditPost(post)}
-                                        size="small"
-                                        title="Edit"
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        color="error"
-                                        onClick={() => handleDeleteClick(post)}
-                                        size="small"
-                                        title="Delete"
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                    {!post.isDraft && (
-                                        <IconButton
-                                            color={post.status === 'published' ? 'warning' : 'success'}
-                                            onClick={() => handlePublishToggle(post)}
-                                            size="small"
-                                            title={post.status === 'published' ? 'Unpublish' : 'Publish'}
-                                        >
-                                            {post.status === 'published' ? (
-                                                <VisibilityOffIcon fontSize="small" />
-                                            ) : (
-                                                <VisibilityIcon fontSize="small" />
-                                            )}
-                                        </IconButton>
-                                    )}
-                                    {post.status === 'published' && (
-                                        <IconButton
-                                            color="info"
-                                            onClick={() => handleViewPost(post)}
-                                            size="small"
-                                            title="View"
-                                        >
-                                            <VisibilityIcon fontSize="small" />
-                                        </IconButton>
-                                    )}
+                                    <BlogPostActions post={post} {...actionHandlers} />
                                 </Box>
                             </TableCell>
                         </TableRow>
@@ -506,45 +409,28 @@ const BlogManager = () => {
 
     return (
         <Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    gap: { xs: 2, sm: 0 },
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    mb: 3,
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    component="h1"
-                    sx={{
-                        fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
-                    }}
-                >
-                    Blogs
-                </Typography>
-                <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleNewPost}>
-                    New
-                </Button>
-            </Box>
+            <PageHeader
+                title="Blogs"
+                action={
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => navigate(routes.admin.blogNew)}
+                    >
+                        New
+                    </Button>
+                }
+            />
 
             <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-                <Box
-                    display="flex"
-                    flexDirection={isMobile ? 'column' : 'row'}
-                    justifyContent="space-between"
-                    alignItems={isMobile ? 'stretch' : 'center'}
-                    gap={isMobile ? 2 : 0}
-                    mb={2}
-                >
+                <Box mb={2}>
                     <TextField
                         label="Search blog posts"
                         variant="outlined"
                         size="small"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(event) => setSearchTerm(event.target.value)}
                         sx={{ width: isMobile ? '100%' : '300px' }}
                     />
                 </Box>
@@ -561,39 +447,34 @@ const BlogManager = () => {
                                 : 'No blog posts yet. Create your first blog post!'}
                         </Typography>
                     </Box>
+                ) : isTablet ? (
+                    renderCardView()
                 ) : (
-                    <>{isTablet ? renderCardView() : renderTableView()}</>
+                    renderTableView()
                 )}
             </Paper>
 
-            <Dialog
-                open={deleteDialogOpen}
-                onClose={handleDeleteCancel}
+            <ConfirmDialog
+                open={Boolean(postToDelete)}
+                title="Confirm Delete"
+                description={`Are you sure you want to delete ${
+                    postToDelete?.isDraft ? 'the draft of ' : ''
+                }the blog post "${postToDelete?.title}"? This action cannot be undone.`}
                 fullWidth={isMobile}
-                maxWidth={isMobile ? 'sm' : 'xs'}
-            >
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete {selectedPost?.isDraft ? 'the draft of' : ''} the blog post "
-                        {selectedPost?.title}"? This action cannot be undone.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDeleteCancel}>Cancel</Button>
-                    <Button onClick={handleDeleteConfirm} color="error">
-                        Delete
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                onCancel={() => setPostToDelete(null)}
+                onConfirm={handleDeleteConfirm}
+            />
 
             <Snackbar
                 open={snackbar.open}
-                autoHideDuration={5000}
-                onClose={handleCloseSnackbar}
+                autoHideDuration={SNACKBAR_DURATION_MS}
+                onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert severity={snackbar.severity} onClose={handleCloseSnackbar}>
+                <Alert
+                    severity={snackbar.severity}
+                    onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+                >
                     {snackbar.message}
                 </Alert>
             </Snackbar>

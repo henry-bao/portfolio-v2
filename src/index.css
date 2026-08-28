@@ -21,3 +21,10 @@ section {
     padding-top: 5em;
     padding-bottom: 2em;
 }
+
+/* Set by useBodyScrollLock while a full-screen mobile menu or drawer is open. */
+@media (max-width: 768px) {
+    body.disableScroll {
+        overflow: hidden;
+    }
+}

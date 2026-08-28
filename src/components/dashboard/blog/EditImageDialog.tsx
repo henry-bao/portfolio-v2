@@ -1,8 +1,8 @@
 import type { ChangeEvent } from 'react';
-import { Models } from 'appwrite';
+import type { Models } from 'appwrite';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Typography } from '@mui/material';
 import { Upload as UploadIcon } from '@mui/icons-material';
-import { useObjectUrl } from '../../../hooks/useObjectUrl';
+import { useObjectUrl } from '../../../hooks';
 
 interface EditImageDialogProps {
     accept: string;

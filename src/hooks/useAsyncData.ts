@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-export interface AsyncDataState<T> {
+interface AsyncDataState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
 }
 
-export interface AsyncDataActions {
+interface AsyncDataActions {
   refresh: () => void;
   reset: () => void;
 }

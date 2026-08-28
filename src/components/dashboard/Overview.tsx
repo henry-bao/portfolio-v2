@@ -1,66 +1,103 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
-    Typography,
+    Button,
     Card,
     CardContent,
-    Button,
-    Paper,
-    Stack,
     Divider,
-    Skeleton,
-    Switch,
     FormControlLabel,
-    useTheme,
+    Paper,
+    Skeleton,
+    Stack,
+    Switch,
+    Typography,
     alpha,
+    useTheme,
 } from '@mui/material';
 import {
-    getProfileData,
-    getProjects,
-    ProfileData,
-    ProjectData,
-    getSectionVisibility,
-    updateSectionVisibility,
-    SectionVisibility,
-} from '../../services/appwrite';
-import type { SectionVisibilityDocument } from '../../types';
-import { Models } from 'appwrite';
-import { useNavigate } from 'react-router-dom';
-import { getResumeVersions, ResumeVersion } from '../../services/resumeService';
-import { getBlogPosts, BlogPost } from '../../services/appwrite';
-import { routes } from '../../routes/paths';
-import {
-    Visibility as VisibilityIcon,
-    Person as PersonIcon,
-    Code as CodeIcon,
+    Add as AddIcon,
     Article as ArticleIcon,
+    Code as CodeIcon,
     Description as DescriptionIcon,
     Edit as EditIcon,
-    Add as AddIcon,
     Launch as LaunchIcon,
+    Person as PersonIcon,
     Settings as SettingsIcon,
+    Visibility as VisibilityIcon,
 } from '@mui/icons-material';
+import { getBlogPosts } from '../../services/blogService';
+import { getProfileData } from '../../services/profileService';
+import { getProjects } from '../../services/projectService';
+import { getResumeVersions } from '../../services/resumeService';
+import { getSectionVisibility, updateSectionVisibility } from '../../services/visibilityService';
+import type {
+    BlogPostDocument,
+    ProfileDocument,
+    ProjectDocument,
+    SectionVisibility,
+    SectionVisibilityDocument,
+} from '../../types';
+import type { ResumeVersionDocument } from '../../services/resumeService';
+import { routes } from '../../routes/paths';
+
+const visibilityToggles: { section: keyof SectionVisibility; label: string }[] = [
+    { section: 'about', label: 'About Section' },
+    { section: 'projects', label: 'Projects Section' },
+    { section: 'blogs', label: 'Blogs Section' },
+];
+
+const SectionTitle = ({ icon, title }: { icon: ReactNode; title: string }) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ mr: 1, color: 'primary.main', display: 'flex' }}>{icon}</Box>
+        <Typography variant="h6" sx={{ fontWeight: 500 }}>
+            {title}
+        </Typography>
+    </Box>
+);
+
+interface StatCardProps {
+    icon: ReactNode;
+    title: string;
+    isLoading: boolean;
+    skeletonLines?: number;
+    children: ReactNode;
+}
+
+const StatCard = ({ icon, title, isLoading, skeletonLines = 1, children }: StatCardProps) => (
+    <Card sx={{ flex: 1, display: 'flex' }}>
+        <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <SectionTitle icon={icon} title={title} />
+            {isLoading ? (
+                <>
+                    {Array.from({ length: skeletonLines }, (_, index) => (
+                        <Skeleton key={index} animation="wave" height={24} width="70%" sx={{ mb: 1 }} />
+                    ))}
+                    <Skeleton animation="wave" height={36} width="40%" />
+                </>
+            ) : (
+                children
+            )}
+        </CardContent>
+    </Card>
+);
 
 const Overview = () => {
     const theme = useTheme();
-    const [profileData, setProfileData] = useState<(Models.Document & ProfileData) | null>(null);
-    const [projects, setProjects] = useState<(Models.Document & ProjectData)[]>([]);
-    const [resumes, setResumes] = useState<(Models.Document & ResumeVersion)[]>([]);
-    const [blogPosts, setBlogPosts] = useState<(Models.Document & BlogPost)[]>([]);
-    const [sectionVisibility, setSectionVisibility] = useState<SectionVisibilityDocument | null>(null);
-    const [loading, setLoading] = useState({
-        profile: true,
-        projects: true,
-        resumes: true,
-        blogs: true,
-        visibility: true,
-    });
     const navigate = useNavigate();
+    const [profile, setProfile] = useState<ProfileDocument | null>(null);
+    const [projects, setProjects] = useState<ProjectDocument[]>([]);
+    const [resumes, setResumes] = useState<ResumeVersionDocument[]>([]);
+    const [blogPosts, setBlogPosts] = useState<BlogPostDocument[]>([]);
+    const [sectionVisibility, setSectionVisibility] = useState<SectionVisibilityDocument | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         let isMounted = true;
 
         const fetchOverviewData = async () => {
+            // Every card loads independently; one failing request should not blank the page.
             const [profileResult, projectsResult, resumesResult, blogsResult, visibilityResult] =
                 await Promise.allSettled([
                     getProfileData(),
@@ -74,43 +111,20 @@ const Overview = () => {
                 return;
             }
 
-            if (profileResult.status === 'fulfilled') {
-                setProfileData(profileResult.value);
-            } else {
-                console.error('Error fetching profile data:', profileResult.reason);
-            }
+            const apply = <T,>(result: PromiseSettledResult<T>, label: string, setValue: (value: T) => void) => {
+                if (result.status === 'fulfilled') {
+                    setValue(result.value);
+                } else {
+                    console.error(`Error fetching ${label}:`, result.reason);
+                }
+            };
 
-            if (projectsResult.status === 'fulfilled') {
-                setProjects(projectsResult.value);
-            } else {
-                console.error('Error fetching projects:', projectsResult.reason);
-            }
-
-            if (resumesResult.status === 'fulfilled') {
-                setResumes(resumesResult.value);
-            } else {
-                console.error('Error fetching resumes:', resumesResult.reason);
-            }
-
-            if (blogsResult.status === 'fulfilled') {
-                setBlogPosts(blogsResult.value);
-            } else {
-                console.error('Error fetching blog posts:', blogsResult.reason);
-            }
-
-            if (visibilityResult.status === 'fulfilled') {
-                setSectionVisibility(visibilityResult.value);
-            } else {
-                console.error('Error fetching section visibility:', visibilityResult.reason);
-            }
-
-            setLoading({
-                profile: false,
-                projects: false,
-                resumes: false,
-                blogs: false,
-                visibility: false,
-            });
+            apply(profileResult, 'profile data', setProfile);
+            apply(projectsResult, 'projects', setProjects);
+            apply(resumesResult, 'resumes', setResumes);
+            apply(blogsResult, 'blog posts', setBlogPosts);
+            apply(visibilityResult, 'section visibility', setSectionVisibility);
+            setIsLoading(false);
         };
 
         void fetchOverviewData();
@@ -121,15 +135,15 @@ const Overview = () => {
     }, []);
 
     const handleVisibilityToggle = async (section: keyof SectionVisibility) => {
-        if (!sectionVisibility) return;
+        if (!sectionVisibility) {
+            return;
+        }
+
+        const nextValue = !sectionVisibility[section];
 
         try {
-            const newVisibility = {
-                ...sectionVisibility,
-                [section]: !sectionVisibility[section],
-            };
-            await updateSectionVisibility(sectionVisibility.$id, { [section]: newVisibility[section] });
-            setSectionVisibility(newVisibility);
+            await updateSectionVisibility(sectionVisibility.$id, { [section]: nextValue });
+            setSectionVisibility({ ...sectionVisibility, [section]: nextValue });
         } catch (error) {
             console.error('Error updating section visibility:', error);
         }
@@ -137,23 +151,16 @@ const Overview = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" component="h1">
-                    Overview
-                </Typography>
-            </Box>
+            <Typography variant="h4" component="h1" mb={3}>
+                Overview
+            </Typography>
 
             <Stack spacing={4}>
-                {/* Section Visibility Controls */}
                 <Card>
                     <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                            <SettingsIcon sx={{ mr: 1, color: 'primary.main' }} />
-                            <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                Section Visibility
-                            </Typography>
-                        </Box>
-                        {loading.visibility ? (
+                        <SectionTitle icon={<SettingsIcon />} title="Section Visibility" />
+
+                        {isLoading ? (
                             <Box
                                 sx={{
                                     display: 'grid',
@@ -161,10 +168,9 @@ const Overview = () => {
                                     gap: 2,
                                 }}
                             >
-                                <Skeleton animation="wave" height={48} />
-                                <Skeleton animation="wave" height={48} />
-                                <Skeleton animation="wave" height={48} />
-                                <Skeleton animation="wave" height={48} />
+                                {visibilityToggles.map(({ section }) => (
+                                    <Skeleton key={section} animation="wave" height={48} />
+                                ))}
                             </Box>
                         ) : (
                             <Box
@@ -175,104 +181,33 @@ const Overview = () => {
                                     gap: 2,
                                 }}
                             >
-                                <Paper
-                                    sx={{
-                                        p: 2,
-                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                        flex: 1,
-                                    }}
-                                >
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={sectionVisibility?.about ?? true}
-                                                onChange={() => handleVisibilityToggle('about')}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    justifyContent: 'flex-end',
-                                                }}
-                                            >
+                                {visibilityToggles.map(({ section, label }) => (
+                                    <Paper
+                                        key={section}
+                                        sx={{ p: 2, border: `1px solid ${alpha(theme.palette.divider, 0.1)}`, flex: 1 }}
+                                    >
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={sectionVisibility?.[section] ?? true}
+                                                    onChange={() => handleVisibilityToggle(section)}
+                                                    color="primary"
+                                                />
+                                            }
+                                            label={
                                                 <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
-                                                    About Section
+                                                    {label}
                                                 </Typography>
-                                            </Box>
-                                        }
-                                        sx={{ m: 0, justifyContent: 'space-between' }}
-                                    />
-                                </Paper>
-
-                                <Paper
-                                    sx={{
-                                        p: 2,
-                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                        flex: 1,
-                                    }}
-                                >
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={sectionVisibility?.projects ?? true}
-                                                onChange={() => handleVisibilityToggle('projects')}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    justifyContent: 'flex-end',
-                                                }}
-                                            >
-                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
-                                                    Projects Section
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        sx={{ m: 0, justifyContent: 'space-between' }}
-                                    />
-                                </Paper>
-
-                                <Paper
-                                    sx={{
-                                        p: 2,
-                                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                        flex: 1,
-                                    }}
-                                >
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={sectionVisibility?.blogs ?? true}
-                                                onChange={() => handleVisibilityToggle('blogs')}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    justifyContent: 'flex-end',
-                                                }}
-                                            >
-                                                <Typography variant="subtitle2" sx={{ fontSize: 20 }}>
-                                                    Blogs Section
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        sx={{ m: 0, justifyContent: 'space-between' }}
-                                    />
-                                </Paper>
+                                            }
+                                            sx={{ m: 0, justifyContent: 'space-between' }}
+                                        />
+                                    </Paper>
+                                ))}
                             </Box>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* Stats Cards Section */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -282,189 +217,78 @@ const Overview = () => {
                         gap: 3,
                     }}
                 >
-                    {/* Profile Summary Card */}
-                    <Card sx={{ flex: 1, display: 'flex' }}>
-                        <CardContent
-                            sx={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between',
-                            }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                    Profile
+                    <StatCard icon={<PersonIcon />} title="Profile" isLoading={isLoading} skeletonLines={2}>
+                        {profile ? (
+                            <>
+                                <Typography variant="body1" sx={{ mb: 1 }}>
+                                    Name: {profile.name}
                                 </Typography>
-                            </Box>
-                            {loading.profile ? (
-                                <>
-                                    <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 1 }} />
-                                    <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 2 }} />
-                                    <Skeleton animation="wave" height={36} width="40%" />
-                                </>
-                            ) : profileData ? (
-                                <>
-                                    <Typography variant="body1" sx={{ mb: 1 }}>
-                                        Name: {profileData.name}
-                                    </Typography>
-                                    <Typography variant="body1" sx={{ mb: 2 }}>
-                                        Email: {profileData.email}
-                                    </Typography>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<EditIcon />}
-                                        onClick={() => navigate(routes.admin.profile)}
-                                    >
-                                        Edit
-                                    </Button>
-                                </>
-                            ) : (
-                                <Typography variant="body1" color="text.secondary">
-                                    No profile data found. Create your profile to get started.
+                                <Typography variant="body1" sx={{ mb: 2 }}>
+                                    Email: {profile.email}
                                 </Typography>
-                            )}
-                        </CardContent>
-                    </Card>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => navigate(routes.admin.profile)}
+                                >
+                                    Edit
+                                </Button>
+                            </>
+                        ) : (
+                            <Typography variant="body1" color="text.secondary">
+                                No profile data found. Create your profile to get started.
+                            </Typography>
+                        )}
+                    </StatCard>
 
-                    {/* Projects Summary Card */}
-                    <Card sx={{ flex: 1, display: 'flex' }}>
-                        <CardContent
-                            sx={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between',
-                            }}
+                    <StatCard icon={<CodeIcon />} title="Projects" isLoading={isLoading}>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                            Total Projects: {projects.length}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate(routes.admin.projects)}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <CodeIcon sx={{ mr: 1, color: 'primary.main' }} />
-                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                    Projects
-                                </Typography>
-                            </Box>
-                            {loading.projects ? (
-                                <>
-                                    <Skeleton animation="wave" height={24} width="70%" sx={{ mb: 2 }} />
-                                    <Skeleton animation="wave" height={36} width="40%" />
-                                </>
-                            ) : (
-                                <>
-                                    <Typography variant="body1" sx={{ mb: 2 }}>
-                                        Total Projects: {projects.length}
-                                    </Typography>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<AddIcon />}
-                                        onClick={() => navigate(routes.admin.projects)}
-                                    >
-                                        Manage
-                                    </Button>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
+                            Manage
+                        </Button>
+                    </StatCard>
 
-                    {/* Blog Posts Card */}
-                    <Card sx={{ flex: 1, display: 'flex' }}>
-                        <CardContent
-                            sx={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between',
-                            }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <ArticleIcon sx={{ mr: 1, color: 'primary.main' }} />
-                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                    Blogs
-                                </Typography>
-                            </Box>
-                            {loading.blogs ? (
-                                <>
-                                    <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 1 }} />
-                                    <Skeleton animation="wave" height={24} width="40%" sx={{ mb: 2 }} />
-                                    <Skeleton animation="wave" height={36} width="40%" />
-                                </>
-                            ) : (
-                                <>
-                                    <Typography variant="body1" sx={{ mb: 1 }}>
-                                        Total Posts: {blogPosts.length}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                        Published: {blogPosts.filter((post) => post.published).length}
-                                    </Typography>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<AddIcon />}
-                                        onClick={() => navigate(routes.admin.blogs)}
-                                    >
-                                        Manage
-                                    </Button>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
+                    <StatCard icon={<ArticleIcon />} title="Blogs" isLoading={isLoading} skeletonLines={2}>
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                            Total Posts: {blogPosts.length}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Published: {blogPosts.filter((post) => post.published).length}
+                        </Typography>
+                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate(routes.admin.blogs)}>
+                            Manage
+                        </Button>
+                    </StatCard>
 
-                    {/* Resumes Card */}
-                    <Card sx={{ flex: 1, display: 'flex' }}>
-                        <CardContent
-                            sx={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between',
-                            }}
+                    <StatCard icon={<DescriptionIcon />} title="Resumes" isLoading={isLoading}>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                            Total Resumes: {resumes.length}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate(routes.admin.resumes)}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
-                                <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                    Resumes
-                                </Typography>
-                            </Box>
-                            {loading.resumes ? (
-                                <>
-                                    <Skeleton animation="wave" height={24} width="70%" sx={{ mb: 2 }} />
-                                    <Skeleton animation="wave" height={36} width="40%" />
-                                </>
-                            ) : (
-                                <>
-                                    <Typography variant="body1" sx={{ mb: 2 }}>
-                                        Total Resumes: {resumes.length}
-                                    </Typography>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<AddIcon />}
-                                        onClick={() => navigate(routes.admin.resumes)}
-                                    >
-                                        Manage
-                                    </Button>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
+                            Manage
+                        </Button>
+                    </StatCard>
                 </Box>
 
-                {/* Quick Actions Section */}
                 <Paper sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <VisibilityIcon sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                            Quick Actions
-                        </Typography>
-                    </Box>
+                    <SectionTitle icon={<VisibilityIcon />} title="Quick Actions" />
                     <Divider sx={{ mb: 3 }} />
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            gap: 2,
-                            flexWrap: 'wrap',
-                            justifyContent: 'flex-start',
-                        }}
-                    >
-                        <Button variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(routes.admin.profile)}>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => navigate(routes.admin.profile)}
+                        >
                             Update Profile
                         </Button>
                         <Button
@@ -474,7 +298,11 @@ const Overview = () => {
                         >
                             Add New Project
                         </Button>
-                        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate(routes.admin.blogNew)}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate(routes.admin.blogNew)}
+                        >
                             Create Blog Post
                         </Button>
                         <Button

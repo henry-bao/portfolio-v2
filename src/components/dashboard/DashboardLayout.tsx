@@ -1,8 +1,10 @@
-import { useState, useEffect, JSX } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
     AppBar,
     Box,
+    Button,
     CssBaseline,
     Divider,
     Drawer,
@@ -13,62 +15,62 @@ import {
     ListItemIcon,
     ListItemText,
     Toolbar,
-    Typography,
-    Button,
     Tooltip,
-    useTheme,
+    Typography,
     useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
-    Menu as MenuIcon,
-    Dashboard as DashboardIcon,
-    Person as PersonIcon,
-    Work as WorkIcon,
-    ExitToApp as LogoutIcon,
-    KeyboardDoubleArrowLeft as LeftIcon,
-    KeyboardDoubleArrowRight as RightIcon,
-    Home,
-    Description as ResumeIcon,
     Book as BlogIcon,
+    Dashboard as DashboardIcon,
+    Description as ResumeIcon,
+    ExitToApp as LogoutIcon,
+    Home,
+    KeyboardDoubleArrowLeft as LeftIcon,
+    Menu as MenuIcon,
+    Person as PersonIcon,
+    KeyboardDoubleArrowRight as RightIcon,
+    Work as WorkIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/useAuth';
-import { useBodyScrollLock } from '../../hooks';
+import { COMPACT_LAYOUT_WIDTH_PX, useBodyScrollLock, useBreakpoints } from '../../hooks';
 import { routes } from '../../routes/paths';
 
-const expandedDrawerWidth = 240;
-const collapsedDrawerWidth = 64;
+const EXPANDED_DRAWER_WIDTH = 240;
+const COLLAPSED_DRAWER_WIDTH = 64;
+const DRAWER_TRANSITION = 'width 0.2s, margin-left 0.2s';
+
+const menuItems = [
+    { text: 'Overview', icon: <DashboardIcon />, path: routes.admin.overview },
+    { text: 'Profile', icon: <PersonIcon />, path: routes.admin.profile },
+    { text: 'Projects', icon: <WorkIcon />, path: routes.admin.projects },
+    { text: 'Blogs', icon: <BlogIcon />, path: routes.admin.blogs },
+    { text: 'Resumes', icon: <ResumeIcon />, path: routes.admin.resumes },
+];
 
 interface SidebarListItemProps {
-    tooltipText: string;
     text: string;
-    icon: JSX.Element;
+    icon: ReactNode;
     onClick: () => void;
-    isCollapsed: boolean;
-    isMobile: boolean;
+    /** Icon-only mode: the drawer is collapsed and we are not on a mobile overlay. */
+    isIconOnly: boolean;
 }
 
-const SidebarListItem = ({ tooltipText, text, icon, onClick, isCollapsed, isMobile }: SidebarListItemProps) => {
-    const buttonStyles = {
-        py: { xs: 3, sm: 1 },
-        justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
-    };
-
-    const iconStyles = {
-        minWidth: isCollapsed && !isMobile ? 0 : undefined,
-        justifyContent: isCollapsed && !isMobile ? 'center' : undefined,
-    };
-
-    return (
-        <ListItem disablePadding>
-            <Tooltip title={isCollapsed ? tooltipText : ''} placement="right">
-                <ListItemButton onClick={onClick} sx={buttonStyles}>
-                    <ListItemIcon sx={iconStyles}>{icon}</ListItemIcon>
-                    {(!isCollapsed || isMobile) && <ListItemText primary={text} />}
-                </ListItemButton>
-            </Tooltip>
-        </ListItem>
-    );
-};
+const SidebarListItem = ({ text, icon, onClick, isIconOnly }: SidebarListItemProps) => (
+    <ListItem disablePadding>
+        <Tooltip title={isIconOnly ? text : ''} placement="right">
+            <ListItemButton
+                onClick={onClick}
+                sx={{ py: { xs: 3, sm: 1 }, justifyContent: isIconOnly ? 'center' : 'flex-start' }}
+            >
+                <ListItemIcon sx={{ minWidth: isIconOnly ? 0 : undefined, justifyContent: isIconOnly ? 'center' : undefined }}>
+                    {icon}
+                </ListItemIcon>
+                {!isIconOnly && <ListItemText primary={text} />}
+            </ListItemButton>
+        </Tooltip>
+    </ListItem>
+);
 
 const DashboardLayout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -76,28 +78,21 @@ const DashboardLayout = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down(992));
+    const { isMobile } = useBreakpoints();
+    const isCompact = useMediaQuery(theme.breakpoints.down(COMPACT_LAYOUT_WIDTH_PX));
 
     useBodyScrollLock(mobileOpen);
 
     useEffect(() => {
-        setIsCollapsed(isTablet);
-    }, [isTablet]);
+        setIsCollapsed(isCompact);
+    }, [isCompact]);
+
+    const drawerWidth = isCollapsed ? COLLAPSED_DRAWER_WIDTH : EXPANDED_DRAWER_WIDTH;
+    const isIconOnly = isCollapsed && !isMobile;
 
     const handleMenuItemClick = (path: string) => {
-        if (mobileOpen) {
-            setMobileOpen(false);
-        }
+        setMobileOpen(false);
         navigate(path);
-    };
-
-    const handleDrawerToggle = () => {
-        setMobileOpen((currentMobileOpen) => !currentMobileOpen);
-    };
-
-    const handleDrawerCollapse = () => {
-        setIsCollapsed(!isCollapsed);
     };
 
     const handleLogout = async () => {
@@ -105,39 +100,24 @@ const DashboardLayout = () => {
         navigate(routes.admin.login);
     };
 
-    const drawerWidth = isCollapsed ? collapsedDrawerWidth : expandedDrawerWidth;
-
-    const menuItems = [
-        { text: 'Overview', icon: <DashboardIcon />, path: routes.admin.overview },
-        { text: 'Profile', icon: <PersonIcon />, path: routes.admin.profile },
-        { text: 'Projects', icon: <WorkIcon />, path: routes.admin.projects },
-        { text: 'Blogs', icon: <BlogIcon />, path: routes.admin.blogs },
-        { text: 'Resumes', icon: <ResumeIcon />, path: routes.admin.resumes },
-    ];
-
     const drawerContent = (
         <>
             <Toolbar
                 sx={{
-                    justifyContent: {
-                        xs: 'space-between',
-                        sm: isCollapsed ? 'center' : 'space-between',
-                    },
+                    justifyContent: { xs: 'space-between', sm: isCollapsed ? 'center' : 'space-between' },
                     minHeight: 64,
                     px: { xs: 2, sm: isCollapsed ? 0 : 2 },
                 }}
             >
-                {(!isCollapsed || isMobile) && (
+                {!isIconOnly && (
                     <Typography variant="h6" noWrap>
                         Menu
                     </Typography>
                 )}
                 <IconButton
-                    onClick={handleDrawerCollapse}
-                    sx={{
-                        mr: isCollapsed ? 0 : -1,
-                        display: { xs: 'none', sm: 'inline-flex' },
-                    }}
+                    onClick={() => setIsCollapsed((currentIsCollapsed) => !currentIsCollapsed)}
+                    aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    sx={{ mr: isCollapsed ? 0 : -1, display: { xs: 'none', sm: 'inline-flex' } }}
                 >
                     {isCollapsed ? <RightIcon /> : <LeftIcon />}
                 </IconButton>
@@ -147,24 +127,20 @@ const DashboardLayout = () => {
                 {menuItems.map((item) => (
                     <SidebarListItem
                         key={item.text}
-                        tooltipText={item.text}
                         text={item.text}
                         icon={item.icon}
                         onClick={() => handleMenuItemClick(item.path)}
-                        isCollapsed={isCollapsed}
-                        isMobile={isMobile}
+                        isIconOnly={isIconOnly}
                     />
                 ))}
             </List>
             <Divider />
             <List>
                 <SidebarListItem
-                    tooltipText="Logout"
                     text="Logout"
                     icon={<LogoutIcon />}
                     onClick={handleLogout}
-                    isCollapsed={isCollapsed}
-                    isMobile={isMobile}
+                    isIconOnly={isIconOnly}
                 />
             </List>
         </>
@@ -178,7 +154,7 @@ const DashboardLayout = () => {
                 sx={{
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     ml: { sm: `${drawerWidth}px` },
-                    transition: 'width 0.2s, margin-left 0.2s',
+                    transition: DRAWER_TRANSITION,
                 }}
             >
                 <Toolbar>
@@ -186,7 +162,7 @@ const DashboardLayout = () => {
                         color="inherit"
                         aria-label="open drawer"
                         edge="start"
-                        onClick={handleDrawerToggle}
+                        onClick={() => setMobileOpen((currentMobileOpen) => !currentMobileOpen)}
                         sx={{ mr: 2, display: { sm: 'none' } }}
                     >
                         <MenuIcon />
@@ -194,45 +170,32 @@ const DashboardLayout = () => {
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         Dashboard
                     </Typography>
-                    <Button
-                        color="inherit"
-                        onClick={() => {
-                            navigate(routes.home);
-                        }}
-                        startIcon={<Home />}
-                    >
+                    <Button color="inherit" onClick={() => navigate(routes.home)} startIcon={<Home />}>
                         Home
                     </Button>
                 </Toolbar>
             </AppBar>
+
             <Box
                 component="nav"
                 sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
                 aria-label="dashboard navigation"
             >
-                {/* Mobile Drawer */}
                 <Drawer
                     variant="temporary"
                     open={mobileOpen}
-                    onClose={handleDrawerToggle}
-                    ModalProps={{
-                        keepMounted: true,
-                        disableScrollLock: true,
-                    }}
+                    onClose={() => setMobileOpen(false)}
+                    ModalProps={{ keepMounted: true, disableScrollLock: true }}
                     sx={{
                         display: { xs: 'block', sm: 'none' },
-                        '& .MuiDrawer-paper': {
-                            boxSizing: 'border-box',
-                            width: '70vw',
-                            transition: 'width 0.2s',
-                        },
+                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: '70vw', transition: 'width 0.2s' },
                     }}
                 >
                     {drawerContent}
                 </Drawer>
-                {/* Desktop Drawer */}
                 <Drawer
                     variant="permanent"
+                    open
                     sx={{
                         display: { xs: 'none', sm: 'block' },
                         '& .MuiDrawer-paper': {
@@ -242,11 +205,11 @@ const DashboardLayout = () => {
                             overflowX: 'hidden',
                         },
                     }}
-                    open
                 >
                     {drawerContent}
                 </Drawer>
             </Box>
+
             <Box
                 component="main"
                 sx={{

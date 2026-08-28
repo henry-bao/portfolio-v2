@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { Upload as UploadIcon } from '@mui/icons-material';
-import { useObjectUrl } from '../../../hooks/useObjectUrl';
+import { useObjectUrl } from '../../../hooks';
 
 interface ContentImageDialogProps {
     accept: string;

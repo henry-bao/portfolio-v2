@@ -1,101 +1,118 @@
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import {
     Box,
-    Typography,
-    Paper,
     Button,
+    Chip,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    IconButton,
+    Paper,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    IconButton,
-    CircularProgress,
-    Alert,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
     TextField,
-    Chip,
-    useMediaQuery,
-    useTheme,
+    Typography,
 } from '@mui/material';
 import {
+    CheckCircle as ActiveIcon,
     Add as AddIcon,
     Delete as DeleteIcon,
-    CheckCircle as ActiveIcon,
-    RadioButtonUnchecked as InactiveIcon,
+    Edit as EditIcon,
     Description as FileIcon,
+    RadioButtonUnchecked as InactiveIcon,
+    Save as SaveIcon,
     Upload as UploadIcon,
     Visibility as VisibilityIcon,
-    Edit as EditIcon,
-    Save as SaveIcon,
 } from '@mui/icons-material';
-import { Models } from 'appwrite';
-import { getFileUrl } from '../../services/fileProxy';
+import { getFileUrl } from '../../services/storageService';
 import {
-    getResumeVersions,
     addResumeVersion,
-    setResumeAsActive,
     deleteResumeVersion,
+    getResumeVersions,
+    setResumeAsActive,
     updateResumeVersion,
-    ResumeVersion,
 } from '../../services/resumeService';
+import type { ResumeVersionDocument } from '../../services/resumeService';
+import { useBreakpoints } from '../../hooks';
 import { formatShortDateTime } from '../../utils/dates';
+import { ConfirmDialog, PageHeader, StatusAlerts } from '../shared';
+
+const DESCRIPTION_PLACEHOLDER = 'e.g., Updated with recent project, Fixed formatting issues';
+
+const DescriptionField = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
+    <TextField
+        fullWidth
+        label="Description (optional)"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={DESCRIPTION_PLACEHOLDER}
+        multiline
+        minRows={2}
+        maxRows={10}
+    />
+);
 
 const ResumeManager = () => {
-    const [resumeVersions, setResumeVersions] = useState<(Models.Document & ResumeVersion)[]>([]);
+    const [resumeVersions, setResumeVersions] = useState<ResumeVersionDocument[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [isUploading, setIsUploading] = useState(false);
+
     const [newResumeFile, setNewResumeFile] = useState<File | null>(null);
     const [description, setDescription] = useState('');
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [resumeToDelete, setResumeToDelete] = useState<{ id: string; fileId: string } | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
+    const [resumeToDelete, setResumeToDelete] = useState<ResumeVersionDocument | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSettingActive, setIsSettingActive] = useState(false);
 
-    const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [resumeToEdit, setResumeToEdit] = useState<(Models.Document & ResumeVersion) | null>(null);
+    const [resumeToEdit, setResumeToEdit] = useState<ResumeVersionDocument | null>(null);
     const [editDescription, setEditDescription] = useState('');
     const [isEditing, setIsEditing] = useState(false);
 
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    const { isMobile, isTablet } = useBreakpoints();
+    const visibleColumnCount = isMobile ? 3 : isTablet ? 4 : 5;
 
-    useEffect(() => {
-        fetchResumeVersions();
-    }, []);
-
-    const fetchResumeVersions = async () => {
+    const fetchResumeVersions = useCallback(async () => {
         setIsLoading(true);
+
         try {
-            const versions = await getResumeVersions();
-            setResumeVersions(versions);
+            setResumeVersions(await getResumeVersions());
         } catch (error) {
             console.error('Error fetching resume versions:', error);
             setError('Failed to load resume versions');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const handleResumeFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.type !== 'application/pdf') {
-                setError('Only PDF files are supported');
-                return;
-            }
-            setNewResumeFile(file);
-            setUploadDialogOpen(true);
+    useEffect(() => {
+        void fetchResumeVersions();
+    }, [fetchResumeVersions]);
+
+    const handleResumeFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
         }
+
+        if (file.type !== 'application/pdf') {
+            setError('Only PDF files are supported');
+            return;
+        }
+
+        setNewResumeFile(file);
+        setUploadDialogOpen(true);
     };
 
     const handleUploadCancel = () => {
@@ -105,7 +122,9 @@ const ResumeManager = () => {
     };
 
     const handleUploadConfirm = async () => {
-        if (!newResumeFile) return;
+        if (!newResumeFile) {
+            return;
+        }
 
         setIsUploading(true);
         setError('');
@@ -114,9 +133,7 @@ const ResumeManager = () => {
         try {
             await addResumeVersion(newResumeFile, description);
             setSuccess('Resume uploaded successfully');
-            setUploadDialogOpen(false);
-            setNewResumeFile(null);
-            setDescription('');
+            handleUploadCancel();
             await fetchResumeVersions();
         } catch (error) {
             console.error('Error uploading resume:', error);
@@ -126,24 +143,16 @@ const ResumeManager = () => {
         }
     };
 
-    const handleDeleteClick = (resumeId: string, fileId: string) => {
-        setResumeToDelete({ id: resumeId, fileId });
-        setDeleteDialogOpen(true);
-    };
-
-    const handleDeleteCancel = () => {
-        setDeleteDialogOpen(false);
-        setResumeToDelete(null);
-    };
-
     const handleDeleteConfirm = async () => {
-        if (!resumeToDelete) return;
+        if (!resumeToDelete) {
+            return;
+        }
 
         setIsDeleting(true);
+
         try {
-            await deleteResumeVersion(resumeToDelete.id, resumeToDelete.fileId);
+            await deleteResumeVersion(resumeToDelete.$id, resumeToDelete.fileId);
             setSuccess('Resume deleted successfully');
-            setDeleteDialogOpen(false);
             setResumeToDelete(null);
             await fetchResumeVersions();
         } catch (error) {
@@ -154,33 +163,29 @@ const ResumeManager = () => {
         }
     };
 
-    const handleEditClick = (resume: Models.Document & ResumeVersion) => {
+    const handleEditClick = (resume: ResumeVersionDocument) => {
         setResumeToEdit(resume);
         setEditDescription(resume.description || '');
-        setEditDialogOpen(true);
     };
 
     const handleEditCancel = () => {
-        setEditDialogOpen(false);
         setResumeToEdit(null);
         setEditDescription('');
     };
 
     const handleEditConfirm = async () => {
-        if (!resumeToEdit) return;
+        if (!resumeToEdit) {
+            return;
+        }
 
         setIsEditing(true);
         setError('');
         setSuccess('');
 
         try {
-            await updateResumeVersion(resumeToEdit.$id, {
-                description: editDescription,
-            });
+            await updateResumeVersion(resumeToEdit.$id, { description: editDescription });
             setSuccess('Resume updated successfully');
-            setEditDialogOpen(false);
-            setResumeToEdit(null);
-            setEditDescription('');
+            handleEditCancel();
             await fetchResumeVersions();
         } catch (error) {
             console.error('Error updating resume:', error);
@@ -207,38 +212,22 @@ const ResumeManager = () => {
         }
     };
 
+    const iconSize = isMobile ? 'small' : 'medium';
+    const compactChipLabelSx = { '& .MuiChip-label': { padding: isTablet ? 0.6 : undefined } };
+
     return (
         <Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    gap: { xs: 2, sm: 0 },
-                    mb: 3,
-                }}
-            >
-                <Typography variant="h4" component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
-                    Resumes
-                </Typography>
-                <Button variant="contained" color="primary" startIcon={<AddIcon />} component="label">
-                    Upload
-                    <input type="file" hidden accept=".pdf" onChange={handleResumeFileChange} />
-                </Button>
-            </Box>
+            <PageHeader
+                title="Resumes"
+                action={
+                    <Button variant="contained" color="primary" startIcon={<AddIcon />} component="label">
+                        Upload
+                        <input type="file" hidden accept=".pdf" onChange={handleResumeFileChange} />
+                    </Button>
+                }
+            />
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
-            )}
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                    {success}
-                </Alert>
-            )}
+            <StatusAlerts error={error} success={success} />
 
             <Paper sx={{ mb: 3 }}>
                 <TableContainer sx={{ overflowX: 'auto', overflow: 'hidden' }}>
@@ -255,16 +244,14 @@ const ResumeManager = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {isLoading ? (
+                            {isLoading || resumeVersions.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
-                                        <CircularProgress />
-                                    </TableCell>
-                                </TableRow>
-                            ) : resumeVersions.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={isMobile ? 3 : isTablet ? 4 : 5} align="center">
-                                        No resume versions found. Upload your first resume!
+                                    <TableCell colSpan={visibleColumnCount} align="center">
+                                        {isLoading ? (
+                                            <CircularProgress />
+                                        ) : (
+                                            'No resume versions found. Upload your first resume!'
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -277,11 +264,7 @@ const ResumeManager = () => {
                                                     label={isTablet ? '' : 'Active'}
                                                     color="success"
                                                     variant="outlined"
-                                                    sx={{
-                                                        '& .MuiChip-label': {
-                                                            padding: isTablet ? 0.6 : undefined,
-                                                        },
-                                                    }}
+                                                    sx={compactChipLabelSx}
                                                 />
                                             ) : (
                                                 <Chip
@@ -291,12 +274,7 @@ const ResumeManager = () => {
                                                     variant="outlined"
                                                     onClick={() => handleSetActive(resume.$id)}
                                                     disabled={isSettingActive}
-                                                    sx={{
-                                                        cursor: 'pointer',
-                                                        '& .MuiChip-label': {
-                                                            padding: isTablet ? 0.6 : undefined,
-                                                        },
-                                                    }}
+                                                    sx={{ cursor: 'pointer', ...compactChipLabelSx }}
                                                 />
                                             )}
                                         </TableCell>
@@ -316,26 +294,27 @@ const ResumeManager = () => {
                                                     color="primary"
                                                     href={getFileUrl(resume.fileId)}
                                                     target="_blank"
-                                                    size={isMobile ? 'small' : 'medium'}
+                                                    size={iconSize}
                                                     title="View resume"
                                                 >
-                                                    <VisibilityIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                    <VisibilityIcon fontSize={iconSize} />
                                                 </IconButton>
                                                 <IconButton
                                                     color="primary"
                                                     onClick={() => handleEditClick(resume)}
-                                                    size={isMobile ? 'small' : 'medium'}
+                                                    size={iconSize}
                                                     title="Edit resume details"
                                                 >
-                                                    <EditIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                    <EditIcon fontSize={iconSize} />
                                                 </IconButton>
                                                 <IconButton
                                                     color="error"
-                                                    onClick={() => handleDeleteClick(resume.$id, resume.fileId)}
+                                                    onClick={() => setResumeToDelete(resume)}
                                                     disabled={isDeleting}
-                                                    size={isMobile ? 'small' : 'medium'}
+                                                    size={iconSize}
+                                                    title="Delete resume"
                                                 >
-                                                    <DeleteIcon fontSize={isMobile ? 'small' : 'medium'} />
+                                                    <DeleteIcon fontSize={iconSize} />
                                                 </IconButton>
                                             </Box>
                                         </TableCell>
@@ -358,16 +337,7 @@ const ResumeManager = () => {
                         <FileIcon sx={{ mr: 1 }} />
                         <Typography>{newResumeFile?.name}</Typography>
                     </Box>
-                    <TextField
-                        fullWidth
-                        label="Description (optional)"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="e.g., Updated with recent project, Fixed formatting issues"
-                        multiline
-                        minRows={2}
-                        maxRows={10}
-                    />
+                    <DescriptionField value={description} onChange={setDescription} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleUploadCancel} disabled={isUploading}>
@@ -384,41 +354,23 @@ const ResumeManager = () => {
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-                <DialogTitle>Delete Resume Version</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete this resume version? This action cannot be undone.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDeleteCancel} disabled={isDeleting}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleDeleteConfirm}
-                        color="error"
-                        disabled={isDeleting}
-                        startIcon={isDeleting ? <CircularProgress size={20} /> : null}
-                    >
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <ConfirmDialog
+                open={Boolean(resumeToDelete)}
+                title="Delete Resume Version"
+                description="Are you sure you want to delete this resume version? This action cannot be undone."
+                isBusy={isDeleting}
+                onCancel={() => setResumeToDelete(null)}
+                onConfirm={handleDeleteConfirm}
+            />
 
             <Dialog
-                open={editDialogOpen}
+                open={Boolean(resumeToEdit)}
                 onClose={handleEditCancel}
                 maxWidth="sm"
                 fullWidth
                 slotProps={{
                     paper: {
-                        sx: {
-                            overflowX: 'hidden',
-                            '& .MuiDialogContent-root': {
-                                overflowX: 'hidden',
-                            },
-                        },
+                        sx: { overflowX: 'hidden', '& .MuiDialogContent-root': { overflowX: 'hidden' } },
                     },
                 }}
             >
@@ -427,16 +379,7 @@ const ResumeManager = () => {
                     <DialogContentText sx={{ mb: 2 }}>
                         Edit the file description for this resume version.
                     </DialogContentText>
-                    <TextField
-                        fullWidth
-                        label="Description (optional)"
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="e.g., Updated with recent project, Fixed formatting issues"
-                        multiline
-                        minRows={2}
-                        maxRows={10}
-                    />
+                    <DescriptionField value={editDescription} onChange={setEditDescription} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleEditCancel} disabled={isEditing}>
@@ -445,6 +388,7 @@ const ResumeManager = () => {
                     <Button
                         onClick={handleEditConfirm}
                         color="primary"
+                        disabled={isEditing}
                         startIcon={isEditing ? <CircularProgress size={20} /> : <SaveIcon />}
                     >
                         {isEditing ? 'Saving...' : 'Save'}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getActiveResumeVersion } from '../services/resumeService';
-import { getFileUrl } from '../services/fileProxy';
+import { getFileUrl } from '../services/storageService';
 import { routes } from '../routes/paths';
 
 const ResumeRedirect = () => {

@@ -25,7 +25,7 @@ export const getSectionVisibility = async (): Promise<SectionVisibilityDocument 
     }
 };
 
-export const createSectionVisibility = async (data: SectionVisibility) => {
+const createSectionVisibility = async (data: SectionVisibility) => {
     try {
         return await databases.createDocument(DATABASE_ID, COLLECTION_SECTION_VISIBILITY_ID, ID.unique(), data);
     } catch (error) {

@@ -163,7 +163,7 @@
     font-weight: 500;
 }
 
-.read-more {
+.blog-list-read-more {
     color: #2f7295;
     font-weight: 500;
     font-size: 0.875rem;
@@ -171,7 +171,7 @@
     position: relative;
 }
 
-.read-more::after {
+.blog-list-read-more::after {
     content: '';
     position: absolute;
     width: 0;
@@ -182,7 +182,7 @@
     transition: width 0.3s ease;
 }
 
-.blog-list-card:hover .read-more::after {
+.blog-list-card:hover .blog-list-read-more::after {
     width: 100%;
 }
 

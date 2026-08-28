@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Models } from 'appwrite';
-import { getCurrentUser, logout } from '../services/appwrite';
+import { getCurrentUser, logout } from '../services/authService';
 import { AuthContext } from './authContext';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

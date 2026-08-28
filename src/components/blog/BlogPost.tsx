@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getBlogPostBySlug, incrementBlogPostViewCount, getContentImagePreviewUrl } from '../../services/appwrite';
-import { LinearProgress, Alert } from '@mui/material';
-import Footer from '../layout/Footer';
-import BlogNav from './BlogNav';
+import { Alert, LinearProgress } from '@mui/material';
+import { getBlogPostBySlug, incrementBlogPostViewCount } from '../../services/blogService';
+import { getContentImagePreviewUrl } from '../../services/storageService';
 import NotFound from '../NotFound';
+import BlogPageShell from './BlogPageShell';
 import { routes } from '../../routes/paths';
 import { ImageWithFallback } from '../shared';
+import { useAsyncData } from '../../hooks';
 import type {
     BlogPost as BlogPostType,
     BlogPostDocument,
@@ -16,10 +17,13 @@ import type {
     SectionVisibilityStatus,
 } from '../../types';
 import { BLOG_PREVIEW_STORAGE_KEY, BLOG_VIEW_COUNT_DELAY_MS, shouldRecordBlogView } from '../../utils/blog';
+import { PLACEHOLDER_IMAGE } from '../../utils/assets';
+import { classNames } from '../../utils/classNames';
 import { formatBlogDate } from '../../utils/dates';
 import { isSectionVisible } from '../../utils/sectionVisibility';
 import './BlogPost.css';
 
+/** A draft rendered straight from session storage; it has no Appwrite document id. */
 interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
     isPreview: boolean;
 }
@@ -29,103 +33,53 @@ interface BlogPostProps {
     sectionVisibilityStatus: SectionVisibilityStatus;
 }
 
+const PREVIEW_SLUG = 'preview';
+
 const isPersistedBlogPost = (post: BlogPostDocument | PreviewBlogPost): post is BlogPostDocument => '$id' in post;
 
 const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps) => {
     const { slug } = useParams<{ slug: string }>();
     const [searchParams] = useSearchParams();
-    const isPreview = searchParams.get('preview') === 'true' || slug === 'preview';
+    const isPreview = searchParams.get('preview') === 'true' || slug === PREVIEW_SLUG;
+    const canShowBlogs = isSectionVisible(sectionVisibility, sectionVisibilityStatus, 'blogs');
+    const isVisibilityResolved = sectionVisibilityStatus !== 'loading';
 
-    const [post, setPost] = useState<BlogPostDocument | PreviewBlogPost | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const canShowBlogs = useMemo(
-        () => isSectionVisible(sectionVisibility, sectionVisibilityStatus, 'blogs'),
-        [sectionVisibility, sectionVisibilityStatus]
-    );
+    const loadPost = useCallback(async (): Promise<BlogPostDocument | PreviewBlogPost> => {
+        if (slug === PREVIEW_SLUG) {
+            const previewData = sessionStorage.getItem(BLOG_PREVIEW_STORAGE_KEY);
 
-    useEffect(() => {
-        let isMounted = true;
-
-        const fetchData = async () => {
-            setIsLoading(true);
-            setError(null);
-            setPost(null);
-
-            try {
-                if (!canShowBlogs && !isPreview) {
-                    setError('Blogs section is disabled');
-                    setIsLoading(false);
-                    return;
-                }
-
-                if (slug === 'preview') {
-                    try {
-                        const previewData = sessionStorage.getItem(BLOG_PREVIEW_STORAGE_KEY);
-                        if (!previewData) {
-                            setError('Preview data not found');
-                            setIsLoading(false);
-                            return;
-                        }
-
-                        const previewPost = JSON.parse(previewData) as PreviewBlogPost;
-                        if (isMounted) {
-                            setPost(previewPost);
-                        }
-                        setIsLoading(false);
-                        return;
-                    } catch (err) {
-                        console.error('Error loading preview data:', err);
-                        setError('Failed to load preview');
-                        setIsLoading(false);
-                        return;
-                    }
-                }
-
-                if (!slug) {
-                    setIsLoading(false);
-                    return;
-                }
-
-                const blogPost = await getBlogPostBySlug(slug);
-
-                if (!isMounted) {
-                    return;
-                }
-
-                if (!blogPost || (!blogPost.published && !isPreview)) {
-                    setError('Post not found');
-                    setIsLoading(false);
-                    return;
-                }
-
-                setPost(blogPost);
-            } catch (err) {
-                console.error('Error fetching blog post:', err);
-                if (isMounted) {
-                    setError('Failed to load blog post');
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
+            if (!previewData) {
+                throw new Error('Preview data not found');
             }
-        };
 
-        if (sectionVisibilityStatus !== 'loading') {
-            void fetchData();
+            return JSON.parse(previewData) as PreviewBlogPost;
         }
 
-        return () => {
-            isMounted = false;
-        };
-    }, [slug, isPreview, canShowBlogs, sectionVisibilityStatus]);
+        if (!slug) {
+            throw new Error('Post not found');
+        }
+
+        if (!canShowBlogs && !isPreview) {
+            throw new Error('Blogs section is disabled');
+        }
+
+        const blogPost = await getBlogPostBySlug(slug);
+
+        if (!blogPost || (!blogPost.published && !isPreview)) {
+            throw new Error('Post not found');
+        }
+
+        return blogPost;
+    }, [canShowBlogs, isPreview, slug]);
+
+    const { data: post, loading, error } = useAsyncData(loadPost, { enabled: isVisibilityResolved });
 
     useEffect(() => {
         if (!post || isPreview || import.meta.env.DEV || !isPersistedBlogPost(post)) {
             return;
         }
 
+        // Only count a view once the reader has actually stayed on the page.
         const timer = window.setTimeout(() => {
             if (shouldRecordBlogView(post.$id)) {
                 void incrementBlogPostViewCount(post.$id);
@@ -135,31 +89,26 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
         return () => window.clearTimeout(timer);
     }, [isPreview, post]);
 
-    if (isLoading) {
+    if (!isVisibilityResolved || loading) {
         return (
-            <div className="blog-page-wrapper">
-                {!isPreview && <BlogNav />}
+            <BlogPageShell showNav={!isPreview}>
                 <div className="blog-post-container">
                     <p className="loading-message">Loading...</p>
                     <LinearProgress />
                 </div>
-                <Footer resumeUrl={null} />
-            </div>
+            </BlogPageShell>
         );
     }
 
-    if (!canShowBlogs && !isPreview) {
+    if (error || !post || (!canShowBlogs && !isPreview)) {
         return <NotFound />;
     }
 
-    if (error || !post) {
-        return <NotFound />;
-    }
+    const tags = post.tags ?? [];
 
     return (
-        <div className="blog-page-wrapper">
-            {!isPreview && <BlogNav />}
-            <div className="blog-post-container" style={isPreview ? { paddingTop: '2rem' } : undefined}>
+        <BlogPageShell showNav={!isPreview}>
+            <div className={classNames('blog-post-container', isPreview && 'blog-post-container--preview')}>
                 {isPreview && (
                     <Alert severity="info" sx={{ mb: 3 }}>
                         This is a preview of your blog post. It is not yet published.
@@ -178,9 +127,9 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                     <div className="blog-post-meta">
                         <span className="blog-post-date">{formatBlogDate(post.publishedDate)}</span>
 
-                        {post.tags && post.tags.length > 0 && (
+                        {tags.length > 0 && (
                             <div className="blog-post-tags">
-                                {post.tags.map((tag, index) => (
+                                {tags.map((tag, index) => (
                                     <span key={`${tag}-${index}`} className="blog-post-tag">
                                         {tag}
                                     </span>
@@ -190,9 +139,7 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
 
                         <div className="blog-post-views">
                             <p>
-                                {isPreview || !isPersistedBlogPost(post)
-                                    ? 'Preview'
-                                    : `${post.viewCount || 0} views`}
+                                {isPersistedBlogPost(post) && !isPreview ? `${post.viewCount || 0} views` : 'Preview'}
                             </p>
                         </div>
                     </div>
@@ -201,7 +148,7 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                         <div className="blog-post-cover">
                             <ImageWithFallback
                                 src={getContentImagePreviewUrl(post.coverImageId)}
-                                fallbackSrc="/img/placeholder.svg"
+                                fallbackSrc={PLACEHOLDER_IMAGE}
                                 alt={post.title}
                             />
                         </div>
@@ -212,8 +159,7 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
                 </div>
             </div>
-            <Footer resumeUrl={null} />
-        </div>
+        </BlogPageShell>
     );
 };
 

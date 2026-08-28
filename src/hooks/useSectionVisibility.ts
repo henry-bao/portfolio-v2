@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getSectionVisibility, sendPing } from '../services/appwrite';
+import { sendPing } from '../config/appwrite';
+import { getSectionVisibility } from '../services/visibilityService';
 import type { SectionVisibilityDocument, SectionVisibilityStatus } from '../types';
 
 export function useSectionVisibility() {

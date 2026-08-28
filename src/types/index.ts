@@ -1,6 +1,5 @@
 import type { Models } from 'appwrite';
 
-// Base interfaces from appwrite service
 export interface ProfileData {
     name: string;
     email: string;
@@ -44,19 +43,11 @@ export interface SectionVisibility {
     resumes: boolean;
 }
 
-// Combined types with Appwrite document properties
+/** Appwrite stores each of the shapes above as a document with its own metadata. */
 export type ProfileDocument = Models.Document & ProfileData;
 export type ProjectDocument = Models.Document & ProjectData;
 export type BlogPostDocument = Models.Document & BlogPost;
 export type SectionVisibilityDocument = Models.Document & SectionVisibility;
+
+/** `fallback` means the request failed and hardcoded defaults are being shown instead. */
 export type SectionVisibilityStatus = 'loading' | 'ready' | 'fallback';
-
-// API State types
-export type DataState<T> =
-    | { status: 'idle'; data: null; error: null }
-    | { status: 'loading'; data: null; error: null }
-    | { status: 'success'; data: T; error: null }
-    | { status: 'error'; data: null; error: string };
-
-// Re-export custom type guards that properly handle optional properties
-export { isProfileData, isProjectData, isBlogPost, isSectionVisibility } from './guards';

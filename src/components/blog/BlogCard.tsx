@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { getContentImagePreviewUrl } from '../../services/appwrite';
+import { getContentImagePreviewUrl } from '../../services/storageService';
 import { routes } from '../../routes/paths';
 import type { BlogPostDocument } from '../../types';
+import { PLACEHOLDER_IMAGE } from '../../utils/assets';
 import { formatBlogDate } from '../../utils/dates';
 import { ImageWithFallback } from '../shared';
 
@@ -12,72 +13,60 @@ interface BlogCardProps {
     variant?: BlogCardVariant;
 }
 
+/** Both variants use the same markup with a `blog-` or `blog-list-` class prefix. */
+const classPrefixes: Record<BlogCardVariant, string> = {
+    home: 'blog',
+    list: 'blog-list',
+};
+
+const TagList = ({ tags, className }: { tags: string[]; className: string }) => (
+    <div className={`${className}s`}>
+        {tags.map((tag, index) => (
+            <span key={`${tag}-${index}`} className={className}>
+                {tag}
+            </span>
+        ))}
+    </div>
+);
+
 export function BlogCard({ post, variant = 'home' }: BlogCardProps) {
-    const isListVariant = variant === 'list';
-    const prefix = isListVariant ? 'blog-list' : 'blog';
-    const titleClassName = isListVariant ? 'blog-list-title' : 'blog-title';
-    const dateClassName = isListVariant ? 'blog-list-date' : 'blog-date';
-    const summaryClassName = isListVariant ? 'blog-list-summary' : 'blog-summary';
-    const tagsClassName = isListVariant ? 'blog-list-tags' : 'blog-tags';
-    const tagClassName = isListVariant ? 'blog-list-tag' : 'blog-tag';
-    const readMoreClassName = isListVariant ? 'read-more' : 'blog-read-more';
-
-    const content = (
-        <>
-            {post.coverImageId && (
-                <div className={`${prefix}-card-image`}>
-                    <ImageWithFallback
-                        src={getContentImagePreviewUrl(post.coverImageId)}
-                        fallbackSrc="/img/placeholder.svg"
-                        alt={post.title}
-                        loading="lazy"
-                    />
-                </div>
-            )}
-            <div className={`${prefix}-card-content`}>
-                <h2 className={titleClassName}>{post.title}</h2>
-                <p className={dateClassName}>{formatBlogDate(post.publishedDate)}</p>
-                <p className={summaryClassName}>{post.summary}</p>
-
-                {isListVariant ? (
-                    <div className="blog-list-card-meta">
-                        {post.tags && post.tags.length > 0 && (
-                            <div className={tagsClassName}>
-                                {post.tags.map((tag, index) => (
-                                    <span key={`${tag}-${index}`} className={tagClassName}>
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="blog-list-views">
-                            <span>{post.viewCount || 0} views</span>
-                        </div>
-                    </div>
-                ) : (
-                    post.tags &&
-                    post.tags.length > 0 && (
-                        <div className={tagsClassName}>
-                            {post.tags.map((tag, index) => (
-                                <span key={`${tag}-${index}`} className={tagClassName}>
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    )
-                )}
-
-                <div className={readMoreClassName}>
-                    Read more <span aria-hidden="true">&rarr;</span>
-                </div>
-            </div>
-        </>
-    );
+    const prefix = classPrefixes[variant];
+    const tags = post.tags ?? [];
 
     return (
         <Link to={routes.blogPostBySlug(post.slug)} className={`${prefix}-card-link`}>
-            <article className={`${prefix}-card`}>{content}</article>
+            <article className={`${prefix}-card`}>
+                {post.coverImageId && (
+                    <div className={`${prefix}-card-image`}>
+                        <ImageWithFallback
+                            src={getContentImagePreviewUrl(post.coverImageId)}
+                            fallbackSrc={PLACEHOLDER_IMAGE}
+                            alt={post.title}
+                            loading="lazy"
+                        />
+                    </div>
+                )}
+                <div className={`${prefix}-card-content`}>
+                    <h2 className={`${prefix}-title`}>{post.title}</h2>
+                    <p className={`${prefix}-date`}>{formatBlogDate(post.publishedDate)}</p>
+                    <p className={`${prefix}-summary`}>{post.summary}</p>
+
+                    {variant === 'list' ? (
+                        <div className="blog-list-card-meta">
+                            {tags.length > 0 && <TagList tags={tags} className="blog-list-tag" />}
+                            <div className="blog-list-views">
+                                <span>{post.viewCount || 0} views</span>
+                            </div>
+                        </div>
+                    ) : (
+                        tags.length > 0 && <TagList tags={tags} className="blog-tag" />
+                    )}
+
+                    <div className={`${prefix}-read-more`}>
+                        Read more <span aria-hidden="true">&rarr;</span>
+                    </div>
+                </div>
+            </article>
         </Link>
     );
 }

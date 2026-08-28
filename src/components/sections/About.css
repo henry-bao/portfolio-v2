@@ -74,6 +74,14 @@
     color: #c0738b;
 }
 
+.r-punctuation-color {
+    color: #59597f;
+}
+
+.r-function-color {
+    color: #6b96b6;
+}
+
 .about-click {
     color: #6b96b6;
     transition: all 0.3s ease;

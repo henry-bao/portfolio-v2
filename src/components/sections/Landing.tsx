@@ -1,19 +1,21 @@
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import { routes } from '../../routes/paths';
 import { scrollToSection } from '../../utils/scroll';
 import './Landing.css';
 
+/** Clicks on the waving hand needed to reveal the dashboard login. */
+const ADMIN_UNLOCK_CLICKS = 5;
+
 const Landing = () => {
     const navigate = useNavigate();
-    const [clickCount, setClickCount] = useState(0);
+    const clickCountRef = useRef(0);
 
     const handleWaveClick = () => {
-        const newCount = clickCount + 1;
-        setClickCount(newCount);
+        clickCountRef.current += 1;
 
-        if (newCount === 5) {
-            setClickCount(0);
+        if (clickCountRef.current >= ADMIN_UNLOCK_CLICKS) {
+            clickCountRef.current = 0;
             navigate(routes.admin.login);
         }
     };
@@ -23,9 +25,16 @@ const Landing = () => {
             <div className="hello-container">
                 <div className="type-animation">
                     <span className="open-tag">&lt;Hello&gt;</span>{' '}
-                    <span className="wave-hand" onClick={handleWaveClick}>
+                    {/* Decorative easter egg: hidden from assistive tech and the tab order. */}
+                    <button
+                        type="button"
+                        className="wave-hand"
+                        onClick={handleWaveClick}
+                        aria-hidden="true"
+                        tabIndex={-1}
+                    >
                         {'👋'}
-                    </span>
+                    </button>
                     {"  I'm Henry "}
                     <span className="close-tag">&lt;/Hello&gt;&nbsp;</span>
                 </div>
@@ -36,7 +45,7 @@ const Landing = () => {
                 aria-label="Scroll to about section"
                 onClick={() => scrollToSection('about')}
             >
-                <div className="scroll-indicator"></div>
+                <div className="scroll-indicator" />
             </button>
         </section>
     );
