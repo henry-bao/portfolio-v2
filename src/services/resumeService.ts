@@ -1,6 +1,7 @@
 import { ID, Query } from 'appwrite';
 import type { Models } from 'appwrite';
-import { COLLECTION_RESUME_ID, DATABASE_ID, STORAGE_FILE_BUCKET_ID, databases, storage } from '../config/appwrite';
+import { COLLECTION_RESUME_ID, DATABASE_ID, STORAGE_BUCKET_ID, databases, storage } from '../config/appwrite';
+import { deleteFile } from './storageService';
 
 interface ResumeVersion {
     fileId: string;
@@ -53,7 +54,7 @@ export const addResumeVersion = async (
     setAsActive = false
 ): Promise<ResumeVersionDocument> => {
     try {
-        const uploadResult = await storage.createFile(STORAGE_FILE_BUCKET_ID, ID.unique(), file);
+        const uploadResult = await storage.createFile({ bucketId: STORAGE_BUCKET_ID, fileId: ID.unique(), file });
         const existingVersions = await getResumeVersions();
         const isFirstVersion = existingVersions.length === 0;
 
@@ -110,7 +111,7 @@ export const deleteResumeVersion = async (resumeId: string, fileId: string): Pro
         )) as unknown as ResumeVersionDocument;
 
         await databases.deleteDocument(DATABASE_ID, COLLECTION_RESUME_ID, resumeId);
-        await storage.deleteFile(STORAGE_FILE_BUCKET_ID, fileId);
+        await deleteFile(fileId);
 
         if (!resumeDoc.isActive) {
             return;

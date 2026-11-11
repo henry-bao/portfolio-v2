@@ -51,14 +51,14 @@ export function BlogMetadata({
     onTagRemove,
 }: BlogMetadataProps) {
     return (
-        <Grid item xs={12}>
+        <Grid size={12}>
             <Typography variant="h6" gutterBottom>
                 Basic Information
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
             <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         fullWidth
                         label="Title"
@@ -69,7 +69,7 @@ export function BlogMetadata({
                     />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField
                         fullWidth
                         label="Slug"
@@ -78,19 +78,21 @@ export function BlogMetadata({
                         margin="normal"
                         required
                         helperText="Used for the URL"
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <Button size="small" onClick={onManualSlugGenerate}>
-                                        Generate
-                                    </Button>
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <Button size="small" onClick={onManualSlugGenerate}>
+                                            Generate
+                                        </Button>
+                                    </InputAdornment>
+                                ),
+                            },
                         }}
                     />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField
                         fullWidth
                         label="Published Date"
@@ -99,13 +101,15 @@ export function BlogMetadata({
                         onChange={(e) => onPublishedDateChange(e.target.value)}
                         margin="normal"
                         required
-                        InputLabelProps={{
-                            shrink: true,
+                        slotProps={{
+                            inputLabel: {
+                                shrink: true,
+                            },
                         }}
                     />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         fullWidth
                         label="Summary"
@@ -120,16 +124,14 @@ export function BlogMetadata({
                     />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <FormControlLabel
-                        control={
-                            <Switch checked={published} onChange={(e) => onPublishedChange(e.target.checked)} />
-                        }
+                        control={<Switch checked={published} onChange={(e) => onPublishedChange(e.target.checked)} />}
                         label="Publish this post"
                     />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         fullWidth
                         label="Add Tag"
@@ -143,19 +145,21 @@ export function BlogMetadata({
                                 onTagAdd();
                             }
                         }}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <Button
-                                        size="small"
-                                        onClick={onTagAdd}
-                                        startIcon={<AddIcon />}
-                                        disabled={!tagInput.trim()}
-                                    >
-                                        Add
-                                    </Button>
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <Button
+                                            size="small"
+                                            onClick={onTagAdd}
+                                            startIcon={<AddIcon />}
+                                            disabled={!tagInput.trim()}
+                                        >
+                                            Add
+                                        </Button>
+                                    </InputAdornment>
+                                ),
+                            },
                         }}
                     />
 

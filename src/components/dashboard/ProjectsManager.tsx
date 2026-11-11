@@ -129,7 +129,7 @@ const SortableCard = ({ project, logoUrl, onEdit, onDelete }: SortableProjectPro
             sx={{ width: '100%', overflow: 'hidden', touchAction: 'pan-y' }}
         >
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <IconButton
                         {...dragHandleProps}
                         size="small"
@@ -157,10 +157,10 @@ const SortableCard = ({ project, logoUrl, onEdit, onDelete }: SortableProjectPro
                 </Box>
 
                 <Box sx={{ pl: 6 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1, wordBreak: 'break-word' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1, wordBreak: 'break-word' }}>
                         <strong>Role:</strong> {project.role}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', wordBreak: 'break-word' }}>
                         <strong>Date:</strong> {project.date}
                     </Typography>
                 </Box>
@@ -306,11 +306,11 @@ const ProjectsManager = () => {
             <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
                 <Stack spacing={2} sx={{ touchAction: 'pan-y', overflowY: 'auto', width: '100%' }}>
                     {isLoading ? (
-                        <Box display="flex" justifyContent="center" alignItems="center" py={2}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 2 }}>
                             <CircularProgress />
                         </Box>
                     ) : projects.length === 0 ? (
-                        <Typography color="textSecondary" textAlign="center">
+                        <Typography color="textSecondary" sx={{ textAlign: 'center' }}>
                             <EmptyState />
                         </Typography>
                     ) : (

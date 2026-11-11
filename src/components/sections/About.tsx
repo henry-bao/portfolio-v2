@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { getFilePreviewUrl } from '../../services/storageService';
 import type { ProfileDocument } from '../../types';
 import { FALLBACK_PROFILE_IMAGE, FALLBACK_RESUME_URL } from '../../utils/assets';
 import { mapProfileDocumentToDisplayData } from '../../utils/profile';
 import { ImageWithFallback } from '../shared';
-import './About.css';
+import { Section, SectionTitle } from '../layout/Section';
+import styles from './About.module.css';
 
 interface AboutProps {
     loading: boolean;
@@ -19,8 +20,8 @@ const TokenList = ({ items, separator = '&&' }: { items: string[]; separator?: s
     <>
         {items.map((item, index) => (
             <span key={`${item}-${index}`}>
-                <span className="r-string-color"> "{item}"</span>
-                {index < items.length - 1 && <span className="r-punctuation-color">&nbsp;{separator}</span>}
+                <span className={styles.string}> "{item}"</span>
+                {index < items.length - 1 && <span className={styles.punctuation}>&nbsp;{separator}</span>}
             </span>
         ))}
     </>
@@ -29,15 +30,15 @@ const TokenList = ({ items, separator = '&&' }: { items: string[]; separator?: s
 /** Renders `c("a", "b")`. */
 const TokenVector = ({ items }: { items: string[] }) => (
     <>
-        <span className="r-function-color">c</span>
-        <span className="r-punctuation-color">(</span>
+        <span className={styles.function}>c</span>
+        <span className={styles.punctuation}>(</span>
         {items.map((item, index) => (
             <span key={`${item}-${index}`}>
-                <span className="r-string-color">"{item}"</span>
+                <span className={styles.string}>"{item}"</span>
                 {index < items.length - 1 && ', '}
             </span>
         ))}
-        <span className="r-punctuation-color">)</span>
+        <span className={styles.punctuation}>)</span>
     </>
 );
 
@@ -46,7 +47,7 @@ const EmailTokens = ({ email }: { email: string }) => (
     <>
         {email.split(/([@.])/).map((part, index) =>
             part === '@' || part === '.' ? (
-                <span key={`${part}-${index}`} className="r-punctuation-color">
+                <span key={`${part}-${index}`} className={styles.punctuation}>
                     {part}
                 </span>
             ) : (
@@ -57,14 +58,14 @@ const EmailTokens = ({ email }: { email: string }) => (
 );
 
 const AboutRow = ({ label, children }: { label: string; children: ReactNode }) => (
-    <li>
-        {label} <span className="r-arrow-color">&lt;-</span>
+    <li className={styles.fact}>
+        {label} <span className={styles.assign}>&lt;-</span>
         {children}
     </li>
 );
 
 const ExternalLink = ({ href, children }: { href: string; children: string }) => (
-    <a href={href} target="_blank" rel="noopener" className="about-click">
+    <a href={href} target="_blank" rel="noopener" className={styles.link}>
         {children}
     </a>
 );
@@ -79,27 +80,27 @@ const About = ({ loading, profile, resumeUrl }: AboutProps) => {
     );
 
     return (
-        <section id="about" className="about-css">
-            <div className="about">
-                <h1 className="sec-title">About Me</h1>
+        <Section id="about" className={styles.about}>
+            <div className={styles.content}>
+                <SectionTitle>About Me</SectionTitle>
 
                 {loading ? (
-                    <Box className="about-loading" aria-label="Loading profile">
+                    <div className={styles.loading} aria-label="Loading profile">
                         <CircularProgress />
-                    </Box>
+                    </div>
                 ) : (
-                    <div className="about-container">
-                        <div className="my-pic-container">
+                    <div className={styles.layout}>
+                        <div className={styles.photoFrame}>
                             <ImageWithFallback
-                                className="my-pic"
+                                className={styles.photo}
                                 src={profileImageUrl}
                                 fallbackSrc={FALLBACK_PROFILE_IMAGE}
                                 alt="A picture of me (Henry Bao) in black and white"
                             />
                         </div>
-                        <ul className="about-list">
+                        <ul className={styles.facts}>
                             <AboutRow label="name">
-                                <span className="r-string-color"> "{displayData.name}"</span>
+                                <span className={styles.string}> "{displayData.name}"</span>
                             </AboutRow>
                             <AboutRow label="pronouns">
                                 <TokenList items={displayData.pronouns} />
@@ -112,9 +113,7 @@ const About = ({ loading, profile, resumeUrl }: AboutProps) => {
                                 <TokenVector items={displayData.languages} />
                             </AboutRow>
                             <AboutRow label="resume">
-                                <ExternalLink href={resumeUrl || FALLBACK_RESUME_URL}>
-                                    {' download()'}
-                                </ExternalLink>
+                                <ExternalLink href={resumeUrl || FALLBACK_RESUME_URL}>{' download()'}</ExternalLink>
                             </AboutRow>
                             <AboutRow label="linkedin">
                                 <ExternalLink href={displayData.linkedin}>{' redirect()'}</ExternalLink>
@@ -123,7 +122,7 @@ const About = ({ loading, profile, resumeUrl }: AboutProps) => {
                                 <ExternalLink href={displayData.github}>{' redirect()'}</ExternalLink>
                             </AboutRow>
                             <AboutRow label="e-mail">
-                                <span className="r-string-color">
+                                <span className={styles.string}>
                                     {' "'}
                                     <EmailTokens email={displayData.email} />
                                     {'"'}
@@ -133,7 +132,7 @@ const About = ({ loading, profile, resumeUrl }: AboutProps) => {
                     </div>
                 )}
             </div>
-        </section>
+        </Section>
     );
 };
 

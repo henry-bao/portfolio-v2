@@ -1,0 +1,149 @@
+.landing {
+    height: 100vh;
+    padding: 5rem 3rem 2rem;
+    background-color: var(--color-bg);
+    color: var(--color-text-on-dark);
+    text-align: center;
+}
+
+.greeting {
+    display: inline-block;
+    padding-top: 35vh;
+    font-size: 3rem;
+    user-select: none;
+}
+
+/* Types the greeting out left to right behind a blinking caret. */
+.typewriter {
+    width: 0;
+    overflow: hidden;
+    border-right: 0.08em solid grey;
+    white-space: nowrap;
+    animation:
+        typing 1.5s steps(30, end) forwards,
+        caret-blink 0.9s infinite;
+}
+
+.tag {
+    color: var(--color-primary);
+}
+
+.wave {
+    display: inline-block;
+    transform-origin: 70% 70%;
+    cursor: pointer;
+    animation: wave 3.5s infinite;
+}
+
+/* The arrow sits 30vh below the greeting; the button's padding widens its click target. */
+.scrollButton {
+    display: block;
+    width: fit-content;
+    margin: calc(30vh - 1rem) auto 0;
+    padding: 1rem;
+    cursor: pointer;
+    visibility: hidden;
+    animation: fade-in 5s forwards;
+}
+
+.scrollArrow {
+    display: block;
+    width: 0.8em;
+    height: 0.8em;
+    border: solid var(--color-text-on-dark);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    animation: bounce 2s ease infinite;
+}
+
+@media (max-width: 1200px) {
+    .greeting {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .landing {
+        padding-inline: 1.5rem;
+    }
+
+    .greeting {
+        padding-top: 32vh;
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 510px) {
+    .greeting {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 450px) {
+    .greeting {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 350px) {
+    .greeting {
+        padding-top: 28vh;
+        font-size: 0.9rem;
+    }
+}
+
+@keyframes typing {
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes caret-blink {
+    from {
+        border-color: transparent;
+    }
+    to {
+        border-color: grey;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0%,
+    100% {
+        translate: 0 -0.8em;
+    }
+    25% {
+        translate: 0 0;
+    }
+}
+
+@keyframes wave {
+    0%,
+    60%,
+    100% {
+        rotate: 0deg;
+    }
+    10%,
+    30% {
+        rotate: 14deg;
+    }
+    20% {
+        rotate: -8deg;
+    }
+    40% {
+        rotate: -4deg;
+    }
+    50% {
+        rotate: 10deg;
+    }
+}

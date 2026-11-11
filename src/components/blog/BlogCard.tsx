@@ -1,28 +1,23 @@
 import { Link } from 'react-router-dom';
-import { getContentImagePreviewUrl } from '../../services/storageService';
+import { getFileUrl } from '../../services/storageService';
 import { routes } from '../../routes/paths';
 import type { BlogPostDocument } from '../../types';
 import { PLACEHOLDER_IMAGE } from '../../utils/assets';
+import { classNames } from '../../utils/classNames';
 import { formatBlogDate } from '../../utils/dates';
 import { ImageWithFallback } from '../shared';
-
-type BlogCardVariant = 'home' | 'list';
+import styles from './BlogCard.module.css';
 
 interface BlogCardProps {
     post: BlogPostDocument;
-    variant?: BlogCardVariant;
+    /** `home`: compact light card on the home page. `list`: larger dark card with view counts. */
+    variant?: 'home' | 'list';
 }
 
-/** Both variants use the same markup with a `blog-` or `blog-list-` class prefix. */
-const classPrefixes: Record<BlogCardVariant, string> = {
-    home: 'blog',
-    list: 'blog-list',
-};
-
-const TagList = ({ tags, className }: { tags: string[]; className: string }) => (
-    <div className={`${className}s`}>
+const TagList = ({ tags }: { tags: string[] }) => (
+    <div className={styles.tags}>
         {tags.map((tag, index) => (
-            <span key={`${tag}-${index}`} className={className}>
+            <span key={`${tag}-${index}`} className={styles.tag}>
                 {tag}
             </span>
         ))}
@@ -30,39 +25,39 @@ const TagList = ({ tags, className }: { tags: string[]; className: string }) => 
 );
 
 export function BlogCard({ post, variant = 'home' }: BlogCardProps) {
-    const prefix = classPrefixes[variant];
+    const isListVariant = variant === 'list';
     const tags = post.tags ?? [];
+    // Home cards sit under the section's h2; list cards under the page's h1.
+    const Title = isListVariant ? 'h2' : 'h3';
 
     return (
-        <Link to={routes.blogPostBySlug(post.slug)} className={`${prefix}-card-link`}>
-            <article className={`${prefix}-card`}>
+        <Link to={routes.blogPostBySlug(post.slug)} className={classNames(styles.link, isListVariant && styles.list)}>
+            <article className={styles.card}>
                 {post.coverImageId && (
-                    <div className={`${prefix}-card-image`}>
+                    <div className={styles.cover}>
                         <ImageWithFallback
-                            src={getContentImagePreviewUrl(post.coverImageId)}
+                            src={getFileUrl(post.coverImageId)}
                             fallbackSrc={PLACEHOLDER_IMAGE}
                             alt={post.title}
                             loading="lazy"
                         />
                     </div>
                 )}
-                <div className={`${prefix}-card-content`}>
-                    <h2 className={`${prefix}-title`}>{post.title}</h2>
-                    <p className={`${prefix}-date`}>{formatBlogDate(post.publishedDate)}</p>
-                    <p className={`${prefix}-summary`}>{post.summary}</p>
+                <div className={styles.body}>
+                    <Title className={styles.title}>{post.title}</Title>
+                    <p className={styles.date}>{formatBlogDate(post.publishedDate)}</p>
+                    <p className={styles.summary}>{post.summary}</p>
 
-                    {variant === 'list' ? (
-                        <div className="blog-list-card-meta">
-                            {tags.length > 0 && <TagList tags={tags} className="blog-list-tag" />}
-                            <div className="blog-list-views">
-                                <span>{post.viewCount || 0} views</span>
-                            </div>
+                    {isListVariant ? (
+                        <div className={styles.meta}>
+                            {tags.length > 0 && <TagList tags={tags} />}
+                            <span className={styles.views}>{post.viewCount || 0} views</span>
                         </div>
                     ) : (
-                        tags.length > 0 && <TagList tags={tags} className="blog-tag" />
+                        tags.length > 0 && <TagList tags={tags} />
                     )}
 
-                    <div className={`${prefix}-read-more`}>
+                    <div className={styles.readMore}>
                         Read more <span aria-hidden="true">&rarr;</span>
                     </div>
                 </div>

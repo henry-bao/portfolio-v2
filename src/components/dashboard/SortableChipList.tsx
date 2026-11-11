@@ -130,7 +130,7 @@ export function SortableChipList({
         return (
             <>
                 <Skeleton animation="wave" height={56} width="100%" sx={{ mb: 2 }} />
-                <Box display="flex" flexWrap="wrap" width="100%" mb={2} gap={1}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', width: '100%', mb: 2, gap: 1 }}>
                     <Skeleton animation="wave" height={32} width={100} />
                     <Skeleton animation="wave" height={32} width={120} />
                     <Skeleton animation="wave" height={32} width={80} />
@@ -141,7 +141,7 @@ export function SortableChipList({
 
     return (
         <>
-            <Box display="flex" alignItems="center" mb={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <TextField
                     fullWidth
                     label={inputLabel}
@@ -154,7 +154,7 @@ export function SortableChipList({
                 </Button>
             </Box>
 
-            <Box display="flex" flexWrap="wrap" width="100%" mb={2}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', width: '100%', mb: 2 }}>
                 <DndContext
                     sensors={sensors}
                     collisionDetection={closestCorners}
@@ -164,7 +164,15 @@ export function SortableChipList({
                     onDragCancel={resetDragState}
                 >
                     <SortableContext items={itemIds} strategy={rectSortingStrategy}>
-                        <Box display="flex" flexWrap="wrap" width="100%" sx={{ minHeight: '50px', position: 'relative' }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                width: '100%',
+                                minHeight: '50px',
+                                position: 'relative',
+                            }}
+                        >
                             {items.map((item, index) => (
                                 <SortableChip
                                     key={itemIds[index]}

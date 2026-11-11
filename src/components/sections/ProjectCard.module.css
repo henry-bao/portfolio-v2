@@ -1,0 +1,116 @@
+/* Mobile-first: the side-by-side, animated layout only kicks in on laptops. */
+
+.card {
+    margin-bottom: 2rem;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-bottom: 2px solid;
+    font-size: 1.375rem;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.3s ease;
+}
+
+.toggle[aria-expanded='true'] {
+    color: var(--color-primary);
+}
+
+/* Clips the details while framer-motion animates their height. */
+.collapse {
+    overflow: hidden;
+}
+
+.details {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.logo {
+    align-self: center;
+    width: 12rem;
+    margin-block: 1.5rem;
+    border-radius: 10px;
+}
+
+.description {
+    flex: 1;
+}
+
+.role {
+    margin-bottom: 1em;
+    font-size: 1.5em;
+}
+
+.point {
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+.date {
+    display: block;
+    margin-block: 1em;
+}
+
+.link {
+    color: var(--color-primary);
+    transition: color 0.3s ease;
+}
+
+.link:hover {
+    color: var(--color-secondary);
+}
+
+@media (min-width: 768px) {
+    .logo {
+        width: 15rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .details {
+        flex-direction: row;
+        gap: 3rem;
+        margin-top: 1rem;
+        font-size: 0.9375rem;
+    }
+
+    .logo {
+        width: 20rem;
+        margin: 0;
+        animation: reveal-image 0.3s 0.15s both;
+    }
+
+    .description {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        margin-left: 20px;
+        animation: fade-in 0.6s 0.2s both;
+    }
+}
+
+@keyframes reveal-image {
+    from {
+        opacity: 0;
+        clip-path: inset(50% 0 50% 0);
+        transform: scale(0.4);
+    }
+    to {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}

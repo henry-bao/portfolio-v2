@@ -1,30 +1,4 @@
-@import 'tailwindcss';
-
-* {
-    box-sizing: border-box;
-    margin: 0px;
-    padding: 0px;
-    outline: 0px;
-    font-family: 'Source Code Pro', monospace;
-}
-
-html {
-    scroll-behavior: smooth;
-    background-color: rgb(15, 15, 15);
-}
-
-section {
-    height: auto;
-    max-height: 100%;
-    padding-left: 3em;
-    padding-right: 3em;
-    padding-top: 5em;
-    padding-bottom: 2em;
-}
-
-/* Set by useBodyScrollLock while a full-screen mobile menu or drawer is open. */
-@media (max-width: 768px) {
-    body.disableScroll {
-        overflow: hidden;
-    }
-}
+/* Only the reset is imported from Tailwind: the site doesn't use utility classes. */
+@import 'tailwindcss/preflight.css' layer(base);
+@import './styles/tokens.css';
+@import './styles/base.css';

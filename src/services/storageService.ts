@@ -1,6 +1,12 @@
-import { ID, Query } from 'appwrite';
+import { AppwriteException, ID, Query } from 'appwrite';
 import type { Models } from 'appwrite';
-import { STORAGE_BLOGS_BUCKET_ID, STORAGE_FILE_BUCKET_ID, storage } from '../config/appwrite';
+import { STORAGE_BUCKET_ID, storage } from '../config/appwrite';
+
+/**
+ * Everything lives in one bucket. Blog images go in this virtual folder so the media library lists
+ * (and can delete or replace) only them, never resumes, the profile photo or project logos at the root.
+ */
+const BLOG_IMAGE_FOLDER = 'blog';
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
 export const ALLOWED_DOCUMENT_TYPES = [
@@ -15,47 +21,50 @@ const assertAllowedType = (file: File, allowedTypes: string[]) => {
     }
 };
 
-/** URL of a file in the main bucket, used for resumes and other downloads. */
-export const getFileUrl = (fileId: string) => storage.getFileView(STORAGE_FILE_BUCKET_ID, fileId);
+/** URL of a stored file as-is: resumes and other downloads, and blog images. */
+export const getFileUrl = (fileId: string) => storage.getFileView({ bucketId: STORAGE_BUCKET_ID, fileId });
 
 /**
- * Optionally resized preview of an *image* in the main bucket. Appwrite's preview endpoint
- * only renders images -- point documents at `getFileUrl` instead, or it serves a placeholder.
+ * Optionally resized preview of an *image*. Appwrite's preview endpoint only renders images --
+ * point documents at `getFileUrl` instead, or it serves a placeholder.
  */
 export const getFilePreviewUrl = (fileId: string, width?: number, height?: number) =>
-    storage.getFilePreview(STORAGE_FILE_BUCKET_ID, fileId, width, height);
+    storage.getFilePreview({ bucketId: STORAGE_BUCKET_ID, fileId, width, height });
 
-/** URL of an image in the blog bucket. */
-export const getContentImagePreviewUrl = (fileId: string) => storage.getFileView(STORAGE_BLOGS_BUCKET_ID, fileId);
-
-export const uploadFile = async (file: File, { allowedTypes = ALLOWED_IMAGE_TYPES } = {}) => {
+export const uploadFile = async (
+    file: File,
+    { allowedTypes = ALLOWED_IMAGE_TYPES, folder }: { allowedTypes?: string[]; folder?: string } = {}
+) => {
     try {
         assertAllowedType(file, allowedTypes);
-        return await storage.createFile(STORAGE_FILE_BUCKET_ID, ID.unique(), file);
+        return await storage.createFile({ bucketId: STORAGE_BUCKET_ID, fileId: ID.unique(), file, folder });
     } catch (error) {
         console.error('Error uploading file:', error);
         throw error;
     }
 };
 
-export const deleteFile = async (fileId: string, bucketId = STORAGE_FILE_BUCKET_ID) => {
+/** Deletes a file. A file that's already gone counts as deleted, so stale ids never block a save. */
+export const deleteFile = async (fileId: string) => {
     try {
-        await storage.deleteFile(bucketId, fileId);
+        await storage.deleteFile({ bucketId: STORAGE_BUCKET_ID, fileId });
         return true;
     } catch (error) {
+        if (error instanceof AppwriteException && error.code === 404) {
+            return true;
+        }
+
         console.error('Error deleting file:', error);
         throw error;
     }
 };
 
-export const deleteContentImage = (fileId: string) => deleteFile(fileId, STORAGE_BLOGS_BUCKET_ID);
-
 export const getContentImages = async (limit = 50): Promise<Models.File[]> => {
     try {
-        const images = await storage.listFiles(STORAGE_BLOGS_BUCKET_ID, [
-            Query.limit(limit),
-            Query.orderDesc('$createdAt'),
-        ]);
+        const images = await storage.listFiles({
+            bucketId: STORAGE_BUCKET_ID,
+            queries: [Query.equal('folder', BLOG_IMAGE_FOLDER), Query.limit(limit), Query.orderDesc('$createdAt')],
+        });
 
         return images.files;
     } catch (error) {
@@ -65,23 +74,17 @@ export const getContentImages = async (limit = 50): Promise<Models.File[]> => {
 };
 
 export const uploadContentImage = async (file: File): Promise<{ fileId: string; url: string }> => {
-    try {
-        assertAllowedType(file, ALLOWED_IMAGE_TYPES);
-        const result = await storage.createFile(STORAGE_BLOGS_BUCKET_ID, ID.unique(), file);
+    const result = await uploadFile(file, { folder: BLOG_IMAGE_FOLDER });
 
-        return { fileId: result.$id, url: getContentImagePreviewUrl(result.$id) };
-    } catch (error) {
-        console.error('Error uploading content image:', error);
-        throw error;
-    }
+    return { fileId: result.$id, url: getFileUrl(result.$id) };
 };
 
 /** Replaces an image in place by reusing its file id, so existing markdown links keep working. */
 export const updateContentImage = async (fileId: string, file: File): Promise<Models.File> => {
     try {
         assertAllowedType(file, ALLOWED_IMAGE_TYPES);
-        await storage.deleteFile(STORAGE_BLOGS_BUCKET_ID, fileId);
-        return await storage.createFile(STORAGE_BLOGS_BUCKET_ID, fileId, file);
+        await deleteFile(fileId);
+        return await storage.createFile({ bucketId: STORAGE_BUCKET_ID, fileId, file, folder: BLOG_IMAGE_FOLDER });
     } catch (error) {
         console.error('Error updating content image:', error);
         throw error;

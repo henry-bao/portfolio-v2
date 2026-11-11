@@ -10,8 +10,6 @@ import Landing from './components/sections/Landing';
 import Projects from './components/sections/Projects';
 import Blog from './components/sections/Blog';
 
-import './Portfolio.css';
-
 interface PortfolioProps {
     sectionVisibility: SectionVisibilityDocument | null;
     sectionVisibilityStatus: SectionVisibilityStatus;
@@ -33,9 +31,7 @@ function Portfolio({ sectionVisibility, sectionVisibilityStatus }: PortfolioProp
             <Navbar sectionVisibility={sectionVisibility} sectionVisibilityStatus={sectionVisibilityStatus} />
             <main>
                 <Landing />
-                {canShowSection('about') && (
-                    <About loading={profileLoading} profile={profile} resumeUrl={resumeUrl} />
-                )}
+                {canShowSection('about') && <About loading={profileLoading} profile={profile} resumeUrl={resumeUrl} />}
                 {canShowSection('projects') && <Projects />}
                 {canShowSection('blogs') && <Blog />}
             </main>

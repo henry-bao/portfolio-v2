@@ -1,7 +1,17 @@
 import type { ChangeEvent } from 'react';
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Typography,
+} from '@mui/material';
 import { Upload as UploadIcon } from '@mui/icons-material';
 import { useObjectUrl } from '../../../hooks';
+import { ImagePreview } from '../ImagePreview';
 
 interface ContentImageDialogProps {
     accept: string;
@@ -30,14 +40,8 @@ export function ContentImageDialog({
             <DialogContent>
                 <Box sx={{ mt: 1 }}>
                     {image ? (
-                        <Box textAlign="center">
-                            {previewUrl && (
-                                <img
-                                    src={previewUrl}
-                                    alt="Preview"
-                                    style={{ maxWidth: '100%', maxHeight: '200px', marginBottom: '10px' }}
-                                />
-                            )}
+                        <Box sx={{ textAlign: 'center' }}>
+                            {previewUrl && <ImagePreview src={previewUrl} alt="Preview" maxHeight={200} centered />}
                             <Typography variant="body2">
                                 {image.name} ({Math.round(image.size / 1024)} KB)
                             </Typography>
@@ -48,7 +52,7 @@ export function ContentImageDialog({
                                 Select Image
                                 <input type="file" hidden accept={accept} onChange={onImageChange} />
                             </Button>
-                            <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
+                            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
                                 Allowed formats: JPG, PNG, GIF, WebP, SVG
                             </Typography>
                         </Box>

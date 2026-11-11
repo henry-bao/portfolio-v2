@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom';
 import { useBlogPosts } from '../../hooks';
 import { routes } from '../../routes/paths';
 import { BlogCard } from '../blog/BlogCard';
-import './Blog.css';
+import { Section, SectionTitle } from '../layout/Section';
+import { classNames } from '../../utils/classNames';
+import styles from './Blog.module.css';
 
 const HOME_PAGE_POST_LIMIT = 3;
 
@@ -11,30 +13,28 @@ const Blog = () => {
     const blogPosts = (blogPostsData ?? []).slice(0, HOME_PAGE_POST_LIMIT);
 
     return (
-        <section id="blogs" className="blog-section">
-            <div className="container">
-                <h1 className="section-title">Blogs</h1>
+        <Section id="blogs" inset className={styles.blog}>
+            <SectionTitle>Blogs</SectionTitle>
 
-                {isLoading ? (
-                    <div className="loading-spinner">Loading...</div>
-                ) : blogPosts.length === 0 ? (
-                    <p className="blog-no-posts-message">No blog posts available yet.</p>
-                ) : (
-                    <>
-                        <div className="blog-grid">
-                            {blogPosts.map((post) => (
-                                <BlogCard key={post.$id} post={post} />
-                            ))}
-                        </div>
-                        <div className="view-all-container">
-                            <Link to={routes.blogs} className="view-all-button">
-                                View All Posts
-                            </Link>
-                        </div>
-                    </>
-                )}
-            </div>
-        </section>
+            {isLoading ? (
+                <p className={styles.status}>Loading...</p>
+            ) : blogPosts.length === 0 ? (
+                <p className={classNames(styles.status, styles.empty)}>No blog posts available yet.</p>
+            ) : (
+                <>
+                    <div className={styles.grid}>
+                        {blogPosts.map((post) => (
+                            <BlogCard key={post.$id} post={post} />
+                        ))}
+                    </div>
+                    <div className={styles.actions}>
+                        <Link to={routes.blogs} className={styles.viewAll}>
+                            View All Posts
+                        </Link>
+                    </div>
+                </>
+            )}
+        </Section>
     );
 };
 

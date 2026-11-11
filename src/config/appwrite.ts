@@ -3,8 +3,8 @@ import { Account, Client, Databases, Storage } from 'appwrite';
 const env = import.meta.env;
 
 export const DATABASE_ID = env.VITE_APPWRITE_DB_ID;
-export const STORAGE_FILE_BUCKET_ID = env.VITE_APPWRITE_STORAGE_FILE_BUCKET_ID;
-export const STORAGE_BLOGS_BUCKET_ID = env.VITE_APPWRITE_STORAGE_BLOGS_BUCKET_ID;
+/** The project's only storage bucket; see storageService for how files are organized inside it. */
+export const STORAGE_BUCKET_ID = env.VITE_APPWRITE_STORAGE_FILE_BUCKET_ID;
 export const COLLECTION_PROFILE_ID = env.VITE_APPWRITE_DB_PROFILE_COLLECTION_ID;
 export const COLLECTION_PROJECTS_ID = env.VITE_APPWRITE_DB_PROJECTS_COLLECTION_ID;
 export const COLLECTION_BLOG_ID = env.VITE_APPWRITE_DB_BLOG_COLLECTION_ID;

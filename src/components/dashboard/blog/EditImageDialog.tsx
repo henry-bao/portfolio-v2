@@ -3,6 +3,7 @@ import type { Models } from 'appwrite';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Typography } from '@mui/material';
 import { Upload as UploadIcon } from '@mui/icons-material';
 import { useObjectUrl } from '../../../hooks';
+import { ImagePreview } from '../ImagePreview';
 
 interface EditImageDialogProps {
     accept: string;
@@ -37,15 +38,11 @@ export function EditImageDialog({
                             <Typography variant="subtitle2" gutterBottom>
                                 Current Image
                             </Typography>
-                            <img
+                            <ImagePreview
                                 src={getImageUrl(imageToEdit.$id)}
                                 alt={imageToEdit.name}
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '150px',
-                                    display: 'block',
-                                    margin: '0 auto 10px',
-                                }}
+                                maxHeight={150}
+                                centered
                             />
                             <Typography variant="caption">
                                 {imageToEdit.name} ({Math.round(imageToEdit.sizeOriginal / 1024)} KB)
@@ -60,12 +57,13 @@ export function EditImageDialog({
                     </Typography>
 
                     {newImageFile ? (
-                        <Box textAlign="center">
+                        <Box sx={{ textAlign: 'center' }}>
                             {newImagePreviewUrl && (
-                                <img
+                                <ImagePreview
                                     src={newImagePreviewUrl}
                                     alt="New image preview"
-                                    style={{ maxWidth: '100%', maxHeight: '150px', marginBottom: '10px' }}
+                                    maxHeight={150}
+                                    centered
                                 />
                             )}
                             <Typography variant="body2">
@@ -78,7 +76,7 @@ export function EditImageDialog({
                                 Select New Image
                                 <input type="file" hidden accept={accept} onChange={onFileChange} />
                             </Button>
-                            <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
+                            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
                                 Allowed formats: JPG, PNG, GIF, WebP, SVG
                             </Typography>
                         </Box>

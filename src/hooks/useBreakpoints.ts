@@ -1,6 +1,9 @@
 import { useMediaQuery, useTheme } from '@mui/material';
 
-/** Width below which the dashboard sidebar and project cards switch to their compact layout. */
+/**
+ * Width below which the dashboard sidebar and project cards switch to their compact layout.
+ * Matches the 992px breakpoint in the site's CSS (see src/styles/tokens.css).
+ */
 export const COMPACT_LAYOUT_WIDTH_PX = 992;
 
 /**

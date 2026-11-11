@@ -1,6 +1,9 @@
 import { createTheme } from '@mui/material/styles';
 
-/** Dark theme shared by the public site and the dashboard. */
+/**
+ * Dark theme for the MUI components used by the dashboard and the public site.
+ * The brand colours mirror the CSS custom properties in src/styles/tokens.css.
+ */
 export const theme = createTheme({
     palette: {
         mode: 'dark',

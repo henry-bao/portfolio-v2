@@ -2,6 +2,7 @@ import { scrollToSection } from '../../utils/scroll';
 import { isSectionVisible } from '../../utils/sectionVisibility';
 import type { SectionVisibility, SectionVisibilityDocument, SectionVisibilityStatus } from '../../types';
 import NavShell from './NavShell';
+import type { NavItem } from './NavShell';
 
 interface NavbarProps {
     sectionVisibility: SectionVisibilityDocument | null;
@@ -19,58 +20,19 @@ const navSections: NavSection[] = [
 const Navbar = ({ sectionVisibility, sectionVisibilityStatus }: NavbarProps) => {
     const isLoadingSectionLinks = sectionVisibilityStatus === 'loading';
 
+    const items: NavItem[] = [
+        { key: 'home', label: 'Home', onSelect: () => scrollToSection('home') },
+        ...navSections
+            .filter(({ id }) => isSectionVisible(sectionVisibility, sectionVisibilityStatus, id))
+            .map(({ id, label }) => ({ key: id, label, reveal: true, onSelect: () => scrollToSection(id) })),
+    ];
+
     return (
         <NavShell
-            logo={(closeMenu) => (
-                <button
-                    type="button"
-                    className="nav-link-button nav-logo-button"
-                    onClick={() => {
-                        closeMenu();
-                        scrollToSection('home');
-                    }}
-                >
-                    Henry Bao
-                </button>
-            )}
-        >
-            {(closeMenu) => {
-                const goToSection = (sectionId: string) => {
-                    closeMenu();
-                    scrollToSection(sectionId);
-                };
-
-                return (
-                    <>
-                        <li>
-                            <button type="button" className="nav-link-button" onClick={() => goToSection('home')}>
-                                Home
-                            </button>
-                        </li>
-                        {isLoadingSectionLinks &&
-                            navSections.map(({ id }) => (
-                                <li className="nav-link-skeleton-item" key={id} aria-hidden="true">
-                                    <span className="nav-link-skeleton" />
-                                </li>
-                            ))}
-                        {navSections.map(
-                            ({ id, label }) =>
-                                isSectionVisible(sectionVisibility, sectionVisibilityStatus, id) && (
-                                    <li className="nav-link-enter" key={id}>
-                                        <button
-                                            type="button"
-                                            className="nav-link-button"
-                                            onClick={() => goToSection(id)}
-                                        >
-                                            {label}
-                                        </button>
-                                    </li>
-                                )
-                        )}
-                    </>
-                );
-            }}
-        </NavShell>
+            logo={{ label: 'Henry Bao', onSelect: () => scrollToSection('home') }}
+            items={items}
+            placeholderCount={isLoadingSectionLinks ? navSections.length : 0}
+        />
     );
 };
 

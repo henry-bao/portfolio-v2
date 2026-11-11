@@ -4,12 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, CircularProgress, Divider, Grid, Paper, Skeleton, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { createProfileData, getProfileData, updateProfileData } from '../../services/profileService';
-import {
-    ALLOWED_DOCUMENT_TYPES,
-    deleteFile,
-    getFilePreviewUrl,
-    uploadFile,
-} from '../../services/storageService';
+import { ALLOWED_DOCUMENT_TYPES, deleteFile, getFilePreviewUrl, uploadFile } from '../../services/storageService';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 import type { ProfileData, ProfileDocument } from '../../types';
 import { routes } from '../../routes/paths';
@@ -17,6 +12,7 @@ import { FALLBACK_PROFILE_IMAGE } from '../../utils/assets';
 import { useImagePreview } from '../../hooks';
 import { StatusAlerts } from '../shared';
 import { SortableChipList } from './SortableChipList';
+import { ImagePreview } from './ImagePreview';
 
 type ListField = 'pronouns' | 'education' | 'languages';
 
@@ -30,7 +26,7 @@ const emptyLists: Record<ListField, string[]> = { pronouns: [], education: [], l
 const emptyDrafts: Record<ListField, string> = { pronouns: '', education: '', languages: '' };
 
 const FormSection = ({ title, children }: { title: string; children: ReactNode }) => (
-    <Grid item xs={12}>
+    <Grid size={12}>
         <Typography variant="h6" gutterBottom>
             {title}
         </Typography>
@@ -211,7 +207,7 @@ const ProfileEditor = () => {
 
     return (
         <Box>
-            <Typography variant="h4" component="h1" mb={3}>
+            <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
                 Profile
             </Typography>
 
@@ -222,7 +218,7 @@ const ProfileEditor = () => {
                     <FormSection title="Basic Information">
                         <Grid container spacing={2}>
                             {(['name', 'email'] as const).map((field) => (
-                                <Grid item xs={12} sm={6} key={field}>
+                                <Grid key={field} size={{ xs: 12, sm: 6 }}>
                                     {isLoading ? (
                                         <TextFieldSkeleton />
                                     ) : (
@@ -259,7 +255,7 @@ const ProfileEditor = () => {
                     <FormSection title="Social Links">
                         <Grid container spacing={2}>
                             {(['linkedin', 'github'] as const).map((field) => (
-                                <Grid item xs={12} sm={6} key={field}>
+                                <Grid key={field} size={{ xs: 12, sm: 6 }}>
                                     {isLoading ? (
                                         <TextFieldSkeleton />
                                     ) : (
@@ -279,13 +275,13 @@ const ProfileEditor = () => {
 
                     <FormSection title="Files">
                         <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Typography variant="subtitle1" gutterBottom>
                                     Profile Image
                                 </Typography>
 
                                 {isLoading ? (
-                                    <Box mb={2}>
+                                    <Box sx={{ mb: 2 }}>
                                         <Skeleton
                                             animation="wave"
                                             variant="rectangular"
@@ -297,29 +293,24 @@ const ProfileEditor = () => {
                                     </Box>
                                 ) : (
                                     <>
-                                        <Box mb={2}>
-                                            <img
+                                        <Box sx={{ mb: 2 }}>
+                                            <ImagePreview
                                                 src={profileImagePreviewUrl ?? FALLBACK_PROFILE_IMAGE}
                                                 alt={
                                                     profileImagePreviewUrl
                                                         ? 'Profile preview'
                                                         : 'Default profile image preview'
                                                 }
-                                                style={{
-                                                    maxWidth: '100%',
-                                                    maxHeight: '200px',
-                                                    display: 'block',
-                                                    marginBottom: '10px',
-                                                }}
+                                                maxHeight={200}
                                             />
                                             {!profileImagePreviewUrl && (
-                                                <Typography variant="caption" color="text.secondary">
+                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                                     No profile image set &mdash; the site shows this default.
                                                 </Typography>
                                             )}
                                         </Box>
 
-                                        <Box display="flex" gap={2}>
+                                        <Box sx={{ display: 'flex', gap: 2 }}>
                                             <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
                                                 {profileImagePreviewUrl ? 'Replace Image' : 'Upload Image'}
                                                 <input
@@ -345,15 +336,15 @@ const ProfileEditor = () => {
                                 )}
                             </Grid>
 
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Typography variant="subtitle1" gutterBottom>
                                     Resume
                                 </Typography>
 
                                 {isLoading ? (
-                                    <Box mb={2}>
+                                    <Box sx={{ mb: 2 }}>
                                         <Skeleton animation="wave" height={24} width="60%" sx={{ mb: 2 }} />
-                                        <Box display="flex" gap={2}>
+                                        <Box sx={{ display: 'flex', gap: 2 }}>
                                             <Skeleton animation="wave" height={36} width={120} />
                                             <Skeleton animation="wave" height={36} width={150} />
                                         </Box>
@@ -361,12 +352,12 @@ const ProfileEditor = () => {
                                 ) : (
                                     <>
                                         {resumeFileName && (
-                                            <Box mb={2}>
+                                            <Box sx={{ mb: 2 }}>
                                                 <Typography variant="body2">{resumeFileName}</Typography>
                                             </Box>
                                         )}
 
-                                        <Box display="flex" gap={2}>
+                                        <Box sx={{ display: 'flex', gap: 2 }}>
                                             <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
                                                 Upload Resume
                                                 <input type="file" hidden accept=".pdf" onChange={handleResumeChange} />
@@ -385,8 +376,8 @@ const ProfileEditor = () => {
                         </Grid>
                     </FormSection>
 
-                    <Grid item xs={12}>
-                        <Box display="flex" justifyContent="flex-end" mt={2}>
+                    <Grid size={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                             {isLoading ? (
                                 <Skeleton animation="wave" height={36} width={120} />
                             ) : (

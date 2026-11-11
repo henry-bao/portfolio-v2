@@ -333,7 +333,7 @@ const ResumeManager = () => {
                         You are about to upload a new resume version. Please provide a description to help identify this
                         version.
                     </DialogContentText>
-                    <Box display="flex" alignItems="center" mb={2}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <FileIcon sx={{ mr: 1 }} />
                         <Typography>{newResumeFile?.name}</Typography>
                     </Box>

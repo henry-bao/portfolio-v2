@@ -1,0 +1,129 @@
+/* Rendered markdown: published blog posts and the dashboard's live preview. */
+
+.markdown {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    overflow-wrap: break-word;
+}
+
+.markdown :is(h1, h2, h3, h4, h5, h6) {
+    margin-block: 2rem 1rem;
+    font-weight: 600;
+}
+
+.markdown h1 {
+    font-size: 2rem;
+}
+
+.markdown h2 {
+    font-size: 1.75rem;
+}
+
+.markdown h3 {
+    font-size: 1.5rem;
+}
+
+.markdown h4 {
+    font-size: 1.25rem;
+}
+
+.markdown p {
+    margin-bottom: 1.5rem;
+}
+
+.markdown a {
+    border-bottom: 1px solid currentColor;
+    color: var(--color-primary);
+    transition: color 0.2s;
+}
+
+.markdown a:hover {
+    color: var(--color-secondary);
+}
+
+.markdown img {
+    max-width: 100%;
+    height: auto;
+    margin-block: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.markdown :is(ul, ol) {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.markdown ul {
+    list-style-type: disc;
+}
+
+.markdown ol {
+    margin-left: 1em;
+    list-style-type: decimal;
+}
+
+.markdown li {
+    margin-bottom: 0.5rem;
+}
+
+.markdown blockquote {
+    padding-left: 1rem;
+    border-left: 4px solid var(--color-primary);
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.markdown pre {
+    margin-block: 1.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    background-color: var(--color-surface-code);
+}
+
+.markdown code {
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    background-color: var(--color-surface-code);
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.markdown pre code {
+    padding: 0;
+    background-color: transparent;
+}
+
+.markdown hr {
+    height: 1px;
+    margin-block: 2rem;
+    border: none;
+    background-color: var(--color-text-muted);
+}
+
+/* Wide tables scroll sideways instead of stretching the page on small screens. */
+.tableScroller {
+    margin-block: 1.5rem;
+    overflow-x: auto;
+}
+
+.markdown table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.markdown :is(th, td) {
+    padding: 0.75rem;
+    border: 1px solid var(--color-border-muted);
+}
+
+.markdown th {
+    background-color: var(--color-surface-code);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .markdown {
+        font-size: 1rem;
+    }
+}

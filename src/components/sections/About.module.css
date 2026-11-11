@@ -1,0 +1,110 @@
+.about {
+    display: flex;
+    justify-content: center;
+    background-color: var(--color-light-100);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+/* Fills the space under the title so the photo and facts centre vertically. */
+.layout {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    gap: 100px;
+}
+
+.photoFrame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo {
+    width: 300px;
+    border-radius: 10px;
+}
+
+.facts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    list-style: none;
+}
+
+.fact {
+    padding-bottom: 2em;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.fact:first-child {
+    padding-top: 1.5em;
+}
+
+/* Syntax colours for the R-flavoured `field <- value` pseudo-code. */
+.assign {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.string {
+    color: var(--color-secondary);
+}
+
+.punctuation {
+    color: var(--color-syntax-punctuation);
+}
+
+.function {
+    color: var(--color-syntax-function);
+}
+
+.link {
+    color: var(--color-syntax-function);
+    transition: color 0.3s ease;
+}
+
+.link:hover {
+    color: var(--color-primary);
+}
+
+@media (max-width: 1200px) {
+    .content {
+        align-items: center;
+    }
+
+    .layout {
+        flex-direction: column-reverse;
+        gap: 50px;
+    }
+
+    .fact {
+        font-size: 1.125rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .layout {
+        gap: 20px;
+    }
+
+    .photo {
+        width: 200px;
+    }
+
+    .fact {
+        font-size: 0.9375rem;
+    }
+}

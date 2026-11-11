@@ -1,14 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { Alert, LinearProgress } from '@mui/material';
 import { getBlogPostBySlug, incrementBlogPostViewCount } from '../../services/blogService';
-import { getContentImagePreviewUrl } from '../../services/storageService';
+import { getFileUrl } from '../../services/storageService';
 import NotFound from '../NotFound';
 import BlogPageShell from './BlogPageShell';
 import { routes } from '../../routes/paths';
-import { ImageWithFallback } from '../shared';
+import { ImageWithFallback, MarkdownContent } from '../shared';
 import { useAsyncData } from '../../hooks';
 import type {
     BlogPost as BlogPostType,
@@ -21,7 +19,7 @@ import { PLACEHOLDER_IMAGE } from '../../utils/assets';
 import { classNames } from '../../utils/classNames';
 import { formatBlogDate } from '../../utils/dates';
 import { isSectionVisible } from '../../utils/sectionVisibility';
-import './BlogPost.css';
+import styles from './BlogPost.module.css';
 
 /** A draft rendered straight from session storage; it has no Appwrite document id. */
 interface PreviewBlogPost extends Omit<BlogPostType, 'published'> {
@@ -92,10 +90,10 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
     if (!isVisibilityResolved || loading) {
         return (
             <BlogPageShell showNav={!isPreview}>
-                <div className="blog-post-container">
-                    <p className="loading-message">Loading...</p>
+                <main className={styles.post}>
+                    <p className={styles.loading}>Loading...</p>
                     <LinearProgress />
-                </div>
+                </main>
             </BlogPageShell>
         );
     }
@@ -108,57 +106,53 @@ const BlogPost = ({ sectionVisibility, sectionVisibilityStatus }: BlogPostProps)
 
     return (
         <BlogPageShell showNav={!isPreview}>
-            <div className={classNames('blog-post-container', isPreview && 'blog-post-container--preview')}>
+            <main className={classNames(styles.post, isPreview && styles.preview)}>
                 {isPreview && (
                     <Alert severity="info" sx={{ mb: 3 }}>
                         This is a preview of your blog post. It is not yet published.
                     </Alert>
                 )}
 
-                <div className="blog-post-header">
+                <header className={styles.header}>
                     {!isPreview && (
-                        <Link to={routes.blogs} className="back-to-blog">
+                        <Link to={routes.blogs} className={styles.backLink}>
                             ← Back to blogs
                         </Link>
                     )}
 
-                    <h1 className="blog-post-title">{post.title}</h1>
+                    <h1 className={styles.title}>{post.title}</h1>
 
-                    <div className="blog-post-meta">
-                        <span className="blog-post-date">{formatBlogDate(post.publishedDate)}</span>
+                    <div className={styles.meta}>
+                        <span>{formatBlogDate(post.publishedDate)}</span>
 
                         {tags.length > 0 && (
-                            <div className="blog-post-tags">
+                            <div className={styles.tags}>
                                 {tags.map((tag, index) => (
-                                    <span key={`${tag}-${index}`} className="blog-post-tag">
+                                    <span key={`${tag}-${index}`} className={styles.tag}>
                                         {tag}
                                     </span>
                                 ))}
                             </div>
                         )}
 
-                        <div className="blog-post-views">
-                            <p>
-                                {isPersistedBlogPost(post) && !isPreview ? `${post.viewCount || 0} views` : 'Preview'}
-                            </p>
-                        </div>
+                        <span>
+                            {isPersistedBlogPost(post) && !isPreview ? `${post.viewCount || 0} views` : 'Preview'}
+                        </span>
                     </div>
 
                     {post.coverImageId && (
-                        <div className="blog-post-cover">
+                        <div className={styles.cover}>
                             <ImageWithFallback
-                                src={getContentImagePreviewUrl(post.coverImageId)}
+                                src={getFileUrl(post.coverImageId)}
                                 fallbackSrc={PLACEHOLDER_IMAGE}
                                 alt={post.title}
                             />
                         </div>
                     )}
-                </div>
+                </header>
 
-                <div className="blog-post-content">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
-                </div>
-            </div>
+                <MarkdownContent>{post.content}</MarkdownContent>
+            </main>
         </BlogPageShell>
     );
 };

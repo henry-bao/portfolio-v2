@@ -1,16 +1,16 @@
 import { useProjects } from '../../hooks';
 import { getFilePreviewUrl } from '../../services/storageService';
 import { LoadingError } from '../shared';
+import { Section, SectionTitle } from '../layout/Section';
 import ProjectCard from './ProjectCard';
-
-import './Projects.css';
+import styles from './Projects.module.css';
 
 const Projects = () => {
     const { data: projects, loading, error, refresh } = useProjects();
 
     return (
-        <section id="projects" className="projects-css">
-            <h1 className="sec-title">Projects</h1>
+        <Section id="projects" inset className={styles.projects}>
+            <SectionTitle>Projects</SectionTitle>
 
             <LoadingError loading={loading} error={error} onRetry={refresh}>
                 {projects?.length ? (
@@ -22,7 +22,7 @@ const Projects = () => {
                         />
                     ))
                 ) : (
-                    <div className="empty-container">
+                    <div className={styles.empty}>
                         <p>oops, no projects found</p>
                         <p>db probably broke (i blame appwrite)</p>
                         <p>at least the about me section has fallback data</p>
@@ -30,7 +30,7 @@ const Projects = () => {
                     </div>
                 )}
             </LoadingError>
-        </section>
+        </Section>
     );
 };
 

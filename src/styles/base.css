@@ -1,0 +1,26 @@
+/* Element defaults layered on top of Tailwind's preflight reset. */
+
+html {
+    scroll-behavior: smooth;
+    background-color: var(--color-bg);
+    font-family: var(--font-mono);
+}
+
+/* Set by useBodyScrollLock while the full-screen mobile menu is open. */
+body.scroll-locked {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Code is set in the site font too; preflight would swap in the system monospace stack. */
+code,
+kbd,
+samp,
+pre {
+    font-family: inherit;
+}

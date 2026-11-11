@@ -55,14 +55,19 @@ export function MediaLibraryDialog({
                 ) : images.length === 0 ? (
                     <Box sx={{ textAlign: 'center', my: 4 }}>
                         <Typography color="textSecondary">No images found</Typography>
-                        <Button variant="outlined" startIcon={<UploadIcon />} sx={{ mt: 2 }} onClick={onOpenUploadDialog}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<UploadIcon />}
+                            sx={{ mt: 2 }}
+                            onClick={onOpenUploadDialog}
+                        >
                             Upload New Image
                         </Button>
                     </Box>
                 ) : (
                     <Grid container spacing={2} sx={{ mt: 1, mb: 3 }}>
                         {images.map((image) => (
-                            <Grid item xs={12} sm={6} md={4} key={image.$id}>
+                            <Grid key={image.$id} size={{ xs: 12, sm: 6, md: 4 }}>
                                 <Card
                                     sx={{
                                         border: selectedImage?.$id === image.$id ? '2px solid #1976d2' : 'none',

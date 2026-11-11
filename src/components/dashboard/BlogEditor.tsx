@@ -15,14 +15,12 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import type { Models } from 'appwrite';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { createBlogPost, getBlogPost, getBlogPostBySlug, updateBlogPost } from '../../services/blogService';
 import {
     ALLOWED_IMAGE_TYPES,
-    deleteContentImage,
-    getContentImagePreviewUrl,
+    deleteFile,
     getContentImages,
+    getFileUrl,
     updateContentImage,
     uploadContentImage,
 } from '../../services/storageService';
@@ -33,7 +31,7 @@ import { routes } from '../../routes/paths';
 import type { BlogPost, BlogPostDocument } from '../../types';
 import { buildSlug } from '../../utils/blog';
 import { formatLocalDateTime, getTodayInputDate, toInputDate } from '../../utils/dates';
-import { StatusAlerts } from '../shared';
+import { MarkdownContent, StatusAlerts } from '../shared';
 import {
     BlogContentEditor,
     BlogEditorSkeleton,
@@ -43,7 +41,6 @@ import {
     EditImageDialog,
     MediaLibraryDialog,
 } from './blog';
-import './markdown-preview.css';
 
 const AUTOSAVE_DELAY_MS = 1000;
 const IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(',');
@@ -148,7 +145,7 @@ const BlogEditor = () => {
                     applyDraft(existingDraft);
 
                     if (!existingDraft.coverImageUrl && postData.coverImageId) {
-                        setCoverImageRemoteUrl(getContentImagePreviewUrl(postData.coverImageId));
+                        setCoverImageRemoteUrl(getFileUrl(postData.coverImageId));
                     }
 
                     return;
@@ -161,9 +158,7 @@ const BlogEditor = () => {
                 setPublishedDate(toInputDate(postData.publishedDate));
                 setPublished(Boolean(postData.published));
                 setTags(postData.tags || []);
-                setCoverImageRemoteUrl(
-                    postData.coverImageId ? getContentImagePreviewUrl(postData.coverImageId) : null
-                );
+                setCoverImageRemoteUrl(postData.coverImageId ? getFileUrl(postData.coverImageId) : null);
                 setIsDraft(false);
             } catch (error) {
                 console.error('Error fetching blog post:', error);
@@ -286,7 +281,7 @@ const BlogEditor = () => {
             setPublished(Boolean(post.published));
             setTags(post.tags || []);
             coverImage.setFile(null);
-            setCoverImageRemoteUrl(post.coverImageId ? getContentImagePreviewUrl(post.coverImageId) : null);
+            setCoverImageRemoteUrl(post.coverImageId ? getFileUrl(post.coverImageId) : null);
         } else {
             setTitle('');
             setContent('');
@@ -337,12 +332,12 @@ const BlogEditor = () => {
 
             if (coverImage.file) {
                 if (coverImageId) {
-                    await deleteContentImage(coverImageId);
+                    await deleteFile(coverImageId);
                 }
 
                 coverImageId = (await uploadContentImage(coverImage.file)).fileId;
             } else if (coverImagePreview === null && coverImageId) {
-                await deleteContentImage(coverImageId);
+                await deleteFile(coverImageId);
                 // `null` clears the stored id; `undefined` would be stripped from the update payload.
                 coverImageId = null;
             }
@@ -363,7 +358,7 @@ const BlogEditor = () => {
             removeCurrentDraft();
             setIsDraft(false);
             coverImage.setFile(null);
-            setCoverImageRemoteUrl(result.coverImageId ? getContentImagePreviewUrl(result.coverImageId) : null);
+            setCoverImageRemoteUrl(result.coverImageId ? getFileUrl(result.coverImageId) : null);
             setSuccess(`Blog post ${isNewPost ? 'created' : 'updated'} successfully`);
 
             if (isNewPost) {
@@ -435,7 +430,7 @@ const BlogEditor = () => {
             return;
         }
 
-        const url = getContentImagePreviewUrl(selectedLibraryImage.$id);
+        const url = getFileUrl(selectedLibraryImage.$id);
 
         insertTextAtCursor(`![${selectedLibraryImage.name.split('.')[0] || 'image'}](${url})`);
         handleCloseMediaLibrary();
@@ -457,7 +452,7 @@ const BlogEditor = () => {
         }
 
         try {
-            await deleteContentImage(targetImageId);
+            await deleteFile(targetImageId);
             await loadContentImages();
             setSuccess('Image deleted successfully');
         } catch (error) {
@@ -491,11 +486,9 @@ const BlogEditor = () => {
 
     const renderMarkdownPreview = () =>
         content ? (
-            <div className="markdown-preview">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-            </div>
+            <MarkdownContent>{content}</MarkdownContent>
         ) : (
-            <Typography color="textSecondary" align="center" py={10}>
+            <Typography color="textSecondary" align="center" sx={{ py: 10 }}>
                 No content to preview
             </Typography>
         );
@@ -548,7 +541,7 @@ const BlogEditor = () => {
                         onRemove={clearCoverImage}
                     />
 
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <Typography variant="h6" gutterBottom>
                             Content
                         </Typography>
@@ -566,8 +559,8 @@ const BlogEditor = () => {
                         />
                     </Grid>
 
-                    <Grid item xs={12}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+                    <Grid size={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                             <Box>
                                 <Button
                                     variant="outlined"
@@ -596,7 +589,7 @@ const BlogEditor = () => {
 
                             {isDraft && lastSaved && (
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                         {lastSaved}
                                     </Typography>
                                     <Button size="small" onClick={handleDiscardDraft} sx={{ ml: 1 }}>
@@ -624,7 +617,7 @@ const BlogEditor = () => {
                 loading={loadingImages}
                 open={isMediaLibraryOpen}
                 selectedImage={selectedLibraryImage}
-                getImageUrl={getContentImagePreviewUrl}
+                getImageUrl={getFileUrl}
                 onClose={handleCloseMediaLibrary}
                 onImageMenuOpen={handleImageMenuOpen}
                 onInsert={handleInsertLibraryImage}
@@ -657,7 +650,7 @@ const BlogEditor = () => {
                 imageToEdit={imageToEdit}
                 newImageFile={newImageFile}
                 open={Boolean(imageToEdit)}
-                getImageUrl={getContentImagePreviewUrl}
+                getImageUrl={getFileUrl}
                 onClose={handleCloseEditImage}
                 onFileChange={(event) => setNewImageFile(event.target.files?.[0] ?? null)}
                 onUpdate={handleUpdateImage}

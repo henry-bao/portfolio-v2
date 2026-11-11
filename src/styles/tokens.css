@@ -1,0 +1,39 @@
+/*
+ * Design tokens for the public site. The dashboard is styled through the MUI theme
+ * (src/theme), which mirrors the brand colours below; keep the two in sync.
+ *
+ * Breakpoints (desktop-first, used as `max-width` media queries; custom
+ * properties can't be used inside media queries):
+ *   1200px  wide desktop  -> laptop
+ *    992px  laptop        -> tablet   (matches COMPACT_LAYOUT_WIDTH_PX)
+ *    768px  tablet        -> phone    (mobile nav menu)
+ */
+:root {
+    /* Brand */
+    --color-primary: #2f7295;
+    --color-secondary: #c0738b;
+
+    /* Dark surfaces */
+    --color-bg: rgb(15 15 15);
+    --color-bg-raised: rgb(25 25 25);
+    --color-surface: rgb(30 30 30);
+    --color-surface-code: rgb(40 40 40);
+
+    /* Light surfaces, from lightest to darkest (one per home-page section) */
+    --color-light-100: rgb(245 245 245);
+    --color-light-200: rgb(235 235 235);
+    --color-light-300: rgb(225 225 225);
+
+    /* Text */
+    --color-text-on-dark: rgb(255 255 255 / 75%);
+    --color-text-on-dark-hover: rgb(200 200 200 / 55%);
+    --color-text-muted: rgb(200 200 200);
+    --color-text-on-light: black;
+    --color-border-muted: rgb(200 200 200 / 30%);
+
+    /* R-flavoured syntax highlighting used by the About section */
+    --color-syntax-punctuation: #59597f;
+    --color-syntax-function: #6b96b6;
+
+    --font-mono: 'Source Code Pro', monospace;
+}

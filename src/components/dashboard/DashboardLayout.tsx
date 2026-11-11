@@ -5,7 +5,6 @@ import {
     AppBar,
     Box,
     Button,
-    CssBaseline,
     Divider,
     Drawer,
     IconButton,
@@ -33,7 +32,7 @@ import {
     Work as WorkIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/useAuth';
-import { COMPACT_LAYOUT_WIDTH_PX, useBodyScrollLock, useBreakpoints } from '../../hooks';
+import { COMPACT_LAYOUT_WIDTH_PX, useBreakpoints } from '../../hooks';
 import { routes } from '../../routes/paths';
 
 const EXPANDED_DRAWER_WIDTH = 240;
@@ -80,8 +79,6 @@ const DashboardLayout = () => {
     const theme = useTheme();
     const { isMobile } = useBreakpoints();
     const isCompact = useMediaQuery(theme.breakpoints.down(COMPACT_LAYOUT_WIDTH_PX));
-
-    useBodyScrollLock(mobileOpen);
 
     useEffect(() => {
         setIsCollapsed(isCompact);
@@ -148,7 +145,6 @@ const DashboardLayout = () => {
 
     return (
         <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
             <AppBar
                 position="fixed"
                 sx={{
@@ -185,7 +181,7 @@ const DashboardLayout = () => {
                     variant="temporary"
                     open={mobileOpen}
                     onClose={() => setMobileOpen(false)}
-                    ModalProps={{ keepMounted: true, disableScrollLock: true }}
+                    ModalProps={{ keepMounted: true }}
                     sx={{
                         display: { xs: 'block', sm: 'none' },
                         '& .MuiDrawer-paper': { boxSizing: 'border-box', width: '70vw', transition: 'width 0.2s' },

@@ -151,7 +151,7 @@ const Overview = () => {
 
     return (
         <Box>
-            <Typography variant="h4" component="h1" mb={3}>
+            <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
                 Overview
             </Typography>
 
@@ -235,7 +235,7 @@ const Overview = () => {
                                 </Button>
                             </>
                         ) : (
-                            <Typography variant="body1" color="text.secondary">
+                            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
                                 No profile data found. Create your profile to get started.
                             </Typography>
                         )}
@@ -258,10 +258,14 @@ const Overview = () => {
                         <Typography variant="body1" sx={{ mb: 1 }}>
                             Total Posts: {blogPosts.length}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                             Published: {blogPosts.filter((post) => post.published).length}
                         </Typography>
-                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate(routes.admin.blogs)}>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate(routes.admin.blogs)}
+                        >
                             Manage
                         </Button>
                     </StatCard>

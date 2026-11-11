@@ -1,0 +1,13 @@
+/* Sticky footer: the page content grows to push the footer to the bottom. */
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+
+.loading {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}

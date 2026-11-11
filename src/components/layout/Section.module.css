@@ -1,0 +1,38 @@
+/* Full-height home-page section on a light background. */
+.section {
+    min-height: 100vh;
+    padding: 5rem 3rem 2rem;
+    color: var(--color-text-on-light);
+}
+
+/* Wider side gutters for text-heavy sections. */
+.inset {
+    padding-inline: 8rem;
+}
+
+.title {
+    padding-top: 1rem;
+    font-size: 1.875rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+@media (max-width: 1200px) {
+    .inset {
+        padding-inline: 4rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .title {
+        padding-top: 0;
+        padding-bottom: 0.5em;
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding-inline: 1.5rem;
+    }
+}

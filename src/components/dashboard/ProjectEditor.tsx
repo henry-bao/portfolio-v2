@@ -28,6 +28,7 @@ import type { ProjectData, ProjectDocument } from '../../types';
 import { routes } from '../../routes/paths';
 import { useImagePreview } from '../../hooks';
 import { StatusAlerts } from '../shared';
+import { ImagePreview } from './ImagePreview';
 
 const DEFAULT_LINK_TEXT = 'Click here to learn more';
 const REDIRECT_AFTER_CREATE_MS = 1500;
@@ -177,14 +178,14 @@ const ProjectEditor = () => {
 
             <Paper sx={{ p: 3 }}>
                 <Grid container spacing={3}>
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <Typography variant="h6" gutterBottom>
                             Basic Information
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
                         <Grid container spacing={2}>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <TextField
                                     fullWidth
                                     label="Project Title"
@@ -194,7 +195,7 @@ const ProjectEditor = () => {
                                     required
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
                                     label="Your Role"
@@ -204,7 +205,7 @@ const ProjectEditor = () => {
                                     required
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
                                     label="Date/Period"
@@ -215,7 +216,7 @@ const ProjectEditor = () => {
                                     required
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <FormControlLabel
                                     control={
                                         <Switch
@@ -229,8 +230,8 @@ const ProjectEditor = () => {
                         </Grid>
                     </Grid>
 
-                    <Grid item xs={12}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Grid size={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="h6" gutterBottom>
                                 Project Description
                             </Typography>
@@ -255,7 +256,7 @@ const ProjectEditor = () => {
 
                         <Collapse in={isDescriptionExpanded}>
                             {description.map((item, index) => (
-                                <Box key={index} display="flex" alignItems="center" mb={2}>
+                                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                     <TextField
                                         fullWidth
                                         label={`Description Item ${index + 1}`}
@@ -282,14 +283,14 @@ const ProjectEditor = () => {
                         </Collapse>
                     </Grid>
 
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <Typography variant="h6" gutterBottom>
                             Project Link (Optional)
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
                         <Grid container spacing={2}>
-                            <Grid item xs={12} sm={8}>
+                            <Grid size={{ xs: 12, sm: 8 }}>
                                 <TextField
                                     fullWidth
                                     label="Link URL"
@@ -299,7 +300,7 @@ const ProjectEditor = () => {
                                     placeholder="https://example.com"
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     fullWidth
                                     label="Link Text"
@@ -312,24 +313,15 @@ const ProjectEditor = () => {
                         </Grid>
                     </Grid>
 
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <Typography variant="h6" gutterBottom>
                             Project Logo
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
 
                         {logo.previewUrl && (
-                            <Box mb={2}>
-                                <img
-                                    src={logo.previewUrl}
-                                    alt="Logo preview"
-                                    style={{
-                                        maxWidth: '200px',
-                                        maxHeight: '200px',
-                                        display: 'block',
-                                        marginBottom: '10px',
-                                    }}
-                                />
+                            <Box sx={{ mb: 2 }}>
+                                <ImagePreview src={logo.previewUrl} alt="Logo preview" maxWidth={200} maxHeight={200} />
                             </Box>
                         )}
 
@@ -339,8 +331,8 @@ const ProjectEditor = () => {
                         </Button>
                     </Grid>
 
-                    <Grid item xs={12}>
-                        <Box display="flex" justifyContent="flex-end" mt={2}>
+                    <Grid size={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                             <Button
                                 variant="outlined"
                                 onClick={() => navigate(routes.admin.projects)}

@@ -323,7 +323,7 @@ const BlogManager = () => {
     };
 
     const renderCardView = () => (
-        <Stack spacing={2} mt={2}>
+        <Stack spacing={2} sx={{ mt: 2 }}>
             {filteredPosts.map((post) => (
                 <Card key={post.$id} variant="outlined">
                     <CardContent>
@@ -332,20 +332,20 @@ const BlogManager = () => {
                         </Typography>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                 {getPostDisplayDate(post)}
                             </Typography>
                             <BlogStatusChip post={post} />
                         </Box>
 
                         {post.hasDraft && (
-                            <Typography variant="body2" color="warning.main" sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ color: 'warning.main', mb: 1 }}>
                                 Has unsaved changes
                             </Typography>
                         )}
 
                         {!post.isDraft && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                                 Views: {post.viewCount || 0}
                             </Typography>
                         )}
@@ -384,7 +384,7 @@ const BlogManager = () => {
                             <TableCell>
                                 <BlogStatusChip post={post} />
                                 {post.hasDraft && (
-                                    <Typography color="warning.main" fontSize="0.75rem" paddingTop={0.5}>
+                                    <Typography sx={{ color: 'warning.main', fontSize: '0.75rem', paddingTop: 0.5 }}>
                                         Has unsaved changes
                                     </Typography>
                                 )}
@@ -424,7 +424,7 @@ const BlogManager = () => {
             />
 
             <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-                <Box mb={2}>
+                <Box sx={{ mb: 2 }}>
                     <TextField
                         label="Search blog posts"
                         variant="outlined"
@@ -436,11 +436,11 @@ const BlogManager = () => {
                 </Box>
 
                 {isLoading ? (
-                    <Box display="flex" justifyContent="center" my={5}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
                         <CircularProgress />
                     </Box>
                 ) : filteredPosts.length === 0 ? (
-                    <Box textAlign="center" my={5}>
+                    <Box sx={{ textAlign: 'center', my: 5 }}>
                         <Typography variant="body1" color="textSecondary">
                             {searchTerm
                                 ? 'No blog posts found matching your search'

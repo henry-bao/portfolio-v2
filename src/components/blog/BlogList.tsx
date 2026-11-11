@@ -1,11 +1,10 @@
-import { CircularProgress } from '@mui/material';
 import { useBlogPosts } from '../../hooks';
 import type { SectionVisibilityDocument, SectionVisibilityStatus } from '../../types';
 import { isSectionVisible } from '../../utils/sectionVisibility';
 import NotFound from '../NotFound';
-import BlogPageShell from './BlogPageShell';
+import BlogPageShell, { BlogPageLoading } from './BlogPageShell';
 import { BlogCard } from './BlogCard';
-import './BlogList.css';
+import styles from './BlogList.module.css';
 
 interface BlogListProps {
     sectionVisibility: SectionVisibilityDocument | null;
@@ -22,9 +21,7 @@ const BlogList = ({ sectionVisibility, sectionVisibilityStatus }: BlogListProps)
     if (sectionVisibilityStatus === 'loading' || (canShowBlogs && blogPostsLoading)) {
         return (
             <BlogPageShell>
-                <div className="blog-loading-container">
-                    <CircularProgress />
-                </div>
+                <BlogPageLoading />
             </BlogPageShell>
         );
     }
@@ -37,24 +34,22 @@ const BlogList = ({ sectionVisibility, sectionVisibilityStatus }: BlogListProps)
 
     return (
         <BlogPageShell>
-            <div className="blog-list-container">
-                <header className="blog-list-header">
-                    <h1>Blogs</h1>
-                    <p>Thoughts, insights, and updates</p>
+            <main className={styles.page}>
+                <header className={styles.header}>
+                    <h1 className={styles.title}>Blogs</h1>
+                    <p className={styles.tagline}>Thoughts, insights, and updates</p>
                 </header>
 
                 {blogPosts.length === 0 ? (
-                    <div className="no-posts-message">
-                        <p>No blog posts available yet. Check back soon!</p>
-                    </div>
+                    <p className={styles.empty}>No blog posts available yet. Check back soon!</p>
                 ) : (
-                    <div className="blog-list-grid">
+                    <div className={styles.grid}>
                         {blogPosts.map((post) => (
                             <BlogCard key={post.$id} post={post} variant="list" />
                         ))}
                     </div>
                 )}
-            </div>
+            </main>
         </BlogPageShell>
     );
 };
