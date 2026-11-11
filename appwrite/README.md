@@ -59,9 +59,13 @@ To redeploy, package `package.json` and `src/` as a `.tar.gz` and create a deplo
 
 Each version keeps its own file id on purpose. Appwrite tells browsers to cache a file's view URL for 45 days, so overwriting one fixed file would keep serving stale copies.
 
-## Still to do after the rebuild is deployed
+## Rebuild migration completed (2026-11-11)
 
-These wait for the new code to be live on both hosts, because the old code breaks without them:
+After commit `e2a642b` was deployed to both hosts:
 
-1. Enable row security on `blogs` and `resumes`, and remove `read("any")` from their table-level permissions. Before flipping, check that every published post and the active resume has `read("any")` in its row permissions (backfilled 2026-11-11; the new code maintains it).
-2. Delete the unused `profile.resumeFileId` column. The old dashboard still writes it, and the resumes table is now the only source of truth for the resume.
+1. Enabled row security on `blogs` and `resumes`, and removed `read("any")` from their table-level permissions. Public rows retain row-level `read("any")`; table-level access is restricted to `label:admin`.
+2. Deleted the unused `profile.resumeFileId` column. The resumes table is the only source of truth for the resume.
+
+Verified guest reads, private-row 404s, all three query indexes, and the production `/resume` and `/resume-redirect` redirects to a working PDF. Exactly one of the 13 resume rows is active and public. The live data also passes the app's Zod schemas without dropped rows.
+
+An empty public blog list can be valid: at verification time both posts were unpublished and had no public-read permission. Check the publication flags as an admin before changing queries or permissions.
