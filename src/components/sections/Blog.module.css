@@ -6,16 +6,16 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
-    margin-top: 3rem;
+    margin-top: 1rem;
 }
 
 .status {
-    margin-top: 3rem;
+    margin-top: 2rem;
     text-align: center;
 }
 
 .empty {
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
     font-size: 1.1rem;
 }
 
@@ -28,19 +28,16 @@
 .viewAll {
     display: inline-block;
     padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-sm);
     background-color: var(--color-primary);
     color: white;
     font-weight: 500;
-    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
-    transition:
-        background-color 0.3s ease,
-        box-shadow 0.3s ease;
+    transition: background-color 0.2s ease;
 }
 
+/* A darker cut of the same blue: white text stays readable, which it doesn't on the pink. */
 .viewAll:hover {
-    background-color: var(--color-secondary);
-    box-shadow: 0 6px 10px rgb(0 0 0 / 15%);
+    background-color: var(--color-primary-ink);
 }
 
 @media (max-width: 1200px) {
@@ -56,10 +53,9 @@
 }
 
 .retry {
-    border: 0;
-    border-bottom: 1px solid currentColor;
-    background: none;
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
     font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
     cursor: pointer;
 }

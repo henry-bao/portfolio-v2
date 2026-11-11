@@ -22,8 +22,9 @@ const Landing = () => {
 
     return (
         <section id="home" className={styles.landing}>
-            <div className={styles.greeting}>
-                <div className={styles.typewriter}>
+            {/* Read out as plain words; the markup-style tags are for the eye only. */}
+            <h1 className={styles.greeting} aria-label="Hello, I'm Henry">
+                <span className={styles.typewriter}>
                     <span className={styles.tag}>&lt;Hello&gt;</span>{' '}
                     {/* Decorative easter egg: hidden from assistive tech and the tab order. */}
                     <button
@@ -37,8 +38,8 @@ const Landing = () => {
                     </button>
                     {"  I'm Henry "}
                     <span className={styles.tag}>&lt;/Hello&gt;&nbsp;</span>
-                </div>
-            </div>
+                </span>
+            </h1>
             <button
                 type="button"
                 className={styles.scrollButton}

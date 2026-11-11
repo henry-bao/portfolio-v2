@@ -18,10 +18,9 @@
 }
 
 .retry {
-    border: 0;
-    border-bottom: 1px solid currentColor;
-    background: none;
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
     font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
     cursor: pointer;
 }

@@ -1,20 +1,24 @@
 .landing {
-    height: 100vh;
-    padding: 5rem 3rem 2rem;
+    height: 100svh;
+    padding: 5rem var(--page-gutter) 2rem;
     background-color: var(--color-bg);
     color: var(--color-text-on-dark);
     text-align: center;
 }
 
+/* The page's title. Sized from the viewport, so the greeting holds one line at every width. */
 .greeting {
     display: inline-block;
-    padding-top: 35vh;
-    font-size: 3rem;
+    padding-top: 35svh;
+    font-size: var(--text-display);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
     user-select: none;
 }
 
 /* Types the greeting out left to right behind a blinking caret. */
 .typewriter {
+    display: block;
     width: 0;
     overflow: hidden;
     border-right: 0.08em solid grey;
@@ -39,7 +43,7 @@
 .scrollButton {
     display: block;
     width: fit-content;
-    margin: calc(30vh - 1rem) auto 0;
+    margin: calc(30svh - 1rem) auto 0;
     padding: 1rem;
     cursor: pointer;
     visibility: hidden;
@@ -53,42 +57,24 @@
     border: solid var(--color-text-on-dark);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
+    transition: border-color 0.2s ease;
     animation: bounce 2s ease infinite;
 }
 
-@media (max-width: 1200px) {
-    .greeting {
-        font-size: 2rem;
+@media (hover: hover) {
+    .scrollButton:hover .scrollArrow {
+        border-color: var(--color-text-on-dark-hover);
     }
 }
 
 @media (max-width: 768px) {
-    .landing {
-        padding-inline: 1.5rem;
+    .greeting {
+        padding-top: 32svh;
     }
 
-    .greeting {
-        padding-top: 32vh;
-        font-size: 1.6rem;
-    }
-}
-
-@media (max-width: 510px) {
-    .greeting {
-        font-size: 1.4rem;
-    }
-}
-
-@media (max-width: 450px) {
-    .greeting {
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 350px) {
-    .greeting {
-        padding-top: 28vh;
-        font-size: 0.9rem;
+    /* Below display size the brand blue is too dim for text, so the tags take its lighter cut. */
+    .tag {
+        color: var(--color-primary-on-dark);
     }
 }
 

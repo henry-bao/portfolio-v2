@@ -33,7 +33,7 @@
 
 .photo {
     width: 300px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
 }
 
 .facts {
@@ -55,12 +55,13 @@
 
 /* Syntax colours for the R-flavoured `field <- value` pseudo-code. */
 .assign {
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
     font-weight: 600;
 }
 
-.string {
-    color: var(--color-secondary);
+.string,
+.stringLink {
+    color: var(--color-secondary-ink);
 }
 
 .punctuation {
@@ -71,13 +72,29 @@
     color: var(--color-syntax-function);
 }
 
+/* Calls and the address are the row's links: underlined faintly at rest, fully on hover. */
+.link,
+.stringLink {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    transition:
+        color 0.2s ease,
+        text-decoration-color 0.2s ease;
+}
+
 .link {
     color: var(--color-syntax-function);
-    transition: color 0.3s ease;
 }
 
 .link:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-ink);
+}
+
+.link:hover,
+.stringLink:hover {
+    text-decoration-color: currentColor;
 }
 
 @media (max-width: 1200px) {
@@ -105,6 +122,6 @@
     }
 
     .fact {
-        font-size: 0.9375rem;
+        font-size: 1rem;
     }
 }

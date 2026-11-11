@@ -3,15 +3,15 @@
     align-items: center;
     justify-content: center;
     min-height: 100dvh;
-    padding: 2rem;
-    background-color: black;
+    padding: 2rem var(--page-gutter);
+    background-color: var(--color-bg);
     color: white;
 }
 
 .card {
     max-width: 600px;
     padding: 3rem;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     background-color: var(--color-surface);
     text-align: center;
 }
@@ -25,27 +25,31 @@
 
 .title {
     margin-block: 0.5rem 1.5rem;
-    font-size: 2.5rem;
+    font-size: var(--text-title);
     font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
 .message {
     margin-bottom: 2.5rem;
-    font-size: 1.2rem;
-    line-height: 1.5;
+    color: var(--color-text-on-dark);
+    font-size: 1.125rem;
+    line-height: 1.6;
 }
 
 .homeLink {
     display: inline-block;
     padding: 0.75rem 1.5rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background-color: var(--color-primary);
     font-weight: 500;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease;
 }
 
+/* A darker cut of the same blue, so the white label stays readable. */
 .homeLink:hover {
-    background-color: var(--color-secondary);
+    background-color: var(--color-primary-ink);
 }
 
 @media (max-width: 768px) {
@@ -55,10 +59,6 @@
 
     .code {
         font-size: 6rem;
-    }
-
-    .title {
-        font-size: 2rem;
     }
 }
 

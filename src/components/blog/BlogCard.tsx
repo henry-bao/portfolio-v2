@@ -57,9 +57,7 @@ export function BlogCard({ post, variant = 'home' }: BlogCardProps) {
                         tags.length > 0 && <TagList tags={tags} />
                     )}
 
-                    <div className={styles.readMore}>
-                        Read more <span aria-hidden="true">&rarr;</span>
-                    </div>
+                    <div className={styles.readMore}>Read more</div>
                 </div>
             </article>
         </Link>

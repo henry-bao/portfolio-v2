@@ -6,14 +6,12 @@
     padding-block: 25px;
     transition:
         padding 0.3s ease,
-        background-color 0.3s ease,
-        opacity 0.3s ease;
+        background-color 0.3s ease;
 }
 
 .sticky {
     padding-block: 15px;
     background-color: var(--color-bg-raised);
-    opacity: 0.95;
 }
 
 .content {
@@ -21,11 +19,12 @@
     align-items: center;
     justify-content: space-between;
     margin: auto;
-    padding-inline: 30px;
+    padding-inline: var(--page-gutter);
 }
 
 .menu {
     display: inline-flex;
+    gap: 1.75rem;
     list-style: none;
 }
 
@@ -41,10 +40,10 @@
 .logo {
     font-size: 1.875rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .link {
-    margin-left: 25px;
     font-size: 1.25rem;
     font-weight: 500;
 }
@@ -58,8 +57,9 @@
 
 .adminLink {
     padding: 5px 10px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background-color: var(--color-primary);
+    color: white;
 }
 
 /* Links that appear once section visibility has loaded fade in rather than pop. */
@@ -70,28 +70,26 @@
 .skeletonItem {
     display: flex;
     align-items: center;
-    margin-left: 25px;
 }
 
 .skeleton {
     display: block;
     width: 4.7rem;
     height: 0.8rem;
-    border-radius: 999px;
-    background: linear-gradient(90deg, rgb(255 255 255 / 16%), rgb(255 255 255 / 32%), rgb(255 255 255 / 16%));
-    background-size: 220% 100%;
-    opacity: 0.85;
-    animation: shimmer 1.15s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+    background-color: rgb(255 255 255 / 22%);
+    animation: pulse 1.15s ease-in-out infinite alternate;
 }
 
+/* A 44px touch target around the 22px burger. */
 .menuButton {
     display: none;
     position: relative;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: 1.5px solid var(--color-text-on-dark);
+    width: 44px;
+    height: 44px;
+    margin-right: -11px;
     line-height: 0;
     cursor: pointer;
 }
@@ -100,13 +98,12 @@
 .burger,
 .burger::before,
 .burger::after {
-    width: 20px;
-    height: 3px;
-    border-radius: 4px;
+    width: 22px;
+    height: 2px;
     background-color: var(--color-text-on-dark);
     transition:
-        transform 0.5s ease-in-out,
-        background-color 0.5s ease-in-out;
+        transform 0.3s ease,
+        background-color 0.3s ease;
 }
 
 .burger {
@@ -150,6 +147,15 @@
 }
 
 @media (max-width: 768px) {
+    /* The taller button would otherwise grow the bar. */
+    .nav {
+        padding-block: 18px;
+    }
+
+    .sticky {
+        padding-block: 8px;
+    }
+
     .menuButton {
         display: flex;
     }
@@ -162,6 +168,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-around;
+        gap: 0;
         padding: 3rem 0 6rem;
         background-color: var(--color-bg-raised);
         transform: translateX(-100%);
@@ -176,9 +183,8 @@
         visibility: visible;
     }
 
-    .link,
-    .skeletonItem {
-        margin-left: 0;
+    .link {
+        font-size: 1.5rem;
     }
 
     .skeleton {
@@ -197,16 +203,11 @@
     }
 }
 
-@keyframes shimmer {
-    0% {
-        background-position: 120% 50%;
+@keyframes pulse {
+    from {
         opacity: 0.45;
     }
-    50% {
-        opacity: 0.75;
-    }
-    100% {
-        background-position: -120% 50%;
-        opacity: 0.45;
+    to {
+        opacity: 0.9;
     }
 }

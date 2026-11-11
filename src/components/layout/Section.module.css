@@ -1,38 +1,28 @@
-/* Full-height home-page section on a light background. */
+/* Full-height home-page section on a light background. The top padding clears the fixed nav. */
 .section {
-    min-height: 100vh;
-    padding: 5rem 3rem 2rem;
+    min-height: 100svh;
+    padding: 5rem var(--page-gutter) 4rem;
     color: var(--color-text-on-light);
 }
 
 /* Wider side gutters for text-heavy sections. */
 .inset {
-    padding-inline: 8rem;
+    padding-inline: var(--page-gutter-inset);
 }
 
 .title {
+    margin-bottom: 2rem;
     padding-top: 1rem;
-    font-size: 1.875rem;
+    font-size: var(--text-title);
     font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
     text-align: center;
-}
-
-@media (max-width: 1200px) {
-    .inset {
-        padding-inline: 4rem;
-    }
 }
 
 @media (max-width: 992px) {
     .title {
+        margin-bottom: 1.5rem;
         padding-top: 0;
-        padding-bottom: 0.5em;
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .section {
-        padding-inline: 1.5rem;
     }
 }

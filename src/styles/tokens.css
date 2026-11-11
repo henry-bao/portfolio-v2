@@ -9,14 +9,23 @@
  *    768px  tablet        -> phone    (mobile nav menu)
  */
 :root {
-    /* Brand */
+    /* Brand: used as fills, and as text only at display sizes */
     --color-primary: #2f7295;
     --color-secondary: #c0738b;
+
+    /*
+     * The brand colours cut for text. As text the brand values miss 4.5:1 on most surfaces, so
+     * text takes the darker cut on the light surfaces and the lighter one on the dark surfaces.
+     */
+    --color-primary-ink: #256583;
+    --color-secondary-ink: #99455f;
+    --color-primary-on-dark: #5a9cc0;
 
     /* Dark surfaces */
     --color-bg: rgb(15 15 15);
     --color-bg-raised: rgb(25 25 25);
     --color-surface: rgb(30 30 30);
+    --color-surface-hover: rgb(36 36 36);
     --color-surface-code: rgb(40 40 40);
 
     /* Light surfaces, from lightest to darkest (one per home-page section) */
@@ -26,14 +35,37 @@
 
     /* Text */
     --color-text-on-dark: rgb(255 255 255 / 75%);
-    --color-text-on-dark-hover: rgb(200 200 200 / 55%);
+    --color-text-on-dark-hover: white;
     --color-text-muted: rgb(200 200 200);
-    --color-text-on-light: black;
+    /* The dark ground doubles as the ink on light surfaces, so the page has one black. */
+    --color-text-on-light: rgb(15 15 15);
+    --color-text-on-light-muted: rgb(15 15 15 / 68%);
     --color-border-muted: rgb(200 200 200 / 30%);
+
+    /* Quiet fills for tags and chips: a step in tone from whatever they sit on */
+    --color-tint-on-light: rgb(15 15 15 / 7%);
+    --color-tint-on-dark: rgb(255 255 255 / 9%);
 
     /* R-flavoured syntax highlighting used by the About section */
     --color-syntax-punctuation: #59597f;
-    --color-syntax-function: #6b96b6;
+    --color-syntax-function: var(--color-primary);
 
     --font-mono: 'Source Code Pro', monospace;
+
+    /*
+     * Type. The greeting is one unbroken line of about 30 monospace characters, so its size
+     * follows the viewport to stay on one line at every width, up to a cap reached at about 1200px.
+     */
+    --text-display: clamp(0.8rem, 4.6vw, 3.5rem);
+    --text-page-title: clamp(2rem, 1.4rem + 2.6vw, 3.25rem);
+    --text-title: clamp(1.625rem, 1.25rem + 1.2vw, 2.25rem);
+
+    /* Frame: the nav, sections and footer share one pair of side gutters. */
+    --page-gutter: clamp(1.5rem, 4vw, 3rem);
+    /* Wider gutters for text-heavy sections; equal to --page-gutter on phones. */
+    --page-gutter-inset: clamp(1.5rem, -0.9rem + 9.9vw, 8rem);
+
+    /* Corners: small for controls and tags, medium for pictures and cards. */
+    --radius-sm: 4px;
+    --radius-md: 8px;
 }

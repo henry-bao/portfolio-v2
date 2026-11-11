@@ -3,7 +3,7 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 6rem 1rem 4rem;
+    padding: 7rem var(--page-gutter) 4rem;
 }
 
 .header {
@@ -12,23 +12,25 @@
 }
 
 .title {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     color: white;
-    font-size: 3rem;
+    font-size: var(--text-page-title);
     font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
 }
 
 .tagline {
     max-width: 600px;
     margin: 0 auto;
     color: var(--color-text-muted);
-    font-size: 1.2rem;
+    font-size: 1.125rem;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 2.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+    gap: 2rem;
 }
 
 .empty {
@@ -40,11 +42,8 @@
 
 @media (max-width: 768px) {
     .page {
+        padding-top: 6rem;
         padding-bottom: 3rem;
-    }
-
-    .title {
-        font-size: 2.5rem;
     }
 
     .grid {
@@ -53,10 +52,9 @@
 }
 
 .retry {
-    border: 0;
-    border-bottom: 1px solid currentColor;
-    background: none;
-    color: var(--color-primary);
+    color: var(--color-primary-on-dark);
     font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
     cursor: pointer;
 }

@@ -22,7 +22,7 @@ const Footer = () => (
             </a>
         </p>
         <p className={styles.line}>
-            Copyright &copy; {FIRST_COPYRIGHT_YEAR}-{new Date().getFullYear()}
+            Copyright &copy; {FIRST_COPYRIGHT_YEAR}&ndash;{new Date().getFullYear()}
         </p>
     </footer>
 );

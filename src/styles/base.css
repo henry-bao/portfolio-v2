@@ -11,10 +11,22 @@ body.scroll-locked {
     overflow: hidden;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    html {
-        scroll-behavior: auto;
-    }
+::selection {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+/*
+ * One keyboard focus ring for the whole public site. `:where` keeps the specificity at zero, so
+ * any component (and every MUI control in the dashboard) that styles its own focus still wins.
+ */
+:where(a, button, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+:where(h1, h2, h3) {
+    text-wrap: balance;
 }
 
 /* Code is set in the site font too; preflight would swap in the system monospace stack. */
@@ -23,4 +35,24 @@ kbd,
 samp,
 pre {
     font-family: inherit;
+}
+
+/*
+ * Keep every state change, drop the travel: animations and transitions land on their end state.
+ * Loading spinners are left running, since a frozen one reads as a broken page.
+ */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *:not([role='progressbar'], [role='progressbar'] *),
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0s !important;
+    }
 }

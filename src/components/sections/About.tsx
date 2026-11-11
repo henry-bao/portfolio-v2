@@ -78,10 +78,14 @@ const AboutRow = ({ label, children }: { label: string; children: ReactNode }) =
     </li>
 );
 
+/** The leading space stays outside the link, so only the call itself is underlined. */
 const ExternalLink = ({ href, children }: { href: string; children: string }) => (
-    <a href={href} target="_blank" rel="noopener" className={styles.link}>
-        {children}
-    </a>
+    <>
+        {' '}
+        <a href={href} target="_blank" rel="noopener" className={styles.link}>
+            {children}
+        </a>
+    </>
 );
 
 const About = () => {
@@ -125,20 +129,21 @@ const About = () => {
                             </AboutRow>
                             <AboutRow label="resume">
                                 {/* A plain link on purpose: /resume is a server redirect on Vercel. */}
-                                <ExternalLink href={routes.resume}>{' download()'}</ExternalLink>
+                                <ExternalLink href={routes.resume}>download()</ExternalLink>
                             </AboutRow>
                             <AboutRow label="linkedin">
-                                <ExternalLink href={displayData.linkedin}>{' redirect()'}</ExternalLink>
+                                <ExternalLink href={displayData.linkedin}>redirect()</ExternalLink>
                             </AboutRow>
                             <AboutRow label="github">
-                                <ExternalLink href={displayData.github}>{' redirect()'}</ExternalLink>
+                                <ExternalLink href={displayData.github}>redirect()</ExternalLink>
                             </AboutRow>
                             <AboutRow label="e-mail">
-                                <span className={styles.string}>
-                                    {' "'}
+                                {' '}
+                                <a href={`mailto:${displayData.email}`} className={styles.stringLink}>
+                                    {'"'}
                                     <EmailTokens email={displayData.email} />
                                     {'"'}
-                                </span>
+                                </a>
                             </AboutRow>
                         </ul>
                     </div>

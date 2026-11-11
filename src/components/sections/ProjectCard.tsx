@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useMediaQuery, useTheme } from '@mui/material';
-import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
+import { ArrowDropDown } from '@mui/icons-material';
 import { fileUrl, projectsApi } from '../../api';
 import type { Project } from '../../api';
 import { PLACEHOLDER_IMAGE } from '../../config/site';
@@ -22,7 +22,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
     const theme = useTheme();
     // Expanding is only animated on wider screens; compact layouts just toggle.
     const isCompact = useMediaQuery(theme.breakpoints.down(COMPACT_LAYOUT_WIDTH_PX));
-    const ToggleIcon = isExpanded ? ArrowDropDown : ArrowDropUp;
+    const prefersReducedMotion = useReducedMotion();
 
     return (
         <div className={styles.card}>
@@ -34,7 +34,8 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
                 onClick={() => setIsExpanded((currentIsExpanded) => !currentIsExpanded)}
             >
                 {title}
-                <ToggleIcon sx={{ fontSize: '3rem' }} />
+                {/* Points down while open and flips up when closed. */}
+                <ArrowDropDown className={styles.toggleIcon} sx={{ fontSize: '3rem' }} />
             </button>
 
             <AnimatePresence>
@@ -45,7 +46,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: isCompact ? 0 : EXPAND_DURATION_S }}
+                        transition={{ duration: isCompact || prefersReducedMotion ? 0 : EXPAND_DURATION_S }}
                     >
                         <div className={styles.details}>
                             <ImageWithFallback
@@ -56,12 +57,18 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
                             />
                             <div className={styles.description}>
                                 <h3 className={styles.role}>{role}</h3>
-                                {description.map((paragraph, index) => (
-                                    <p key={`${paragraph}-${index}`} className={styles.point}>{`● ${paragraph}`}</p>
-                                ))}
-                                <strong className={styles.date}>{date}</strong>
+                                {description.length > 0 && (
+                                    <ul className={styles.points}>
+                                        {description.map((paragraph, index) => (
+                                            <li key={`${paragraph}-${index}`} className={styles.point}>
+                                                {paragraph}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                                <p className={styles.date}>{date}</p>
                                 {linkUrl && (
-                                    <p className={styles.point}>
+                                    <p>
                                         <a href={linkUrl} target="_blank" rel="noopener" className={styles.link}>
                                             {linkText ?? projectsApi.DEFAULT_LINK_TEXT}
                                         </a>
