@@ -2,16 +2,21 @@ import { useEffect, useState } from 'react';
 import type { ImgHTMLAttributes } from 'react';
 
 type ImageLoadState = 'loading' | 'loaded' | 'fallback';
-const transparentPixel =
-    'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+const transparentPixel = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 const defaultFallbackDelayMs = 3000;
 
 interface ImageWithFallbackProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
+    /** Show the fallback if `src` hasn't loaded after this long (it still swaps in if it loads later). */
     fallbackDelayMs?: number;
     src?: string | null;
     fallbackSrc: string;
 }
 
+/**
+ * An `<img>` that preloads `src` and shows `fallbackSrc` when there is no source, when it fails, or
+ * while it is too slow. Nothing is shown during the brief initial load, so a broken image never flashes.
+ */
 export function ImageWithFallback({
     fallbackDelayMs = defaultFallbackDelayMs,
     fallbackSrc,
@@ -21,62 +26,51 @@ export function ImageWithFallback({
     style,
     ...props
 }: ImageWithFallbackProps) {
-    const [activeSrc, setActiveSrc] = useState<string | null>(src ? null : fallbackSrc);
-    const [loadState, setLoadState] = useState<ImageLoadState>(src ? 'loading' : 'fallback');
+    const preferredSrc = src?.trim() || null;
+    // The outcome is tagged with the source it belongs to, so a new `src` starts as "loading" without
+    // having to reset any state.
+    const [outcome, setOutcome] = useState<{ src: string; state: 'loaded' | 'fallback' } | null>(null);
+
+    const loadState: ImageLoadState = !preferredSrc
+        ? 'fallback'
+        : outcome?.src === preferredSrc
+          ? outcome.state
+          : 'loading';
 
     useEffect(() => {
-        const preferredSrc = src?.trim();
-
         if (!preferredSrc) {
-            setActiveSrc(fallbackSrc);
-            setLoadState('fallback');
             return;
         }
 
-        let isCurrentRequest = true;
+        let isCurrent = true;
         const image = new Image();
-
-        setActiveSrc(null);
-        setLoadState('loading');
-
-        const fallbackTimer = window.setTimeout(() => {
-            if (!isCurrentRequest) {
-                return;
+        const settle = (state: 'loaded' | 'fallback') => {
+            if (isCurrent) {
+                setOutcome({ src: preferredSrc, state });
             }
+        };
 
-            setActiveSrc(fallbackSrc);
-            setLoadState('fallback');
-        }, fallbackDelayMs);
+        const fallbackTimer = window.setTimeout(() => settle('fallback'), fallbackDelayMs);
 
         image.onload = () => {
-            if (!isCurrentRequest) {
-                return;
-            }
-
             window.clearTimeout(fallbackTimer);
-            setActiveSrc(preferredSrc);
-            setLoadState('loaded');
+            settle('loaded');
         };
-
         image.onerror = () => {
-            if (!isCurrentRequest) {
-                return;
-            }
-
             window.clearTimeout(fallbackTimer);
-            setActiveSrc(fallbackSrc);
-            setLoadState('fallback');
+            settle('fallback');
         };
-
         image.src = preferredSrc;
 
         return () => {
-            isCurrentRequest = false;
+            isCurrent = false;
             window.clearTimeout(fallbackTimer);
             image.onload = null;
             image.onerror = null;
         };
-    }, [fallbackDelayMs, fallbackSrc, src]);
+    }, [fallbackDelayMs, preferredSrc]);
+
+    const activeSrc = loadState === 'loaded' ? preferredSrc : loadState === 'fallback' ? fallbackSrc : null;
 
     const handleRenderedLoad: ImgHTMLAttributes<HTMLImageElement>['onLoad'] = (event) => {
         if (loadState !== 'loading') {
@@ -85,9 +79,8 @@ export function ImageWithFallback({
     };
 
     const handleRenderedError: ImgHTMLAttributes<HTMLImageElement>['onError'] = (event) => {
-        if (activeSrc && activeSrc !== fallbackSrc) {
-            setActiveSrc(fallbackSrc);
-            setLoadState('fallback');
+        if (preferredSrc && activeSrc === preferredSrc) {
+            setOutcome({ src: preferredSrc, state: 'fallback' });
             return;
         }
 

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { routes } from '../../routes/paths';
-import { scrollToSection } from '../../utils/scroll';
+import { routes } from '../../app/routes';
+import { scrollToSection } from '../../lib/scroll';
 import styles from './Landing.module.css';
 
 /** Clicks on the waving hand needed to reveal the dashboard login. */

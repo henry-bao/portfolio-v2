@@ -1,0 +1,71 @@
+.page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 2rem;
+    background-color: black;
+    color: white;
+}
+
+.card {
+    max-width: 600px;
+    padding: 3rem;
+    border-radius: 4px;
+    background-color: var(--color-surface);
+    text-align: center;
+}
+
+.code {
+    color: var(--color-primary);
+    font-size: 8rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.title {
+    margin-block: 0.5rem 1.5rem;
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+.message {
+    margin-bottom: 2.5rem;
+    font-size: 1.2rem;
+    line-height: 1.5;
+}
+
+.homeLink {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    background-color: var(--color-primary);
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.homeLink:hover {
+    background-color: var(--color-secondary);
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 2rem;
+    }
+
+    .code {
+        font-size: 6rem;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+}
+
+/* Same look when the action is a button rather than a link (e.g. "Try again"). */
+button.homeLink {
+    border: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}

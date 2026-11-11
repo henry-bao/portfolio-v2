@@ -1,19 +1,33 @@
-import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { CircularProgress } from '@mui/material';
-import { getFileUrl } from '../../services/storageService';
-import type { ProfileDocument } from '../../types';
-import { FALLBACK_PROFILE_IMAGE, FALLBACK_RESUME_URL } from '../../utils/assets';
-import { mapProfileDocumentToDisplayData } from '../../utils/profile';
+import { fileUrl } from '../../api';
+import type { Profile } from '../../api';
+import { routes } from '../../app/routes';
+import { FALLBACK_PROFILE, FALLBACK_PROFILE_IMAGE } from '../../config/site';
+import { useProfile } from '../../queries';
 import { ImageWithFallback } from '../shared';
 import { Section, SectionTitle } from '../layout/Section';
 import styles from './About.module.css';
 
-interface AboutProps {
-    loading: boolean;
-    profile: ProfileDocument | null;
-    resumeUrl: string | null;
-}
+/**
+ * Fills gaps from the built-in profile, so the section is never empty: everything when no profile
+ * could be loaded, and blank text fields otherwise. Saved lists are shown as-is, even when empty.
+ */
+const withFallbacks = (profile: Profile | null | undefined) => {
+    if (!profile) {
+        return FALLBACK_PROFILE;
+    }
+
+    return {
+        name: profile.name || FALLBACK_PROFILE.name,
+        pronouns: profile.pronouns,
+        education: profile.education,
+        languages: profile.languages,
+        linkedin: profile.linkedin ?? FALLBACK_PROFILE.linkedin,
+        github: profile.github ?? FALLBACK_PROFILE.github,
+        email: profile.email || FALLBACK_PROFILE.email,
+    };
+};
 
 /** Renders `"a" && "b"` the way the surrounding R-flavoured pseudo-code reads. */
 const TokenList = ({ items, separator = '&&' }: { items: string[]; separator?: string }) => (
@@ -70,14 +84,11 @@ const ExternalLink = ({ href, children }: { href: string; children: string }) =>
     </a>
 );
 
-const About = ({ loading, profile, resumeUrl }: AboutProps) => {
-    const { displayData, profileImageUrl } = useMemo(
-        () => ({
-            displayData: mapProfileDocumentToDisplayData(profile),
-            profileImageUrl: profile?.profileImageId ? getFileUrl(profile.profileImageId) : null,
-        }),
-        [profile]
-    );
+const About = () => {
+    // A failed load falls through to the built-in profile rather than an error message.
+    const { data: profile, isPending: loading } = useProfile();
+    const displayData = withFallbacks(profile);
+    const profileImageUrl = fileUrl(profile?.profileImageId);
 
     return (
         <Section id="about" className={styles.about}>
@@ -113,7 +124,8 @@ const About = ({ loading, profile, resumeUrl }: AboutProps) => {
                                 <TokenVector items={displayData.languages} />
                             </AboutRow>
                             <AboutRow label="resume">
-                                <ExternalLink href={resumeUrl || FALLBACK_RESUME_URL}>{' download()'}</ExternalLink>
+                                {/* A plain link on purpose: /resume is a server redirect on Vercel. */}
+                                <ExternalLink href={routes.resume}>{' download()'}</ExternalLink>
                             </AboutRow>
                             <AboutRow label="linkedin">
                                 <ExternalLink href={displayData.linkedin}>{' redirect()'}</ExternalLink>

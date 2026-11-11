@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
-import { getFileUrl } from '../../services/storageService';
-import { routes } from '../../routes/paths';
-import type { BlogPostDocument } from '../../types';
-import { PLACEHOLDER_IMAGE } from '../../utils/assets';
-import { classNames } from '../../utils/classNames';
-import { formatBlogDate } from '../../utils/dates';
+import { fileUrl } from '../../api';
+import type { BlogPost } from '../../api';
+import { routes } from '../../app/routes';
+import { PLACEHOLDER_IMAGE } from '../../config/site';
+import { classNames } from '../../lib/classNames';
+import { formatBlogDate } from '../../lib/dates';
 import { ImageWithFallback } from '../shared';
 import styles from './BlogCard.module.css';
 
 interface BlogCardProps {
-    post: BlogPostDocument;
+    post: BlogPost;
     /** `home`: compact light card on the home page. `list`: larger dark card with view counts. */
     variant?: 'home' | 'list';
 }
@@ -26,7 +26,7 @@ const TagList = ({ tags }: { tags: string[] }) => (
 
 export function BlogCard({ post, variant = 'home' }: BlogCardProps) {
     const isListVariant = variant === 'list';
-    const tags = post.tags ?? [];
+    const { tags } = post;
     // Home cards sit under the section's h2; list cards under the page's h1.
     const Title = isListVariant ? 'h2' : 'h3';
 
@@ -36,7 +36,7 @@ export function BlogCard({ post, variant = 'home' }: BlogCardProps) {
                 {post.coverImageId && (
                     <div className={styles.cover}>
                         <ImageWithFallback
-                            src={getFileUrl(post.coverImageId)}
+                            src={fileUrl(post.coverImageId)}
                             fallbackSrc={PLACEHOLDER_IMAGE}
                             alt={post.title}
                             loading="lazy"
@@ -51,7 +51,7 @@ export function BlogCard({ post, variant = 'home' }: BlogCardProps) {
                     {isListVariant ? (
                         <div className={styles.meta}>
                             {tags.length > 0 && <TagList tags={tags} />}
-                            <span className={styles.views}>{post.viewCount || 0} views</span>
+                            <span className={styles.views}>{post.viewCount} views</span>
                         </div>
                     ) : (
                         tags.length > 0 && <TagList tags={tags} />

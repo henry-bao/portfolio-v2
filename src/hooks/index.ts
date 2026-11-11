@@ -1,10 +1,8 @@
-export { useAsyncData } from './useAsyncData';
-export { useActiveResumeVersion, useBlogPosts, useProfileData, useProjects } from './useAppwriteData';
+/** UI-only hooks. Data hooks live in src/queries. */
 export { useBodyScrollLock } from './useBodyScrollLock';
 export { COMPACT_LAYOUT_WIDTH_PX, useBreakpoints } from './useBreakpoints';
-export { useImagePreview } from './useImagePreview';
+export { useFileField } from './useFileField';
 export { useMarkdownEditor } from './useMarkdownEditor';
 export type { MarkdownFormatAction } from './useMarkdownEditor';
 export { useObjectUrl } from './useObjectUrl';
-export { useSectionVisibility } from './useSectionVisibility';
 export { useStickyHeader } from './useStickyHeader';

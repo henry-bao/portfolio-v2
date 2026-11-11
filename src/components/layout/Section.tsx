@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { classNames } from '../../utils/classNames';
+import { classNames } from '../../lib/classNames';
 import styles from './Section.module.css';
 
 interface SectionProps {

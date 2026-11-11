@@ -21,9 +21,9 @@ export default defineConfig(
         rules: {
             ...reactHooks.configs.recommended.rules,
             'react-hooks/exhaustive-deps': 'error',
-            // New in eslint-plugin-react-hooks v7. Existing fetch-on-mount effects trip it; kept visible
-            // as a warning until they're migrated rather than failing lint.
-            'react-hooks/set-state-in-effect': 'warn',
+            // Data loading lives in React Query (src/queries), so effects never need to copy fetched data
+            // into state. The one legitimate case (useObjectUrl) is suppressed inline with its reason.
+            'react-hooks/set-state-in-effect': 'error',
             'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],

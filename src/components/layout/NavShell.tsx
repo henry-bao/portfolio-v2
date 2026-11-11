@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useMediaQuery } from '@mui/material';
-import { useAuth } from '../../context/useAuth';
+import { useIsAdmin } from '../../queries';
 import { useBodyScrollLock, useStickyHeader } from '../../hooks';
-import { routes } from '../../routes/paths';
-import { classNames } from '../../utils/classNames';
+import { routes } from '../../app/routes';
+import { classNames } from '../../lib/classNames';
 import styles from './NavShell.module.css';
 
 /** A nav entry is either a route link or an in-page action such as scrolling to a section. */
@@ -57,13 +57,13 @@ const NavLink = ({
 
 /**
  * Fixed header shared by the portfolio and blog pages: sticky background on scroll,
- * the full-screen mobile menu and the authenticated-only admin link.
+ * the full-screen mobile menu and the admin-only dashboard link.
  */
 const NavShell = ({ logo, items, placeholderCount = 0 }: NavShellProps) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const isSticky = useStickyHeader();
     const isMobile = useMediaQuery(MOBILE_MENU_QUERY);
-    const { isAuthenticated } = useAuth();
+    const isAdmin = useIsAdmin();
 
     useBodyScrollLock(menuOpen && isMobile);
 
@@ -90,7 +90,7 @@ const NavShell = ({ logo, items, placeholderCount = 0 }: NavShellProps) => {
                             <span className={styles.skeleton} />
                         </li>
                     ))}
-                    {isAuthenticated && (
+                    {isAdmin && (
                         <li>
                             <RouterLink
                                 to={routes.admin.overview}

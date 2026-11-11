@@ -14,7 +14,7 @@ const BlogPageShell = ({ children, showNav = true }: BlogPageShellProps) => (
     <div className={styles.page}>
         {showNav && <BlogNav />}
         {children}
-        <Footer resumeUrl={null} />
+        <Footer />
     </div>
 );
 

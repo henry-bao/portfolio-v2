@@ -10,3 +10,18 @@
     gap: 1rem;
     padding-top: 5rem;
 }
+
+.loading {
+    display: flex;
+    justify-content: center;
+    padding-top: 5rem;
+}
+
+.retry {
+    border: 0;
+    border-bottom: 1px solid currentColor;
+    background: none;
+    color: var(--color-primary);
+    font: inherit;
+    cursor: pointer;
+}

@@ -1,10 +1,12 @@
 import { Alert, Box, Button, CircularProgress } from '@mui/material';
 import { Refresh } from '@mui/icons-material';
 import type { ReactNode } from 'react';
+import { getErrorMessage } from '../../api';
 
 interface LoadingErrorProps {
     loading: boolean;
-    error: string | null;
+    /** Anything thrown; shown with a user-safe message. */
+    error: unknown;
     onRetry?: () => void;
     children: ReactNode;
 }
@@ -33,7 +35,7 @@ export function LoadingError({ loading, error, onRetry, children }: LoadingError
                         )
                     }
                 >
-                    {error}
+                    {getErrorMessage(error)}
                 </Alert>
             </Box>
         );

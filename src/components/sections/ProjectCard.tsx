@@ -2,21 +2,21 @@ import { useId, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
+import { fileUrl, projectsApi } from '../../api';
+import type { Project } from '../../api';
+import { PLACEHOLDER_IMAGE } from '../../config/site';
 import { COMPACT_LAYOUT_WIDTH_PX } from '../../hooks';
-import type { ProjectDocument } from '../../types';
-import { PLACEHOLDER_IMAGE } from '../../utils/assets';
 import { ImageWithFallback } from '../shared';
 import styles from './ProjectCard.module.css';
 
 interface ProjectCardProps {
-    project: ProjectDocument;
-    logoUrl?: string;
+    project: Project;
 }
 
 const EXPAND_DURATION_S = 0.3;
 
-const ProjectCard = ({ project, logoUrl }: ProjectCardProps) => {
-    const { title, role, description, date, link_url: linkUrl, link_text: linkText, isOpen = false } = project;
+const ProjectCard = ({ project }: ProjectCardProps) => {
+    const { title, role, description, date, link_url: linkUrl, link_text: linkText, isOpen } = project;
     const [isExpanded, setIsExpanded] = useState(isOpen);
     const detailsId = useId();
     const theme = useTheme();
@@ -50,7 +50,7 @@ const ProjectCard = ({ project, logoUrl }: ProjectCardProps) => {
                         <div className={styles.details}>
                             <ImageWithFallback
                                 className={styles.logo}
-                                src={logoUrl}
+                                src={fileUrl(project.logoFileId)}
                                 fallbackSrc={PLACEHOLDER_IMAGE}
                                 alt={`${title}'s logo`}
                             />
@@ -63,7 +63,7 @@ const ProjectCard = ({ project, logoUrl }: ProjectCardProps) => {
                                 {linkUrl && (
                                     <p className={styles.point}>
                                         <a href={linkUrl} target="_blank" rel="noopener" className={styles.link}>
-                                            {linkText}
+                                            {linkText ?? projectsApi.DEFAULT_LINK_TEXT}
                                         </a>
                                     </p>
                                 )}

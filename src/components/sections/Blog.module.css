@@ -54,3 +54,12 @@
         grid-template-columns: 1fr;
     }
 }
+
+.retry {
+    border: 0;
+    border-bottom: 1px solid currentColor;
+    background: none;
+    color: var(--color-primary);
+    font: inherit;
+    cursor: pointer;
+}

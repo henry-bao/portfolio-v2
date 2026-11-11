@@ -1,11 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Analytics } from '@vercel/analytics/react';
 
-import App from './App';
-import { theme } from './theme';
+import App from './app/App';
 import './index.css';
 
 const rootElement = document.getElementById('root');
@@ -16,10 +12,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
     <StrictMode>
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Analytics />
-            <App />
-        </ThemeProvider>
+        <App />
     </StrictMode>
 );
