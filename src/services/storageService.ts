@@ -21,15 +21,11 @@ const assertAllowedType = (file: File, allowedTypes: string[]) => {
     }
 };
 
-/** URL of a stored file as-is: resumes and other downloads, and blog images. */
-export const getFileUrl = (fileId: string) => storage.getFileView({ bucketId: STORAGE_BUCKET_ID, fileId });
-
 /**
- * Optionally resized preview of an *image*. Appwrite's preview endpoint only renders images --
- * point documents at `getFileUrl` instead, or it serves a placeholder.
+ * URL of a stored file as-is, for images and documents alike. Don't use `storage.getFilePreview`:
+ * image transformations are blocked on the project's Appwrite plan, so every preview URL returns 403.
  */
-export const getFilePreviewUrl = (fileId: string, width?: number, height?: number) =>
-    storage.getFilePreview({ bucketId: STORAGE_BUCKET_ID, fileId, width, height });
+export const getFileUrl = (fileId: string) => storage.getFileView({ bucketId: STORAGE_BUCKET_ID, fileId });
 
 export const uploadFile = async (
     file: File,

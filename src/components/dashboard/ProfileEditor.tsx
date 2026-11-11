@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, CircularProgress, Divider, Grid, Paper, Skeleton, TextField, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { createProfileData, getProfileData, updateProfileData } from '../../services/profileService';
-import { ALLOWED_DOCUMENT_TYPES, deleteFile, getFilePreviewUrl, uploadFile } from '../../services/storageService';
+import { ALLOWED_DOCUMENT_TYPES, deleteFile, getFileUrl, uploadFile } from '../../services/storageService';
 import { addResumeVersion, getActiveResumeVersion } from '../../services/resumeService';
 import type { ProfileData, ProfileDocument } from '../../types';
 import { routes } from '../../routes/paths';
@@ -78,9 +78,7 @@ const ProfileEditor = () => {
                     education: profileData.education || [],
                     languages: profileData.languages || [],
                 });
-                setProfileImageRemoteUrl(
-                    profileData.profileImageId ? getFilePreviewUrl(profileData.profileImageId) : null
-                );
+                setProfileImageRemoteUrl(profileData.profileImageId ? getFileUrl(profileData.profileImageId) : null);
 
                 const activeResume = await getActiveResumeVersion();
                 setResumeFileName(activeResume?.fileName ?? (profileData.resumeFileId ? 'Resume.pdf' : null));
@@ -193,9 +191,7 @@ const ProfileEditor = () => {
 
             setProfile(savedProfile);
             profileImage.setFile(null);
-            setProfileImageRemoteUrl(
-                savedProfile.profileImageId ? getFilePreviewUrl(savedProfile.profileImageId) : null
-            );
+            setProfileImageRemoteUrl(savedProfile.profileImageId ? getFileUrl(savedProfile.profileImageId) : null);
             setSuccess('Profile updated successfully');
         } catch (error) {
             console.error('Error saving profile:', error);

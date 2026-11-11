@@ -1,5 +1,5 @@
 import { useProjects } from '../../hooks';
-import { getFilePreviewUrl } from '../../services/storageService';
+import { getFileUrl } from '../../services/storageService';
 import { LoadingError } from '../shared';
 import { Section, SectionTitle } from '../layout/Section';
 import ProjectCard from './ProjectCard';
@@ -18,7 +18,7 @@ const Projects = () => {
                         <ProjectCard
                             key={project.$id}
                             project={project}
-                            logoUrl={project.logoFileId ? getFilePreviewUrl(project.logoFileId) : undefined}
+                            logoUrl={project.logoFileId ? getFileUrl(project.logoFileId) : undefined}
                         />
                     ))
                 ) : (

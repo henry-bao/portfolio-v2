@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { CircularProgress } from '@mui/material';
-import { getFilePreviewUrl } from '../../services/storageService';
+import { getFileUrl } from '../../services/storageService';
 import type { ProfileDocument } from '../../types';
 import { FALLBACK_PROFILE_IMAGE, FALLBACK_RESUME_URL } from '../../utils/assets';
 import { mapProfileDocumentToDisplayData } from '../../utils/profile';
@@ -74,7 +74,7 @@ const About = ({ loading, profile, resumeUrl }: AboutProps) => {
     const { displayData, profileImageUrl } = useMemo(
         () => ({
             displayData: mapProfileDocumentToDisplayData(profile),
-            profileImageUrl: profile?.profileImageId ? getFilePreviewUrl(profile.profileImageId) : null,
+            profileImageUrl: profile?.profileImageId ? getFileUrl(profile.profileImageId) : null,
         }),
         [profile]
     );

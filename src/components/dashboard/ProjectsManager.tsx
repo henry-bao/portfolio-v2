@@ -39,7 +39,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { deleteProject, getProjects, updateProject } from '../../services/projectService';
-import { getFilePreviewUrl } from '../../services/storageService';
+import { getFileUrl } from '../../services/storageService';
 import type { ProjectDocument } from '../../types';
 import { PLACEHOLDER_IMAGE } from '../../utils/assets';
 import { useBreakpoints } from '../../hooks';
@@ -192,10 +192,7 @@ const ProjectsManager = () => {
             Object.fromEntries(
                 projects
                     .filter((project) => project.logoFileId)
-                    .map((project) => [
-                        project.$id,
-                        getFilePreviewUrl(project.logoFileId as string, AVATAR_SIZE_PX, AVATAR_SIZE_PX),
-                    ])
+                    .map((project) => [project.$id, getFileUrl(project.logoFileId as string)])
             ),
         [projects]
     );

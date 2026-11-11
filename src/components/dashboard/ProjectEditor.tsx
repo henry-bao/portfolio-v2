@@ -23,7 +23,7 @@ import {
     Upload as UploadIcon,
 } from '@mui/icons-material';
 import { createProject, getProject, updateProject } from '../../services/projectService';
-import { deleteFile, getFilePreviewUrl, uploadFile } from '../../services/storageService';
+import { deleteFile, getFileUrl, uploadFile } from '../../services/storageService';
 import type { ProjectData, ProjectDocument } from '../../types';
 import { routes } from '../../routes/paths';
 import { useImagePreview } from '../../hooks';
@@ -78,7 +78,7 @@ const ProjectEditor = () => {
                 setIsOpen(projectData.isOpen || false);
                 setLinkUrl(projectData.link_url || '');
                 setLinkText(projectData.link_text || DEFAULT_LINK_TEXT);
-                setLogoRemoteUrl(projectData.logoFileId ? getFilePreviewUrl(projectData.logoFileId) : null);
+                setLogoRemoteUrl(projectData.logoFileId ? getFileUrl(projectData.logoFileId) : null);
             } catch (error) {
                 console.error('Error fetching project:', error);
                 setError('Failed to load project data');
@@ -119,15 +119,9 @@ const ProjectEditor = () => {
         setSuccess('');
 
         try {
-            let logoFileId = project?.logoFileId;
-
-            if (logo.file) {
-                if (logoFileId) {
-                    await deleteFile(logoFileId);
-                }
-
-                logoFileId = (await uploadFile(logo.file)).$id;
-            }
+            const storedLogoId = project?.logoFileId;
+            // Upload before discarding the old logo so a failed save never leaves the project pointing at a deleted file.
+            const logoFileId = logo.file ? (await uploadFile(logo.file)).$id : storedLogoId;
 
             const projectData: ProjectData = {
                 title,
@@ -143,6 +137,14 @@ const ProjectEditor = () => {
                 ? await createProject(projectData)
                 : await updateProject(projectId, projectData);
 
+            if (storedLogoId && logoFileId !== storedLogoId) {
+                try {
+                    await deleteFile(storedLogoId);
+                } catch {
+                    // Already logged, and the project no longer references it -- only an orphaned file remains.
+                }
+            }
+
             setSuccess(`Project ${isNewProject ? 'created' : 'updated'} successfully`);
 
             if (isNewProject) {
@@ -151,6 +153,9 @@ const ProjectEditor = () => {
                 }, REDIRECT_AFTER_CREATE_MS);
             } else {
                 setProject(result as unknown as ProjectDocument);
+                // Show the stored logo and forget the picked file, so saving again doesn't re-upload it.
+                logo.setFile(null);
+                setLogoRemoteUrl(logoFileId ? getFileUrl(logoFileId) : null);
             }
         } catch (error) {
             console.error('Error saving project:', error);
